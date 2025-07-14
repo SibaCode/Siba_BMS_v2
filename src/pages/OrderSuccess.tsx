@@ -1,8 +1,11 @@
+
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useCart, Order } from "@/contexts/CartContext";
 import { 
   CheckCircle, 
   Package, 
@@ -13,23 +16,57 @@ import {
 } from "lucide-react";
 
 const OrderSuccess = () => {
-  // Mock order data - in real app this would come from URL params or state
-  const order = {
-    id: "ORD-001",
-    items: [
-      { name: "Premium Apron", quantity: 2, price: 45.99 },
-      { name: "Coffee Mug Set", quantity: 1, price: 29.99 }
-    ],
-    subtotal: 121.97,
-    tax: 18.30,
-    total: 140.27,
-    customer: {
-      name: "John Doe",
-      email: "john.doe@email.com",
-      phone: "078-123-4567"
-    },
-    paymentMethod: "Yoco",
-    estimatedDelivery: "2024-01-20"
+  const { lastOrder } = useCart();
+  const [order, setOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    if (lastOrder) {
+      setOrder(lastOrder);
+    } else {
+      // Try to get the most recent order from localStorage
+      const savedOrders = localStorage.getItem('orders');
+      if (savedOrders) {
+        const orders = JSON.parse(savedOrders);
+        if (orders.length > 0) {
+          setOrder(orders[orders.length - 1]);
+        }
+      }
+    }
+  }, [lastOrder]);
+
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-semibold mb-4">No order found</h2>
+            <p className="text-muted-foreground mb-6">We couldn't find your order details.</p>
+            <Button asChild>
+              <Link to="/store">Return to Store</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-ZA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getEstimatedDelivery = () => {
+    const orderDate = new Date(order.createdAt);
+    const deliveryDate = new Date(orderDate);
+    deliveryDate.setDate(orderDate.getDate() + 3); // 3 days for delivery
+    return deliveryDate.toLocaleDateString('en-ZA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   return (
@@ -51,15 +88,21 @@ const OrderSuccess = () => {
         <Card className="mb-8">
           <CardContent className="pt-8">
             <div className="text-center">
-              <CheckCircle className="h-16 w-16 text-success mx-auto mb-4" />
-              <h2 className="text-3xl font-bold text-success mb-2">Order Placed Successfully!</h2>
+              <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+              <h2 className="text-3xl font-bold text-green-600 mb-2">Order Placed Successfully!</h2>
               <p className="text-lg text-muted-foreground mb-4">
                 Thank you for your order. Your order #{order.id} has been confirmed.
               </p>
               <div className="flex justify-center space-x-4 mb-6">
                 <Badge variant="secondary" className="px-4 py-2">
                   <Mail className="h-4 w-4 mr-2" />
-                  Confirmation email sent to {order.customer.email}
+                  Confirmation details saved
+                </Badge>
+                <Badge 
+                  variant={order.status === 'confirmed' ? 'default' : 'secondary'} 
+                  className="px-4 py-2"
+                >
+                  Status: {order.status}
                 </Badge>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -72,7 +115,7 @@ const OrderSuccess = () => {
                 <Button asChild>
                   <Link to="/admin/orders">
                     <Package className="h-4 w-4 mr-2" />
-                    Track Order
+                    View in Admin
                   </Link>
                 </Button>
               </div>
@@ -96,12 +139,16 @@ const OrderSuccess = () => {
                   <span className="font-medium">{order.id}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-muted-foreground">Order Date:</span>
+                  <span className="font-medium">{formatDate(order.createdAt)}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">Payment Method:</span>
-                  <span className="font-medium">{order.paymentMethod}</span>
+                  <span className="font-medium capitalize">{order.paymentMethod}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Estimated Delivery:</span>
-                  <span className="font-medium">{order.estimatedDelivery}</span>
+                  <span className="font-medium">{getEstimatedDelivery()}</span>
                 </div>
                 <Separator />
                 <div>
@@ -150,7 +197,7 @@ const OrderSuccess = () => {
               <div className="space-y-4">
                 <div>
                   <span className="text-muted-foreground">Name:</span>
-                  <div className="font-medium">{order.customer.name}</div>
+                  <div className="font-medium">{order.customer.firstName} {order.customer.lastName}</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Email:</span>
@@ -159,6 +206,14 @@ const OrderSuccess = () => {
                 <div>
                   <span className="text-muted-foreground">Phone:</span>
                   <div className="font-medium">{order.customer.phone}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Shipping Address:</span>
+                  <div className="font-medium">
+                    {order.customer.address}<br />
+                    {order.customer.city}, {order.customer.postalCode}<br />
+                    {order.customer.province}
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -179,7 +234,7 @@ const OrderSuccess = () => {
                 <div>
                   <h4 className="font-semibold">Order Confirmation</h4>
                   <p className="text-sm text-muted-foreground">
-                    You'll receive an email confirmation with your order details.
+                    Your order has been confirmed and saved to our system.
                   </p>
                 </div>
               </div>
@@ -201,7 +256,7 @@ const OrderSuccess = () => {
                 <div>
                   <h4 className="font-semibold">Shipping & Delivery</h4>
                   <p className="text-sm text-muted-foreground">
-                    Your order will be shipped and delivered by {order.estimatedDelivery}.
+                    Your order will be shipped and delivered by {getEstimatedDelivery()}.
                   </p>
                 </div>
               </div>

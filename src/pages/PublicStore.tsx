@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCart } from "@/contexts/CartContext";
 import { 
   Search, 
   ShoppingCart, 
@@ -16,7 +17,7 @@ import {
 const PublicStore = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [cart, setCart] = useState<any[]>([]);
+  const { addItem, itemCount } = useCart();
 
   // Mock data - in real app this would come from backend
   const products = [
@@ -90,13 +91,15 @@ const PublicStore = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const addToCart = (product: any) => {
-    setCart([...cart, product]);
-    // In real app, this would use proper state management
-    console.log("Added to cart:", product);
+  const handleAddToCart = (product: any) => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      category: product.category,
+      image: product.image
+    });
   };
-
-  const cartCount = cart.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,9 +119,9 @@ const PublicStore = () => {
                 <Link to="/store/cart">
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Cart
-                  {cartCount > 0 && (
+                  {itemCount > 0 && (
                     <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs">
-                      {cartCount}
+                      {itemCount}
                     </Badge>
                   )}
                 </Link>
@@ -199,7 +202,7 @@ const PublicStore = () => {
                 <Button 
                   className="w-full" 
                   disabled={!product.inStock}
-                  onClick={() => addToCart(product)}
+                  onClick={() => handleAddToCart(product)}
                 >
                   {product.inStock ? (
                     <>

@@ -1,9 +1,10 @@
-import { useState } from "react";
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useCart } from "@/contexts/CartContext";
 import { 
   ArrowLeft, 
   ShoppingCart as CartIcon, 
@@ -14,48 +15,7 @@ import {
 } from "lucide-react";
 
 const ShoppingCart = () => {
-  // Mock cart data - in real app this would come from state management
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Premium Apron",
-      price: 45.99,
-      quantity: 2,
-      image: "/api/placeholder/100/100"
-    },
-    {
-      id: 2,
-      name: "Coffee Mug Set",
-      price: 29.99,
-      quantity: 1,
-      image: "/api/placeholder/100/100"
-    },
-    {
-      id: 3,
-      name: "Travel Umbrella",
-      price: 59.99,
-      quantity: 1,
-      image: "/api/placeholder/100/100"
-    }
-  ]);
-
-  const updateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity === 0) {
-      setCartItems(cartItems.filter(item => item.id !== id));
-    } else {
-      setCartItems(cartItems.map(item => 
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      ));
-    }
-  };
-
-  const removeItem = (id: number) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
-  };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.15; // 15% tax
-  const total = subtotal + tax;
+  const { items, updateQuantity, removeItem, subtotal, tax, total, itemCount } = useCart();
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,7 +42,7 @@ const ShoppingCart = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {cartItems.length === 0 ? (
+        {items.length === 0 ? (
           <Card className="py-12">
             <CardContent className="text-center">
               <CartIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -102,11 +62,11 @@ const ShoppingCart = () => {
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Cart Items ({cartItems.length})</CardTitle>
+                  <CardTitle>Cart Items ({itemCount})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {cartItems.map((item) => (
+                    {items.map((item) => (
                       <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
                         <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
                           <Store className="h-8 w-8 text-muted-foreground" />
@@ -165,7 +125,7 @@ const ShoppingCart = () => {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between">
-                      <span>Subtotal ({cartItems.length} items)</span>
+                      <span>Subtotal ({itemCount} items)</span>
                       <span>R{subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
@@ -177,7 +137,7 @@ const ShoppingCart = () => {
                       <span>Total</span>
                       <span>R{total.toFixed(2)}</span>
                     </div>
-                    <Button className="w-full mt-6" asChild>
+                    <Button className="w-full mt-6" asChild disabled={items.length === 0}>
                       <Link to="/store/checkout">
                         Proceed to Checkout
                       </Link>
