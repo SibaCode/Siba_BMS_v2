@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { db } from "@/firebase"; // your Firebase config
+import { collection, getDocs } from "firebase/firestore";
+
 import { 
   ArrowLeft, 
   Search, 
@@ -21,52 +24,28 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState("all");
 
   // Mock data - in real app this would come from backend
-  const orders = [
-    {
-      id: "ORD-001",
-      customer: "John Doe",
-      phone: "078-123-4567",
-      items: [
-        { name: "Premium Apron", quantity: 2, price: 45.99 },
-        { name: "Coffee Mug", quantity: 1, price: 29.99 }
-      ],
-      total: 121.97,
-      paymentMethod: "Yoco",
-      paymentStatus: "Paid",
-      deliveryStatus: "Delivered",
-      orderDate: "2024-01-15",
-      deliveryDate: "2024-01-17"
-    },
-    {
-      id: "ORD-002",
-      customer: "Jane Smith",
-      phone: "082-987-6543",
-      items: [
-        { name: "Travel Umbrella", quantity: 1, price: 59.99 }
-      ],
-      total: 59.99,
-      paymentMethod: "EFT",
-      paymentStatus: "Pending",
-      deliveryStatus: "Processing",
-      orderDate: "2024-01-16",
-      deliveryDate: null
-    },
-    {
-      id: "ORD-003",
-      customer: "Mike Johnson",
-      phone: "071-456-7890",
-      items: [
-        { name: "Limited Edition Mug", quantity: 3, price: 35.99 }
-      ],
-      total: 107.97,
-      paymentMethod: "Cash",
-      paymentStatus: "Paid",
-      deliveryStatus: "Shipped",
-      orderDate: "2024-01-16",
-      deliveryDate: null
-    }
-  ];
-
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "orders"));
+        const ordersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setOrders(ordersData);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchOrders();
+  }, []);
+  
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          order.id.toLowerCase().includes(searchTerm.toLowerCase());
