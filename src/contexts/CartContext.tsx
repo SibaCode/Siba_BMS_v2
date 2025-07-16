@@ -25,7 +25,6 @@ export interface Order {
   };
   paymentMethod: string;
   subtotal: number;
-  tax: number;
   total: number;
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered';
   createdAt: string;
@@ -113,7 +112,6 @@ interface CartContextType {
   createOrder: (customer: Order['customer'], paymentMethod: string) => Order;
   itemCount: number;
   subtotal: number;
-  tax: number;
   total: number;
 }
 
@@ -170,8 +168,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createOrder = (customer: Order['customer'], paymentMethod: string): Order => {
     const orderId = `ORD-${Date.now()}`;
     const subtotal = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = subtotal * 0.15; // 15% tax
-    const total = subtotal + tax;
+    const total = subtotal;
 
     const order: Order = {
       id: orderId,
@@ -179,7 +176,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       customer,
       paymentMethod,
       subtotal,
-      tax,
       total,
       status: paymentMethod === 'cash' ? 'confirmed' : 'pending',
       createdAt: new Date().toISOString(),
@@ -199,8 +195,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.15;
-  const total = subtotal + tax;
+  const total = subtotal;
 
   return (
     <CartContext.Provider
@@ -214,7 +209,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createOrder,
         itemCount,
         subtotal,
-        tax,
         total,
       }}
     >

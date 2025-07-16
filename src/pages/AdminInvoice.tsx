@@ -27,7 +27,6 @@ const AdminInvoice = () => {
       { name: "Coffee Mug", quantity: 1, price: 29.99, total: 29.99 }
     ],
     subtotal: 121.97,
-    tax: 18.30,
     total: 140.27,
     paymentMethod: "Yoco",
     paymentStatus: "Paid",
@@ -41,7 +40,6 @@ const AdminInvoice = () => {
     address: "456 Business Street, Cape Town, 8001",
     phone: "021-123-4567",
     email: "info@yourstore.com",
-    taxNumber: "TAX123456789"
   };
 
   const handlePrint = () => {
@@ -153,10 +151,6 @@ const AdminInvoice = () => {
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
                   <span>R{invoice.subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Tax (15%):</span>
-                  <span>R{invoice.tax.toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">

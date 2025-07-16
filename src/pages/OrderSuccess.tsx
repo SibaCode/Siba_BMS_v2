@@ -175,10 +175,6 @@ const OrderSuccess = () => {
                     <span>Subtotal:</span>
                     <span>R{order.subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Tax (15%):</span>
-                    <span>R{order.tax.toFixed(2)}</span>
-                  </div>
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total:</span>
                     <span>R{order.total.toFixed(2)}</span>

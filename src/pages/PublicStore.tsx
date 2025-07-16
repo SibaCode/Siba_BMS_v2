@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState , useEffect} from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCart } from "@/contexts/CartContext";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/firebase";  // Your Firebase config file path
+
 import { 
   Search, 
   ShoppingCart, 
@@ -19,74 +22,29 @@ const PublicStore = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const { addItem, itemCount } = useCart();
 
-  // Mock data - in real app this would come from backend
-  const products = [
-    {
-      id: 1,
-      name: "Premium Apron",
-      category: "Aprons",
-      price: 45.99,
-      image: "/api/placeholder/300/300",
-      description: "High-quality cotton apron perfect for cooking and crafting",
-      inStock: true,
-      stock: 23
-    },
-    {
-      id: 2,
-      name: "Coffee Mug Set",
-      category: "Mugs",
-      price: 29.99,
-      image: "/api/placeholder/300/300",
-      description: "Set of 2 ceramic mugs with beautiful design",
-      inStock: true,
-      stock: 15
-    },
-    {
-      id: 3,
-      name: "Travel Umbrella",
-      category: "Umbrellas",
-      price: 59.99,
-      image: "/api/placeholder/300/300",
-      description: "Compact travel umbrella with wind resistance",
-      inStock: true,
-      stock: 8
-    },
-    {
-      id: 4,
-      name: "Limited Edition Mug",
-      category: "Mugs",
-      price: 35.99,
-      image: "/api/placeholder/300/300",
-      description: "Special edition mug with unique artwork",
-      inStock: false,
-      stock: 0
-    },
-    {
-      id: 5,
-      name: "Chef's Apron",
-      category: "Aprons",
-      price: 52.99,
-      image: "/api/placeholder/300/300",
-      description: "Professional chef's apron with multiple pockets",
-      inStock: true,
-      stock: 12
-    },
-    {
-      id: 6,
-      name: "Storm Umbrella",
-      category: "Umbrellas",
-      price: 75.99,
-      image: "/api/placeholder/300/300",
-      description: "Heavy-duty umbrella for extreme weather conditions",
-      inStock: true,
-      stock: 6
+  const [products, setProducts] = useState<any[]>([]);
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const productsCol = collection(db, "products");  
+        const productsSnapshot = await getDocs(productsCol);
+        const productsList = productsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setProducts(productsList);
+        console.log(products)
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
     }
-  ];
-
+    fetchProducts();
+  }, []);
+  
   const categories = ["all", "Aprons", "Mugs", "Umbrellas"];
 
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
@@ -97,7 +55,7 @@ const PublicStore = () => {
       name: product.name,
       price: product.price,
       category: product.category,
-      image: product.image
+      image:product.image
     });
   };
 
@@ -177,10 +135,14 @@ const PublicStore = () => {
           {filteredProducts.map((product) => (
             <Card key={product.id} className="hover:shadow-lg transition-shadow group">
               <CardHeader className="pb-4">
-                <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                    <Store className="h-16 w-16 text-primary/50" />
-                  </div>
+              <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                  {product.image ? (
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                      <Store className="h-16 w-16 text-primary/50" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">

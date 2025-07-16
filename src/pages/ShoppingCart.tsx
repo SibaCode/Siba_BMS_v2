@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 const ShoppingCart = () => {
-  const { items, updateQuantity, removeItem, subtotal, tax, total, itemCount } = useCart();
+  const { items, updateQuantity, removeItem, subtotal, total, itemCount } = useCart();
 
   return (
     <div className="min-h-screen bg-background">
@@ -68,9 +68,18 @@ const ShoppingCart = () => {
                   <div className="space-y-4">
                     {items.map((item) => (
                       <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
-                        <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
-                          <Store className="h-8 w-8 text-muted-foreground" />
-                        </div>
+                        <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+  {item.image ? (
+    <img
+      src={item.image}
+      alt={item.name}
+      className="object-cover w-full h-full"
+    />
+  ) : (
+    <Store className="h-8 w-8 text-muted-foreground" />
+  )}
+</div>
+
                         <div className="flex-1">
                           <h4 className="font-semibold">{item.name}</h4>
                           <p className="text-sm text-muted-foreground">R{item.price.toFixed(2)} each</p>
@@ -128,14 +137,10 @@ const ShoppingCart = () => {
                       <span>Subtotal ({itemCount} items)</span>
                       <span>R{subtotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Tax (15%)</span>
-                      <span>R{tax.toFixed(2)}</span>
-                    </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span>R{total.toFixed(2)}</span>
+                      <span>R{total}</span>
                     </div>
                     <Button className="w-full mt-6" asChild disabled={items.length === 0}>
                       <Link to="/store/checkout">
