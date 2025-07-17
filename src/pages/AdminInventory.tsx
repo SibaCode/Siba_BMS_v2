@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase"; // Adjust path based on your structure
 import { Checkbox } from "@/components/ui/checkbox";
-
+import VariantsSection from "./VariantsSection"
 import {
   addDoc,
   updateDoc,
@@ -107,14 +107,6 @@ const AdminInventory = () => {
     }
   };
 
-  // const handleInputChange = (field: string, value: any) => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     [field]: value,
-  //   }));
-  // };
-
-  // Reset form for add
  
   const resetForm = () => {
     setFormData({
@@ -337,19 +329,49 @@ const AdminInventory = () => {
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-  
-  const handleVariantChange = (index, field, value) => {
-    const variants = [...formData.variants];
-    variants[index] = { ...variants[index], [field]: value };
-    setFormData((prev) => ({ ...prev, variants }));
-  };
-  
-  const handleVariantImageChange = (index, imageUrl) => {
-    const variants = [...formData.variants];
-    variants[index] = { ...variants[index], images: [imageUrl] };
-    setFormData((prev) => ({ ...prev, variants }));
-  };
 
+  const handleVariantChange = (index: number, field: string, value: any) => {
+    const updatedVariants = [...formData.variants];
+    updatedVariants[index] = {
+      ...updatedVariants[index],
+      [field]: value,
+    };
+    setFormData({ ...formData, variants: updatedVariants });
+  };
+  
+  const handleVariantImageChange = (index: number, imageUrl: string) => {
+    const updatedVariants = [...formData.variants];
+    updatedVariants[index] = {
+      ...updatedVariants[index],
+      images: imageUrl ? [imageUrl] : [],
+    };
+    setFormData({ ...formData, variants: updatedVariants });
+  };
+  
+  const addVariant = () => {
+    setFormData({
+      ...formData,
+      variants: [
+        ...formData.variants,
+        {
+          type: "",
+          color: "",
+          size: "",
+          sellingPrice: "",
+          stockPrice: "",
+          stockQuantity: "",
+          description: "",
+          images: [],
+        },
+      ],
+    });
+  };
+  
+  const removeVariant = (index: number) => {
+    const updatedVariants = formData.variants.filter((_, i) => i !== index);
+    setFormData({ ...formData, variants: updatedVariants });
+  };
+  
   const lowStockCount = products.filter((p) => p.stock < 5).length;
 
   const categories = ["all", "Aprons", "Mugs", "Umbrellas"];
@@ -371,215 +393,219 @@ const AdminInventory = () => {
               <h1 className="text-2xl font-bold text-foreground">Inventory Management</h1>
             </div>
             <div className="flex items-center space-x-4">
+
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-  <DialogTrigger asChild>
-    <Button onClick={openAddModal}>
-      <Plus className="h-4 w-4 mr-2" />
-      Add Product
-    </Button>
-  </DialogTrigger>
-  <DialogContent className="max-w-3xl">
-    <DialogHeader>
-      <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
-    </DialogHeader>
+              <DialogTrigger asChild>
+                <Button onClick={openAddModal}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Product
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
+                </DialogHeader>
 
-    <div className="grid grid-cols-2 gap-4">
-      {/* Core Product Fields */}
-      <div>
-        <Label htmlFor="productID">Product ID *</Label>
-        <Input
-          id="productID"
-          type="text"
-          placeholder="e.g. PRD123"
-          value={formData.productID}
-          onChange={(e) => handleInputChange("productID", e.target.value)}
-          disabled={!!editingProduct}
-        />
-      </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Core Product Fields */}
+                  <div>
+                    <Label htmlFor="productID">Product ID *</Label>
+                    <Input
+                      id="productID"
+                      type="text"
+                      placeholder="e.g. PRD123"
+                      value={formData.productID}
+                      onChange={(e) => handleInputChange("productID", e.target.value)}
+                      disabled={!!editingProduct}
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="name">Product Name *</Label>
-        <Input
-          id="name"
-          placeholder="Product name"
-          value={formData.name}
-          onChange={(e) => handleInputChange("name", e.target.value)}
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="name">Product Name *</Label>
+                    <Input
+                      id="name"
+                      placeholder="Product name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="category">Category *</Label>
-        <Input
-          id="category"
-          placeholder="Category"
-          value={formData.category}
-          onChange={(e) => handleInputChange("category", e.target.value)}
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="category">Category *</Label>
+                    <Input
+                      id="category"
+                      placeholder="Category"
+                      value={formData.category}
+                      onChange={(e) => handleInputChange("category", e.target.value)}
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="supplier">Supplier *</Label>
-        <Input
-          id="supplier"
-          placeholder="Supplier name"
-          value={formData.supplier}
-          onChange={(e) => handleInputChange("supplier", e.target.value)}
-        />
-      </div>
-      <div>
-        <Label htmlFor="productImage">productImage *</Label>
-        <Input
-          id="productImage"
-          placeholder="productImage"
-          value={formData.productImage}
-          onChange={(e) => handleInputChange("productImage", e.target.value)}
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="supplier">Supplier *</Label>
+                    <Input
+                      id="supplier"
+                      placeholder="Supplier name"
+                      value={formData.supplier}
+                      onChange={(e) => handleInputChange("supplier", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="productImage">productImage *</Label>
+                    <Input
+                      id="productImage"
+                      placeholder="productImage"
+                      value={formData.productImage}
+                      onChange={(e) => handleInputChange("productImage", e.target.value)}
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="batchNumber">Batch Number *</Label>
-        <Input
-          id="batchNumber"
-          placeholder="Batch #"
-          value={formData.batchNumber}
-          onChange={(e) => handleInputChange("batchNumber", e.target.value)}
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="batchNumber">Batch Number *</Label>
+                    <Input
+                      id="batchNumber"
+                      placeholder="Batch #"
+                      value={formData.batchNumber}
+                      onChange={(e) => handleInputChange("batchNumber", e.target.value)}
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="status">Status *</Label>
-        <Input
-          id="status"
-          placeholder="e.g. Active / Inactive"
-          value={formData.status}
-          onChange={(e) => handleInputChange("status", e.target.value)}
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="status">Status *</Label>
+                    <Input
+                      id="status"
+                      placeholder="e.g. Active / Inactive"
+                      value={formData.status}
+                      onChange={(e) => handleInputChange("status", e.target.value)}
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="lastRestocked">Last Restocked</Label>
-        <Input
-          id="lastRestocked"
-          type="date"
-          value={formData.lastRestocked}
-          onChange={(e) => handleInputChange("lastRestocked", e.target.value)}
-        />
-      </div>
-    </div>
+                  <div>
+                    <Label htmlFor="lastRestocked">Last Restocked</Label>
+                    <Input
+                      id="lastRestocked"
+                      type="date"
+                      value={formData.lastRestocked}
+                      onChange={(e) => handleInputChange("lastRestocked", e.target.value)}
+                    />
+                  </div>
+                </div>
 
-    {/* Variant Fields – assuming first variant only */}
-    <div className="mt-6 border-t pt-4 grid grid-cols-2 gap-4">
-      <h4 className="col-span-2 font-semibold text-lg">Variant</h4>
+                {/* Variant Fields – assuming first variant only */}
+                {/* <div className="mt-6 border-t pt-4 grid grid-cols-2 gap-4">
+                  <h4 className="col-span-2 font-semibold text-lg">Variant</h4>
 
-      <div>
-        <Label htmlFor="type">Type</Label>
-        <Input
-          id="type"
-          placeholder="e.g. Basic, Deluxe"
-          value={formData.variants[0]?.type || ""}
-          onChange={(e) => handleVariantChange(0, "type", e.target.value)}
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="type">Type</Label>
+                    <Input
+                      id="type"
+                      placeholder="e.g. Basic, Deluxe"
+                      value={formData.variants[0]?.type || ""}
+                      onChange={(e) => handleVariantChange(0, "type", e.target.value)}
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="color">Color</Label>
-        <Input
-          id="color"
-          placeholder="Color"
-          value={formData.variants[0]?.color || ""}
-          onChange={(e) => handleVariantChange(0, "color", e.target.value)}
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="color">Color</Label>
+                    <Input
+                      id="color"
+                      placeholder="Color"
+                      value={formData.variants[0]?.color || ""}
+                      onChange={(e) => handleVariantChange(0, "color", e.target.value)}
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="size">Size</Label>
-        <Input
-          id="size"
-          placeholder="Size"
-          value={formData.variants[0]?.size || ""}
-          onChange={(e) => handleVariantChange(0, "size", e.target.value)}
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="size">Size</Label>
+                    <Input
+                      id="size"
+                      placeholder="Size"
+                      value={formData.variants[0]?.size || ""}
+                      onChange={(e) => handleVariantChange(0, "size", e.target.value)}
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="sellingPrice">Selling Price (R)</Label>
-        <Input
-          id="sellingPrice"
-          type="number"
-          step="0.01"
-          placeholder="0.00"
-          value={formData.variants[0]?.sellingPrice || ""}
-          onChange={(e) =>
-            handleVariantChange(0, "sellingPrice", parseFloat(e.target.value) || 0)
-          }
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="sellingPrice">Selling Price (R)</Label>
+                    <Input
+                      id="sellingPrice"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={formData.variants[0]?.sellingPrice || ""}
+                      onChange={(e) =>
+                        handleVariantChange(0, "sellingPrice", parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="stockPrice">Stock Price (R)</Label>
-        <Input
-          id="stockPrice"
-          type="number"
-          step="0.01"
-          placeholder="0.00"
-          value={formData.variants[0]?.stockPrice || ""}
-          onChange={(e) =>
-            handleVariantChange(0, "stockPrice", parseFloat(e.target.value) || 0)
-          }
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="stockPrice">Stock Price (R)</Label>
+                    <Input
+                      id="stockPrice"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={formData.variants[0]?.stockPrice || ""}
+                      onChange={(e) =>
+                        handleVariantChange(0, "stockPrice", parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </div>
 
-      <div>
-        <Label htmlFor="stockQuantity">Stock Quantity *</Label>
-        <Input
-          id="stockQuantity"
-          type="number"
-          placeholder="0"
-          value={formData.variants[0]?.stockQuantity || ""}
-          onChange={(e) =>
-            handleVariantChange(0, "stockQuantity", parseInt(e.target.value, 10) || 0)
-          }
-        />
-      </div>
+                  <div>
+                    <Label htmlFor="stockQuantity">Stock Quantity *</Label>
+                    <Input
+                      id="stockQuantity"
+                      type="number"
+                      placeholder="0"
+                      value={formData.variants[0]?.stockQuantity || ""}
+                      onChange={(e) =>
+                        handleVariantChange(0, "stockQuantity", parseInt(e.target.value, 10) || 0)
+                      }
+                    />
+                  </div>
 
-      <div className="col-span-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          placeholder="Variant description"
-          value={formData.variants[0]?.description || ""}
-          onChange={(e) => handleVariantChange(0, "description", e.target.value)}
-          rows={3}
-        />
-      </div>
+                  <div className="col-span-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Variant description"
+                      value={formData.variants[0]?.description || ""}
+                      onChange={(e) => handleVariantChange(0, "description", e.target.value)}
+                      rows={3}
+                    />
+                  </div>
 
-      <div className="col-span-2">
-        <Label htmlFor="images">Image URL</Label>
-        <Input
-          id="images"
-          placeholder="https://example.com/image.jpg"
-          value={formData.variants[0]?.images?.[0] || ""}
-          onChange={(e) => handleVariantImageChange(0, e.target.value)}
-        />
-      </div>
-    </div>
+                  <div className="col-span-2">
+                    <Label htmlFor="images">Image URL</Label>
+                    <Input
+                      id="images"
+                      placeholder="https://example.com/image.jpg"
+                      value={formData.variants[0]?.images?.[0] || ""}
+                      onChange={(e) => handleVariantImageChange(0, e.target.value)}
+                    />
+                  </div>
+                </div> */}
 
-    <div className="mt-6 flex justify-end space-x-2">
-      <Button
-        variant="outline"
-        onClick={() => {
-          resetForm();
-          setIsModalOpen(false);
-        }}
-      >
-        Cancel
-      </Button>
-      <Button onClick={editingProduct ? updateProduct : addProduct}>
-        {editingProduct ? "Update Product" : "Add Product"}
-      </Button>
-    </div>
-  </DialogContent>
-</Dialog>
+<VariantsSection formData={formData} setFormData={setFormData} />
+
+
+                <div className="mt-6 flex justify-end space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      resetForm();
+                      setIsModalOpen(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={editingProduct ? updateProduct : addProduct}>
+                    {editingProduct ? "Update Product" : "Add new product"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
   
             </div>
           </div>
@@ -696,7 +722,7 @@ const AdminInventory = () => {
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
-                  <Button variant="outline" onClick={() => deleteProduct(product)}size="sm">
+                  <Button  onClick={() => deleteProduct(product)}size="sm">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                   {/* <Button
@@ -773,61 +799,40 @@ const AdminInventory = () => {
                 <th className="border border-gray-300 p-2 text-left">Name</th>
                 <th className="border border-gray-300 p-2 text-left">Category</th>
                 <th className="border border-gray-300 p-2 text-left">Price (R)</th>
-                <th className="border border-gray-300 p-2 text-left">In Stock</th>
                 <th className="border border-gray-300 p-2 text-left">Stock</th>
                 <th className="border border-gray-300 p-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={7} className="text-center p-4">
-                    Loading...
-                  </td>
-                </tr>
-              )}
-              {!loading && filteredProducts.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="text-center p-4">
-                    No products found.
-                  </td>
-                </tr>
-              )}
-              {!loading &&
-                filteredProducts.map((product) => (
-                  <tr key={product.docId} className="border-t border-gray-300">
-                    <td className="border border-gray-300 p-2">{product.id}</td>
-                    <td className="border border-gray-300 p-2">{product.name}</td>
-                    <td className="border border-gray-300 p-2">{product.category}</td>
+                  <tr key="" className="border-t border-gray-300">
+                    <td className="border border-gray-300 p-2">5</td>
+                    <td className="border border-gray-300 p-2">5</td>
+                    <td className="border border-gray-300 p-2">5</td>
                     <td className="border border-gray-300 p-2">
-                      {product.price?.toFixed(2)}
+                    
                     </td>
                     <td className="border border-gray-300 p-2">
-                      {product.inStock ? (
-                        <Badge variant="success">Yes</Badge>
-                      ) : (
-                        <Badge variant="destructive">No</Badge>
-                      )}
+                     
                     </td>
-                    <td className="border border-gray-300 p-2">{product.stock}</td>
+                   
                     <td className="border border-gray-300 p-2 space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => openEditModal(product)}
+                        
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => deleteProduct(product)}
+                       
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </td>
                   </tr>
-                ))}
+              
             </tbody>
           </table>
         </CardContent>
