@@ -13,6 +13,7 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminCustomers from "./pages/AdminCustomers";
 import AdminInvoice from "./pages/AdminInvoice";
 import PublicStore from "./pages/PublicStore";
+import ProductDetailsPage from "./pages/ProductDetailsPage";
 import ShoppingCart from "./pages/ShoppingCart";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/admin/customers" element={<AdminCustomers />} />
             <Route path="/admin/invoice/:orderId" element={<AdminInvoice />} />
             <Route path="/store" element={<PublicStore />} />
+            <Route path="/store/product/:productId" element={<ProductDetailsPage />} />
             <Route path="/store/cart" element={<ShoppingCart />} />
             <Route path="/store/checkout" element={<Checkout />} />
             <Route path="/store/success" element={<OrderSuccess />} />

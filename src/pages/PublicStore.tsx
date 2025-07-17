@@ -1,3 +1,4 @@
+
 import { useState , useEffect} from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,14 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCart } from "@/contexts/CartContext";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/firebase";  // Your Firebase config file path
+import { db } from "@/firebase";
 
 import { 
   Search, 
   ShoppingCart, 
   Plus, 
   Store,
-  Filter
+  Filter,
+  Eye
 } from "lucide-react";
 
 const PublicStore = () => {
@@ -131,18 +133,6 @@ const PublicStore = () => {
           </p>
         </div>
 
-        {/* {filteredProducts.map((product) => (
-            <Card key={product.productID} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
-                {product.variants?.[0]?.images? (
-                  <img
-                    src={product.variants?.[0]?.images}
-                    alt={product.name}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (<Package className="h-12 w-12 text-muted-foreground" /> )}
-                </div> */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
             <Card key={product.productID} className="hover:shadow-lg transition-shadow group">
@@ -173,21 +163,34 @@ const PublicStore = () => {
                 <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                  Available in variety of colours
                 </p>
-                <Button
-              className="w-full"
-              disabled={product.status !== "In stock"}
-              onClick={() => handleAddToCart(product)}
-            >
-              {product.status === "In stock" ? (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add to Cart
-                </>
-              ) : (
-                "Out of Stock"
-              )}
-            </Button>
-
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    asChild
+                  >
+                    <Link to={`/store/product/${product.productID}`}>
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    disabled={product.status !== "In stock"}
+                    onClick={() => handleAddToCart(product)}
+                  >
+                    {product.status === "In stock" ? (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add to Cart
+                      </>
+                    ) : (
+                      "Out of Stock"
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
