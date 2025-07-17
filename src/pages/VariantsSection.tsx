@@ -67,7 +67,7 @@ function VariantsSection({ formData, setFormData }) {
     <div className="mt-6 border-t pt-4">
       <h4 className="font-semibold text-lg mb-4">Variants</h4>
   {/* Add Variant Button */}
-  <Button onClick={openAddModal}> <Plus className="h-4 w-4 mr-2" />Add new ariant</Button>
+  <Button onClick={openAddModal}> <Plus className="h-4 w-4 mr-2" />Add new variant</Button>
      
       {/* Variants Table/List */}
       {formData.variants.length > 0 ? (

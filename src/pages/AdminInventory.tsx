@@ -12,6 +12,8 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase"; // Adjust path based on your structure
 import { Checkbox } from "@/components/ui/checkbox";
 import VariantsSection from "./VariantsSection"
+// import CategoriesSection from "./CategoriesSection"
+
 import {
   addDoc,
   updateDoc,
@@ -59,7 +61,8 @@ const AdminInventory = () => {
   const [formData, setFormData] = useState({
     productID: 0,       // string - unique product identifier, e.g. "apron"
     name: "",            // string
-    category: "",        // string
+    category: "", 
+    // categories: [],       // string
     supplier: "",        // string
     productImage:"",
     batchNumber: "",     // string
@@ -113,6 +116,7 @@ const AdminInventory = () => {
       productID:0,      // string
       name: "",
       category: "",
+      // categories: [],
       supplier: "",
       productImage:"",
       batchNumber: "",
@@ -152,6 +156,7 @@ const AdminInventory = () => {
       productID: product.productID || "",
       name: product.name || "",
       category: product.category || "",
+      // categories: [],
       supplier: product.supplier || "",
       productImage: product.productImage || "",
       batchNumber: product.batchNumber || "",
@@ -392,6 +397,7 @@ const AdminInventory = () => {
               <Package className="h-8 w-8 text-primary" />
               <h1 className="text-2xl font-bold text-foreground">Inventory Management</h1>
             </div>
+
             <div className="flex items-center space-x-4">
 
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -400,6 +406,7 @@ const AdminInventory = () => {
                   <Plus className="h-4 w-4 mr-2" />
                   Add Product
                 </Button>
+                
               </DialogTrigger>
               <DialogContent className="max-w-3xl">
                 <DialogHeader>
@@ -431,14 +438,21 @@ const AdminInventory = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="category">Category *</Label>
-                    <Input
-                      id="category"
-                      placeholder="Category"
-                      value={formData.category}
-                      onChange={(e) => handleInputChange("category", e.target.value)}
-                    />
-                  </div>
+                  <Label htmlFor="category">Category *</Label>
+                  <input
+                    id="category"
+                    list="category-list"
+                    placeholder="Category"
+                    value={formData.category}
+                    onChange={(e) => handleInputChange("category", e.target.value)}
+                    className="border rounded p-1 w-full"
+                  />
+                  <datalist id="category-list">
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat} />
+                    ))}
+                  </datalist>
+                </div>
 
                   <div>
                     <Label htmlFor="supplier">Supplier *</Label>
@@ -631,8 +645,11 @@ const AdminInventory = () => {
             <CardContent className="p-4">
               <div className="text-2xl font-bold">{categories.length - 1}</div>
               <div className="text-sm text-muted-foreground">Categories</div>
+              {/* <CategoriesSection formData={formData} setFormData={setFormData} /> */}
+
             </CardContent>
           </Card>
+
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold">R{products.reduce((sum, p) => sum + (p.price * p.stock), 0).toFixed(2)}</div>
