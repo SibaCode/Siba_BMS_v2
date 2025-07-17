@@ -15,24 +15,12 @@ import {
   TrendingUp, 
   AlertTriangle,
   FileText,
-  Store
+  Store,
+  Settings,
+  Folder
 } from "lucide-react";
 
 const AdminDashboard = () => {
-  // Mock data - in real app this would come from backend
-  // const stats = {
-  //   totalProducts: 156,
-  //   lowStockItems: 8,
-  //   totalOrders: 342,
-  //   pendingOrders: 12,
-  //   totalCustomers: 89,
-  //   monthlyRevenue: 15420,
-  //   topProducts: [
-  //     { name: "Custom Aprons", sales: 45, revenue: 2250 },
-  //     { name: "Coffee Mugs", sales: 38, revenue: 1140 },
-  //     { name: "Umbrellas", sales: 22, revenue: 1320 }
-  //   ]
-  // };
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -61,6 +49,7 @@ const AdminDashboard = () => {
 
     fetchStats();
   }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -191,6 +180,57 @@ const AdminDashboard = () => {
               </p>
               <Button asChild className="w-full">
                 <Link to="/admin/customers">View Customers</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Settings className="h-5 w-5 text-primary" />
+                <span>Business Settings</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Manage your business information and settings
+              </p>
+              <Button asChild className="w-full">
+                <Link to="/admin/settings/business-info">Business Info</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Folder className="h-5 w-5 text-primary" />
+                <span>Category Management</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Create and manage product categories
+              </p>
+              <Button asChild className="w-full">
+                <Link to="/admin/settings/categories">Manage Categories</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                <span>Expense Tracking</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Track and manage business expenses
+              </p>
+              <Button asChild className="w-full">
+                <Link to="/admin/finance/expenses">Manage Expenses</Link>
               </Button>
             </CardContent>
           </Card>

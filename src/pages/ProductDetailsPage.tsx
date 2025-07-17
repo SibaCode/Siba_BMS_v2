@@ -72,12 +72,11 @@ const ProductDetailsPage = () => {
       : null;
 
     const itemToAdd = {
-      id: product.id,
+      id: parseInt(product.id),
       name: product.name,
       price: currentVariant?.price || product.price,
-      image: product.image,
-      quantity: quantity,
-      variant: currentVariant?.name || null
+      category: product.category,
+      image: product.image
     };
 
     addItem(itemToAdd);
