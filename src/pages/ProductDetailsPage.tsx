@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ interface Product {
 
 const ProductDetailsPage = () => {
   const { productId } = useParams<{ productId: string }>();
-  const { addToCart } = useCart();
+  const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -81,7 +80,7 @@ const ProductDetailsPage = () => {
       variant: currentVariant?.name || null
     };
 
-    addToCart(itemToAdd);
+    addItem(itemToAdd);
     alert(`Added ${quantity} ${product.name}${currentVariant ? ` (${currentVariant.name})` : ''} to cart!`);
   };
 
