@@ -61,6 +61,7 @@ const AdminInventory = () => {
     name: "",            // string
     category: "",        // string
     supplier: "",        // string
+    productImage:"",
     batchNumber: "",     // string
     status: "",          // string, e.g. "inStock" or "outOfStock"
     lastRestocked: "",   // string or Date (preferably Date)
@@ -121,6 +122,7 @@ const AdminInventory = () => {
       name: "",
       category: "",
       supplier: "",
+      productImage:"",
       batchNumber: "",
       status: "",
       lastRestocked: "",
@@ -159,6 +161,7 @@ const AdminInventory = () => {
       name: product.name || "",
       category: product.category || "",
       supplier: product.supplier || "",
+      productImage: product.productImage || "",
       batchNumber: product.batchNumber || "",
       status: product.status || "",
       lastRestocked: product.lastRestocked || "",
@@ -189,13 +192,12 @@ const AdminInventory = () => {
     setIsModalOpen(true);
   };
   const addProduct = async () => {
-    // Simple validation for main fields and at least one variant
-    console.log(formData)
     if (
       !formData.productID ||
       !formData.name ||
       !formData.category ||
       !formData.supplier ||
+      !formData.productImage ||
       !formData.batchNumber ||
       !formData.status ||
       !formData.lastRestocked ||
@@ -210,9 +212,9 @@ const AdminInventory = () => {
         !v.type ||
         !v.color ||
         !v.size ||
-        !v.sellingPrice ||
-        !v.stockPrice ||
-        !v.stockQuantity
+        v.sellingPrice === undefined ||
+        v.stockPrice === undefined ||
+        v.stockQuantity === undefined
       ) {
         alert("Please fill in all required variant fields.");
         return;
@@ -220,13 +222,12 @@ const AdminInventory = () => {
     }
   
     try {
-      const newId = formData.productID || generateNextId();
-  
       await addDoc(collection(db, "products"), {
-        productID: newId,
+        productID: formData.productID,
         name: formData.name,
         category: formData.category,
         supplier: formData.supplier,
+        productImage: formData.productImage,
         batchNumber: formData.batchNumber,
         status: formData.status,
         lastRestocked: formData.lastRestocked,
@@ -241,6 +242,7 @@ const AdminInventory = () => {
           images: v.images,
         })),
       });
+  
       await fetchProducts();
       setIsModalOpen(false);
       resetForm();
@@ -249,6 +251,8 @@ const AdminInventory = () => {
       alert("Failed to add product.");
     }
   };
+  
+  
   const updateProduct = async () => {
     if (!editingProduct) return;
       if (
@@ -256,6 +260,7 @@ const AdminInventory = () => {
       !formData.name ||
       !formData.category ||
       !formData.supplier ||
+      !formData.productImage ||
       !formData.batchNumber ||
       !formData.status ||
       !formData.lastRestocked ||
@@ -286,6 +291,7 @@ const AdminInventory = () => {
         name: formData.name,
         category: formData.category,
         supplier: formData.supplier,
+        productImage: formData.productImage,
         batchNumber: formData.batchNumber,
         status: formData.status,
         lastRestocked: formData.lastRestocked,
@@ -418,6 +424,15 @@ const AdminInventory = () => {
           placeholder="Supplier name"
           value={formData.supplier}
           onChange={(e) => handleInputChange("supplier", e.target.value)}
+        />
+      </div>
+      <div>
+        <Label htmlFor="productImage">productImage *</Label>
+        <Input
+          id="productImage"
+          placeholder="productImage"
+          value={formData.productImage}
+          onChange={(e) => handleInputChange("productImage", e.target.value)}
         />
       </div>
 
@@ -627,14 +642,7 @@ const AdminInventory = () => {
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {/* {filteredProducts.map((product) => {
-  console.log(product);
-  return (
-    <Card key={product.productID} className="hover:shadow-lg transition-shadow">
-      <span>Supplier: {product.variants?.[0]?.color || "No supplier found"}</span>
-    </Card>
-  );
-})} */}
+        
           {filteredProducts.map((product) => (
             <Card key={product.productID} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
