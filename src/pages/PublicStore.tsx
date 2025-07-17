@@ -51,7 +51,7 @@ const PublicStore = () => {
 
   const handleAddToCart = (product: any) => {
     addItem({
-      id: product.id,
+      id: product.productID,
       name: product.name,
       price: product.price,
       category: product.category,
@@ -131,13 +131,25 @@ const PublicStore = () => {
           </p>
         </div>
 
+        {/* {filteredProducts.map((product) => (
+            <Card key={product.productID} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
+                {product.variants?.[0]?.images? (
+                  <img
+                    src={product.variants?.[0]?.images}
+                    alt={product.name}
+                    className="object-cover w-full h-full"
+                  />
+                ) : (<Package className="h-12 w-12 text-muted-foreground" /> )}
+                </div> */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
-            <Card key={product.id} className="hover:shadow-lg transition-shadow group">
+            <Card key={product.productID} className="hover:shadow-lg transition-shadow group">
               <CardHeader className="pb-4">
               <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-                  {product.image ? (
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  {product.productImage ? (
+                    <img src={product.productImage} alt={product.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
                       <Store className="h-16 w-16 text-primary/50" />
@@ -150,31 +162,32 @@ const PublicStore = () => {
                     <Badge variant="secondary" className="mb-2">{product.category}</Badge>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-primary">R{product.price}</div>
+                    <div className="text-2xl font-bold text-primary">R{product.variants?.[0]?.sellingPrice }</div>
                     <div className="text-sm text-muted-foreground">
-                      {product.inStock ? `${product.stock} in stock` : "Out of stock"}
+                      {product.status}
                     </div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                  {product.description}
+                 Available in variety of colours
                 </p>
-                <Button 
-                  className="w-full" 
-                  disabled={!product.inStock}
-                  onClick={() => handleAddToCart(product)}
-                >
-                  {product.inStock ? (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add to Cart
-                    </>
-                  ) : (
-                    "Out of Stock"
-                  )}
-                </Button>
+                <Button
+              className="w-full"
+              disabled={product.status !== "In stock"}
+              onClick={() => handleAddToCart(product)}
+            >
+              {product.status === "In stock" ? (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add to Cart
+                </>
+              ) : (
+                "Out of Stock"
+              )}
+            </Button>
+
               </CardContent>
             </Card>
           ))}

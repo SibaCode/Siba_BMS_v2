@@ -122,18 +122,7 @@ const AdminInventory = () => {
       batchNumber: "",
       status: "",
       lastRestocked: "",
-      variants: [
-        {
-          type: "",
-          color: "",
-          size: "",
-          sellingPrice: "",
-          stockPrice: "",
-          stockQuantity: "",
-          description: "",
-          images: [],      
-        }
-      ],
+      variants: [],
     });
     setEditingProduct(null);
   };
@@ -189,6 +178,7 @@ const AdminInventory = () => {
     setIsModalOpen(true);
   };
   const addProduct = async () => {
+    console.log(formData.variants)
     if (
       !formData.productID ||
       !formData.name ||
@@ -464,14 +454,23 @@ const AdminInventory = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="productImage">productImage *</Label>
-                    <Input
-                      id="productImage"
-                      placeholder="productImage"
-                      value={formData.productImage}
-                      onChange={(e) => handleInputChange("productImage", e.target.value)}
-                    />
-                  </div>
+              <Label htmlFor="productImage">Product Image *</Label>
+              <Input
+                id="productImage"
+                placeholder="Product Image URL"
+                value={formData.productImage}
+                onChange={(e) => handleInputChange("productImage", e.target.value)}
+              />
+              {/* Image preview */}
+              {formData.productImage && (
+                <img
+                  src={formData.productImage}
+                  alt="Product Preview"
+                  className="mt-2 max-h-40 object-contain border rounded"
+                />
+              )}
+            </div>
+
 
                   <div>
                     <Label htmlFor="batchNumber">Batch Number *</Label>
@@ -601,7 +600,7 @@ const AdminInventory = () => {
                   </div>
                 </div> */}
 
-<VariantsSection formData={formData} setFormData={setFormData} />
+                <VariantsSection formData={formData} setFormData={setFormData} />
 
 
                 <div className="mt-6 flex justify-end space-x-2">
@@ -690,9 +689,9 @@ const AdminInventory = () => {
             <Card key={product.productID} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
-                {product.variants?.[0]?.images? (
+                {product.productImage ? (
                   <img
-                    src={product.variants?.[0]?.images}
+                    src={product.productImage}
                     alt={product.name}
                     className="object-cover w-full h-full"
                   />
@@ -779,81 +778,6 @@ const AdminInventory = () => {
         )}
       </div>
 
-       {/* Product table */}
-       <Card className="max-w-7xl mx-auto mt-6">
-        <CardHeader>
-          <CardTitle>Product List</CardTitle>
-          <div className="flex space-x-2 items-center">
-            <Input
-              placeholder="Search product by name"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-            <Select
-              value={categoryFilter}
-              onValueChange={setCategoryFilter}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full table-auto border-collapse border border-gray-200">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-gray-300 p-2 text-left">ID</th>
-                <th className="border border-gray-300 p-2 text-left">Name</th>
-                <th className="border border-gray-300 p-2 text-left">Category</th>
-                <th className="border border-gray-300 p-2 text-left">Price (R)</th>
-                <th className="border border-gray-300 p-2 text-left">Stock</th>
-                <th className="border border-gray-300 p-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-                  <tr key="" className="border-t border-gray-300">
-                    <td className="border border-gray-300 p-2">5</td>
-                    <td className="border border-gray-300 p-2">5</td>
-                    <td className="border border-gray-300 p-2">5</td>
-                    <td className="border border-gray-300 p-2">
-                    
-                    </td>
-                    <td className="border border-gray-300 p-2">
-                     
-                    </td>
-                   
-                    <td className="border border-gray-300 p-2 space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                       
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-              
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
     </div>
   );
 };

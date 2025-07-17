@@ -62,7 +62,26 @@ function VariantsSection({ formData, setFormData }) {
       [field]: value,
     }));
   };
-
+  const handleAddProduct = () => {
+    // ... logic to save the current product/variant(s) if needed
+  
+    // Clear variants so the table resets
+    setFormData(prev => ({
+      ...prev,
+      variants: []
+    }));
+  
+    // Also clear currentVariant modal form if needed
+    setCurrentVariant({
+      type: '',
+      color: '',
+      size: '',
+      sellingPrice: '',
+      images: [],
+      stockQuantity: 0,
+    });
+  };
+  
   return (
     <div className="mt-6 border-t pt-4">
       <h4 className="font-semibold text-lg mb-4">Variants</h4>
@@ -70,8 +89,7 @@ function VariantsSection({ formData, setFormData }) {
   <Button onClick={openAddModal}> <Plus className="h-4 w-4 mr-2" />Add new variant</Button>
      
       {/* Variants Table/List */}
-      {formData.variants.length > 0 ? (
-
+      {/* {formData.variants.length > 0 ? ( */}
       <table className="w-full table-auto border-collapse border border-gray-200">
             <thead>
               <tr className="bg-gray-100">
@@ -79,6 +97,7 @@ function VariantsSection({ formData, setFormData }) {
                 <th className="border border-gray-300 p-2 text-left">Color</th>
                 <th className="border border-gray-300 p-2 text-left">Size</th>
                 <th className="border border-gray-300 p-2 text-left">Selling Price (R)</th>
+                <th className="border border-gray-300 p-2 text-left">Image</th>
                 <th className="border border-gray-300 p-2 text-left">Stock Quantity</th>
                 <th className="border border-gray-300 p-2 text-left">Actions</th>
               </tr>
@@ -90,6 +109,18 @@ function VariantsSection({ formData, setFormData }) {
               <td className="border border-gray-300 p-2">{variant.color}</td>
               <td className="border border-gray-300 p-2">{variant.size}</td>
               <td className="border border-gray-300 p-2">{variant.sellingPrice}</td>
+              <td className="border border-gray-300 p-2">
+                {variant.images && variant.images[0] ? (
+                    <img 
+                    src={variant.images[0]} 
+                    alt="Variant" 
+                    className="max-h-20 object-contain"
+                    />
+                ) : (
+                    <span>No image</span>
+                )}
+                </td>
+
               <td className="border border-gray-300 p-2">{variant.stockQuantity}</td>
               <td className="p-2 space-x-2">
                  <Button variant="outline" size="sm"  onClick={() => openEditModal(variant, index)} className="flex-1">
@@ -106,9 +137,9 @@ function VariantsSection({ formData, setFormData }) {
           
           </table>
 
-) : (
+{/* ) : (
     <p className="text-sm text-gray-500 italic mb-4">No variants added yet.</p>
-  )}
+  )} */}
      
     
       {isModalOpen && (
@@ -201,36 +232,32 @@ function VariantsSection({ formData, setFormData }) {
               <div>
                 <label htmlFor="modal-image" className="block font-medium">Image URL</label>
                 <input
-                  id="modal-image"
-                   placeholder="https://example.com/image.jpg"
-                  type="text"
-                  value={currentVariant.images?.[0] || ""}
-                  onChange={(e) =>
+                    id="modal-image"
+                    placeholder="https://example.com/image.jpg"
+                    type="text"
+                    value={currentVariant.images?.[0] || ""}
+                    onChange={(e) =>
                     setCurrentVariant(prev => ({
-                      ...prev,
-                      images: [e.target.value],
+                        ...prev,
+                        images: [e.target.value],
                     }))
-                  }
-                  className="w-full border rounded p-1"
+                    }
+                    className="w-full border rounded p-1"
                 />
-              </div>
+                {/* Image preview */}
+                {currentVariant.images?.[0] && (
+                    <img
+                    src={currentVariant.images[0]}
+                    alt="Variant Preview"
+                    className="mt-2 max-h-40 object-contain border rounded"
+                    />
+                )}
+                </div>
+
             </div>
 
             <div className="mt-4 flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="px-4 py-2 border rounded border-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={saveVariant}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-              >
-                Save
-              </button>
+           
               <Button variant="outline" size="sm"   onClick={closeModal} className="flex-1">
                     <Edit className="h-4 w-4 mr-2" />
                     Cancel
