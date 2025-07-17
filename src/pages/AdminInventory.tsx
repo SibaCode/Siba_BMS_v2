@@ -10,7 +10,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase"; // Adjust path based on your structure
+import { Checkbox } from "@/components/ui/checkbox";
 
+import {
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 import { 
   ArrowLeft, 
   Plus, 
@@ -42,28 +52,52 @@ type Order = {
 const AdminInventory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    id: 0, // number - for adding, will generate
-    name: "",
-    category: "",
-    price: "",
-    image: "",
-    description: "",
-    inStock: false,
-    stock: "",
+    productID: 0,       // string - unique product identifier, e.g. "apron"
+    name: "",            // string
+    category: "",        // string
+    supplier: "",        // string
+    batchNumber: "",     // string
+    status: "",          // string, e.g. "inStock" or "outOfStock"
+    lastRestocked: "",   // string or Date (preferably Date)
+    variants: [          // array of variant objects
+      {
+        type: "",           // string, e.g. "full" or "half"
+        color: "",          // string
+        size: "",           // string
+        sellingPrice: "",   // number or string (if form input)
+        stockPrice: "",     // number or string
+        stockQuantity: "",  // number or string
+        description: "",    // string
+        images: [],         // array of strings (urls)
+      }
+    ],
   });
-useEffect(() => {
+  
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
   const fetchProducts = async () => {
+    setLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "products")); // Ensure your collection is named "products"
+      // Order by 'id' descending, limit 100 (adjust if needed)
+      // const q = query(collection(db, "products"), orderBy("id", "desc"), limit(100));
+      // const querySnapshot = await getDocs(q);
+      // const items = querySnapshot.docs.map((doc) => ({
+      //   docId: doc.id, // Firestore doc ID (string)
+      //   ...doc.data(),
+      // }));
+      const querySnapshot = await getDocs(collection(db, "products"));
       const items = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      docId: doc.id,   // "apron", "mug", etc.
+      ...doc.data()
+    }));
+      console.log(items)
       setProducts(items);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -72,18 +106,248 @@ useEffect(() => {
     }
   };
 
-  fetchProducts();
-}, []);
+  // const handleInputChange = (field: string, value: any) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [field]: value,
+  //   }));
+  // };
+
+  // Reset form for add
+ 
+  const resetForm = () => {
+    setFormData({
+      productID:0,      // string
+      name: "",
+      category: "",
+      supplier: "",
+      batchNumber: "",
+      status: "",
+      lastRestocked: "",
+      variants: [
+        {
+          type: "",
+          color: "",
+          size: "",
+          sellingPrice: "",
+          stockPrice: "",
+          stockQuantity: "",
+          description: "",
+          images: [],      
+        }
+      ],
+    });
+    setEditingProduct(null);
+  };
+  
+  // Generate next numeric id by getting max id + 1
+  const generateNextId = () => {
+    if (products.length === 0) return 1;
+    const maxId = Math.max(...products.map((p) => p.id || 0));
+    return maxId + 1;
+  };
+
+  const openAddModal = () => {
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (product: any) => {
+    setEditingProduct(product);
+    setFormData({
+      productID: product.productID || "",
+      name: product.name || "",
+      category: product.category || "",
+      supplier: product.supplier || "",
+      batchNumber: product.batchNumber || "",
+      status: product.status || "",
+      lastRestocked: product.lastRestocked || "",
+      variants: product.variants?.length > 0
+        ? product.variants.map((v: any) => ({
+            type: v.type || "",
+            color: v.color || "",
+            size: v.size || "",
+            sellingPrice: v.sellingPrice?.toString() || "",
+            stockPrice: v.stockPrice?.toString() || "",
+            stockQuantity: v.stockQuantity?.toString() || "",
+            description: v.description || "",
+            images: Array.isArray(v.images) ? v.images : [],
+          }))
+        : [
+            {
+              type: "",
+              color: "",
+              size: "",
+              sellingPrice: "",
+              stockPrice: "",
+              stockQuantity: "",
+              description: "",
+              images: [],
+            },
+          ],
+    });
+    setIsModalOpen(true);
+  };
+  const addProduct = async () => {
+    // Simple validation for main fields and at least one variant
+    console.log(formData)
+    if (
+      !formData.productID ||
+      !formData.name ||
+      !formData.category ||
+      !formData.supplier ||
+      !formData.batchNumber ||
+      !formData.status ||
+      !formData.lastRestocked ||
+      formData.variants.length === 0
+    ) {
+      alert("Please fill in all required main fields and add at least one variant.");
+      return;
+    }
+  
+    for (const v of formData.variants) {
+      if (
+        !v.type ||
+        !v.color ||
+        !v.size ||
+        !v.sellingPrice ||
+        !v.stockPrice ||
+        !v.stockQuantity
+      ) {
+        alert("Please fill in all required variant fields.");
+        return;
+      }
+    }
+  
+    try {
+      const newId = formData.productID || generateNextId();
+  
+      await addDoc(collection(db, "products"), {
+        productID: newId,
+        name: formData.name,
+        category: formData.category,
+        supplier: formData.supplier,
+        batchNumber: formData.batchNumber,
+        status: formData.status,
+        lastRestocked: formData.lastRestocked,
+        variants: formData.variants.map((v) => ({
+          type: v.type,
+          color: v.color,
+          size: v.size,
+          sellingPrice: parseFloat(v.sellingPrice),
+          stockPrice: parseFloat(v.stockPrice),
+          stockQuantity: parseInt(v.stockQuantity, 10),
+          description: v.description,
+          images: v.images,
+        })),
+      });
+      await fetchProducts();
+      setIsModalOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error("Error adding product:", error);
+      alert("Failed to add product.");
+    }
+  };
+  const updateProduct = async () => {
+    if (!editingProduct) return;
+      if (
+      !formData.productID ||
+      !formData.name ||
+      !formData.category ||
+      !formData.supplier ||
+      !formData.batchNumber ||
+      !formData.status ||
+      !formData.lastRestocked ||
+      formData.variants.length === 0
+    ) {
+      alert("Please fill in all required main fields and add at least one variant.");
+      return;
+    }
+  
+    for (const v of formData.variants) {
+      if (
+        !v.type ||
+        !v.color ||
+        !v.size ||
+        !v.sellingPrice ||
+        !v.stockPrice ||
+        !v.stockQuantity
+      ) {
+        alert("Please fill in all required variant fields.");
+        return;
+      }
+    }
+  
+    try {
+      const productRef = doc(db, "products", editingProduct.docId);
+      await updateDoc(productRef, {
+        productID: formData.productID,
+        name: formData.name,
+        category: formData.category,
+        supplier: formData.supplier,
+        batchNumber: formData.batchNumber,
+        status: formData.status,
+        lastRestocked: formData.lastRestocked,
+        variants: formData.variants.map((v) => ({
+          type: v.type,
+          color: v.color,
+          size: v.size,
+          sellingPrice: parseFloat(v.sellingPrice),
+          stockPrice: parseFloat(v.stockPrice),
+          stockQuantity: parseInt(v.stockQuantity, 10),
+          description: v.description,
+          images: v.images,
+        })),
+      });
+      await fetchProducts();
+      setIsModalOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error("Error updating product:", error);
+      alert("Failed to update product.");
+    }
+  };
+
+  const deleteProduct = async (product: any) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+  
+    try {
+      await deleteDoc(doc(db, "products", product.docId));
+      await fetchProducts();
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      alert("Failed to delete product.");
+    }
+  };
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      categoryFilter === "all" || product.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+  
+  const handleVariantChange = (index, field, value) => {
+    const variants = [...formData.variants];
+    variants[index] = { ...variants[index], [field]: value };
+    setFormData((prev) => ({ ...prev, variants }));
+  };
+  
+  const handleVariantImageChange = (index, imageUrl) => {
+    const variants = [...formData.variants];
+    variants[index] = { ...variants[index], images: [imageUrl] };
+    setFormData((prev) => ({ ...prev, variants }));
+  };
+
+  const lowStockCount = products.filter((p) => p.stock < 5).length;
 
   const categories = ["all", "Aprons", "Mugs", "Umbrellas"];
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
-
-  const lowStockCount = products.filter(p => p.stock < 5).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,68 +365,207 @@ useEffect(() => {
               <h1 className="text-2xl font-bold text-foreground">Inventory Management</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Product
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Add New Product</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Product Name</Label>
-                      <Input id="name" placeholder="Enter product name" />
-                    </div>
-                    <div>
-                      <Label htmlFor="category">Category</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Aprons">Aprons</SelectItem>
-                          <SelectItem value="Mugs">Mugs</SelectItem>
-                          <SelectItem value="Umbrellas">Umbrellas</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="price">Price</Label>
-                      <Input id="price" type="number" placeholder="0.00" />
-                    </div>
-                    <div>
-                      <Label htmlFor="stock">Stock Quantity</Label>
-                      <Input id="stock" type="number" placeholder="0" />
-                    </div>
-                    <div>
-                      <Label htmlFor="type">Type</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Perfect">Perfect</SelectItem>
-                          <SelectItem value="Misprint">Misprint</SelectItem>
-                          <SelectItem value="Limited Edition">Limited Edition</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="color">Color</Label>
-                      <Input id="color" placeholder="Color" />
-                    </div>
-                    <div className="col-span-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea id="description" placeholder="Product description" />
-                    </div>
-                  </div>
-                  <Button className="w-full">Add Product</Button>
-                </DialogContent>
-              </Dialog>
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+  <DialogTrigger asChild>
+    <Button onClick={openAddModal}>
+      <Plus className="h-4 w-4 mr-2" />
+      Add Product
+    </Button>
+  </DialogTrigger>
+  <DialogContent className="max-w-3xl">
+    <DialogHeader>
+      <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
+    </DialogHeader>
+
+    <div className="grid grid-cols-2 gap-4">
+      {/* Core Product Fields */}
+      <div>
+        <Label htmlFor="productID">Product ID *</Label>
+        <Input
+          id="productID"
+          type="text"
+          placeholder="e.g. PRD123"
+          value={formData.productID}
+          onChange={(e) => handleInputChange("productID", e.target.value)}
+          disabled={!!editingProduct}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="name">Product Name *</Label>
+        <Input
+          id="name"
+          placeholder="Product name"
+          value={formData.name}
+          onChange={(e) => handleInputChange("name", e.target.value)}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="category">Category *</Label>
+        <Input
+          id="category"
+          placeholder="Category"
+          value={formData.category}
+          onChange={(e) => handleInputChange("category", e.target.value)}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="supplier">Supplier *</Label>
+        <Input
+          id="supplier"
+          placeholder="Supplier name"
+          value={formData.supplier}
+          onChange={(e) => handleInputChange("supplier", e.target.value)}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="batchNumber">Batch Number *</Label>
+        <Input
+          id="batchNumber"
+          placeholder="Batch #"
+          value={formData.batchNumber}
+          onChange={(e) => handleInputChange("batchNumber", e.target.value)}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="status">Status *</Label>
+        <Input
+          id="status"
+          placeholder="e.g. Active / Inactive"
+          value={formData.status}
+          onChange={(e) => handleInputChange("status", e.target.value)}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="lastRestocked">Last Restocked</Label>
+        <Input
+          id="lastRestocked"
+          type="date"
+          value={formData.lastRestocked}
+          onChange={(e) => handleInputChange("lastRestocked", e.target.value)}
+        />
+      </div>
+    </div>
+
+    {/* Variant Fields – assuming first variant only */}
+    <div className="mt-6 border-t pt-4 grid grid-cols-2 gap-4">
+      <h4 className="col-span-2 font-semibold text-lg">Variant</h4>
+
+      <div>
+        <Label htmlFor="type">Type</Label>
+        <Input
+          id="type"
+          placeholder="e.g. Basic, Deluxe"
+          value={formData.variants[0]?.type || ""}
+          onChange={(e) => handleVariantChange(0, "type", e.target.value)}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="color">Color</Label>
+        <Input
+          id="color"
+          placeholder="Color"
+          value={formData.variants[0]?.color || ""}
+          onChange={(e) => handleVariantChange(0, "color", e.target.value)}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="size">Size</Label>
+        <Input
+          id="size"
+          placeholder="Size"
+          value={formData.variants[0]?.size || ""}
+          onChange={(e) => handleVariantChange(0, "size", e.target.value)}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="sellingPrice">Selling Price (R)</Label>
+        <Input
+          id="sellingPrice"
+          type="number"
+          step="0.01"
+          placeholder="0.00"
+          value={formData.variants[0]?.sellingPrice || ""}
+          onChange={(e) =>
+            handleVariantChange(0, "sellingPrice", parseFloat(e.target.value) || 0)
+          }
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="stockPrice">Stock Price (R)</Label>
+        <Input
+          id="stockPrice"
+          type="number"
+          step="0.01"
+          placeholder="0.00"
+          value={formData.variants[0]?.stockPrice || ""}
+          onChange={(e) =>
+            handleVariantChange(0, "stockPrice", parseFloat(e.target.value) || 0)
+          }
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="stockQuantity">Stock Quantity *</Label>
+        <Input
+          id="stockQuantity"
+          type="number"
+          placeholder="0"
+          value={formData.variants[0]?.stockQuantity || ""}
+          onChange={(e) =>
+            handleVariantChange(0, "stockQuantity", parseInt(e.target.value, 10) || 0)
+          }
+        />
+      </div>
+
+      <div className="col-span-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          placeholder="Variant description"
+          value={formData.variants[0]?.description || ""}
+          onChange={(e) => handleVariantChange(0, "description", e.target.value)}
+          rows={3}
+        />
+      </div>
+
+      <div className="col-span-2">
+        <Label htmlFor="images">Image URL</Label>
+        <Input
+          id="images"
+          placeholder="https://example.com/image.jpg"
+          value={formData.variants[0]?.images?.[0] || ""}
+          onChange={(e) => handleVariantImageChange(0, e.target.value)}
+        />
+      </div>
+    </div>
+
+    <div className="mt-6 flex justify-end space-x-2">
+      <Button
+        variant="outline"
+        onClick={() => {
+          resetForm();
+          setIsModalOpen(false);
+        }}
+      >
+        Cancel
+      </Button>
+      <Button onClick={editingProduct ? updateProduct : addProduct}>
+        {editingProduct ? "Update Product" : "Add Product"}
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
+  
             </div>
           </div>
         </div>
@@ -224,13 +627,21 @@ useEffect(() => {
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* {filteredProducts.map((product) => {
+  console.log(product);
+  return (
+    <Card key={product.productID} className="hover:shadow-lg transition-shadow">
+      <span>Supplier: {product.variants?.[0]?.color || "No supplier found"}</span>
+    </Card>
+  );
+})} */}
           {filteredProducts.map((product) => (
-            <Card key={product.id} className="hover:shadow-lg transition-shadow">
+            <Card key={product.productID} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
-                {product.image ? (
+                {product.variants?.[0]?.images? (
                   <img
-                    src={product.image}
+                    src={product.variants?.[0]?.images}
                     alt={product.name}
                     className="object-cover w-full h-full"
                   />
@@ -252,29 +663,49 @@ useEffect(() => {
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Price:</span>
-                    <span className="font-semibold">R{product.price}</span>
+                    <span className="font-semibold">R {product.variants?.[0]?.stockPrice}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Type:</span>
-                    <span>{product.type}</span>
+                    <span> {product.variants?.[0]?.type}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Color:</span>
-                    <span>{product.color}</span>
+                    <span>{product.variants?.[0]?.color}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Size:</span>
-                    <span>{product.size}</span>
+                    <span>{product.variants?.[0]?.size}</span>
+                    
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Desc:</span>
+                    <span>{product.description}</span>
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button variant="outline" size="sm"  onClick={() => openEditModal(product)}className="flex-1">
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" onClick={() => deleteProduct(product)}size="sm">
                     <Trash2 className="h-4 w-4" />
                   </Button>
+                  {/* <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditModal(product)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteProduct(product)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button> */}
+                  
                 </div>
               </CardContent>
             </Card>
@@ -296,6 +727,103 @@ useEffect(() => {
           </Card>
         )}
       </div>
+
+       {/* Product table */}
+       <Card className="max-w-7xl mx-auto mt-6">
+        <CardHeader>
+          <CardTitle>Product List</CardTitle>
+          <div className="flex space-x-2 items-center">
+            <Input
+              placeholder="Search product by name"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+            <Select
+              value={categoryFilter}
+              onValueChange={setCategoryFilter}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <table className="w-full table-auto border-collapse border border-gray-200">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2 text-left">ID</th>
+                <th className="border border-gray-300 p-2 text-left">Name</th>
+                <th className="border border-gray-300 p-2 text-left">Category</th>
+                <th className="border border-gray-300 p-2 text-left">Price (R)</th>
+                <th className="border border-gray-300 p-2 text-left">In Stock</th>
+                <th className="border border-gray-300 p-2 text-left">Stock</th>
+                <th className="border border-gray-300 p-2 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={7} className="text-center p-4">
+                    Loading...
+                  </td>
+                </tr>
+              )}
+              {!loading && filteredProducts.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="text-center p-4">
+                    No products found.
+                  </td>
+                </tr>
+              )}
+              {!loading &&
+                filteredProducts.map((product) => (
+                  <tr key={product.docId} className="border-t border-gray-300">
+                    <td className="border border-gray-300 p-2">{product.id}</td>
+                    <td className="border border-gray-300 p-2">{product.name}</td>
+                    <td className="border border-gray-300 p-2">{product.category}</td>
+                    <td className="border border-gray-300 p-2">
+                      {product.price?.toFixed(2)}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {product.inStock ? (
+                        <Badge variant="success">Yes</Badge>
+                      ) : (
+                        <Badge variant="destructive">No</Badge>
+                      )}
+                    </td>
+                    <td className="border border-gray-300 p-2">{product.stock}</td>
+                    <td className="border border-gray-300 p-2 space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditModal(product)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteProduct(product)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
     </div>
   );
 };
