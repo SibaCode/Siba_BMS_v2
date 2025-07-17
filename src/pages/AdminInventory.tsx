@@ -43,11 +43,19 @@ const AdminInventory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
-  // Mock data - in real app this would come from backend
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [products, setProducts] = useState<any[]>([]);
-const [loading, setLoading] = useState(true);
-
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    id: 0, // number - for adding, will generate
+    name: "",
+    category: "",
+    price: "",
+    image: "",
+    description: "",
+    inStock: false,
+    stock: "",
+  });
 useEffect(() => {
   const fetchProducts = async () => {
     try {
