@@ -12,6 +12,9 @@ import AdminInventory from "./pages/AdminInventory";
 import AdminOrders from "./pages/AdminOrders";
 import AdminCustomers from "./pages/AdminCustomers";
 import AdminInvoice from "./pages/AdminInvoice";
+import AdminBusinessInfoPage from "./pages/AdminBusinessInfoPage";
+import AdminCategoriesPage from "./pages/AdminCategoriesPage";
+import AdminExpensesPage from "./pages/AdminExpensesPage";
 import PublicStore from "./pages/PublicStore";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import ShoppingCart from "./pages/ShoppingCart";
@@ -34,6 +37,9 @@ const App = () => (
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/customers" element={<AdminCustomers />} />
             <Route path="/admin/invoice/:orderId" element={<AdminInvoice />} />
+            <Route path="/admin/settings/business-info" element={<AdminBusinessInfoPage />} />
+            <Route path="/admin/settings/categories" element={<AdminCategoriesPage />} />
+            <Route path="/admin/finance/expenses" element={<AdminExpensesPage />} />
             <Route path="/store" element={<PublicStore />} />
             <Route path="/store/product/:productId" element={<ProductDetailsPage />} />
             <Route path="/store/cart" element={<ShoppingCart />} />

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -435,7 +436,7 @@ const AdminInventory2 = () => {
                     </td>
                     <td className="border border-gray-300 p-2">
                       {product.inStock ? (
-                        <Badge variant="success">Yes</Badge>
+                        <Badge variant="default">Yes</Badge>
                       ) : (
                         <Badge variant="destructive">No</Badge>
                       )}
