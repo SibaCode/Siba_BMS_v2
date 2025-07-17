@@ -1,7 +1,12 @@
+import { useState , useEffect} from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { collection, getDocs } from "firebase/firestore";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { db } from "@/firebase"; // adjust the path if needed
 import { 
   Package, 
   ShoppingCart, 
@@ -15,20 +20,47 @@ import {
 
 const AdminDashboard = () => {
   // Mock data - in real app this would come from backend
-  const stats = {
-    totalProducts: 156,
-    lowStockItems: 8,
-    totalOrders: 342,
-    pendingOrders: 12,
-    totalCustomers: 89,
-    monthlyRevenue: 15420,
-    topProducts: [
-      { name: "Custom Aprons", sales: 45, revenue: 2250 },
-      { name: "Coffee Mugs", sales: 38, revenue: 1140 },
-      { name: "Umbrellas", sales: 22, revenue: 1320 }
-    ]
-  };
+  // const stats = {
+  //   totalProducts: 156,
+  //   lowStockItems: 8,
+  //   totalOrders: 342,
+  //   pendingOrders: 12,
+  //   totalCustomers: 89,
+  //   monthlyRevenue: 15420,
+  //   topProducts: [
+  //     { name: "Custom Aprons", sales: 45, revenue: 2250 },
+  //     { name: "Coffee Mugs", sales: 38, revenue: 1140 },
+  //     { name: "Umbrellas", sales: 22, revenue: 1320 }
+  //   ]
+  // };
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [totalCustomers, setTotalCustomers] = useState(0);
 
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const productsSnapshot = await getDocs(collection(db, "products"));
+        const ordersSnapshot = await getDocs(collection(db, "orders"));
+        const customersSnapshot = await getDocs(collection(db, "customers"));
+
+
+        setTotalProducts(productsSnapshot.size);
+        setTotalOrders(ordersSnapshot.size);
+        setTotalCustomers(ordersSnapshot.size);
+
+
+      } catch (err) {
+        console.error("Error fetching stats", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -60,12 +92,12 @@ const AdminDashboard = () => {
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalProducts}</div>
+              <div className="text-2xl font-bold">{totalProducts}</div>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <span>Low stock:</span>
-                <Badge variant={stats.lowStockItems > 5 ? "destructive" : "secondary"}>
+                <span>Low stock:</span> to investigate
+                {/* <Badge variant={stats.lowStockItems > 5 ? "destructive" : "secondary"}>
                   {stats.lowStockItems}
-                </Badge>
+                </Badge> */}
               </div>
             </CardContent>
           </Card>
@@ -76,10 +108,10 @@ const AdminDashboard = () => {
               <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalOrders}</div>
+              <div className="text-2xl font-bold">{totalOrders}</div>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <span>Pending:</span>
-                <Badge variant="secondary">{stats.pendingOrders}</Badge>
+                <span>Pending:</span>to investigate
+                {/* <Badge variant="secondary">{pendingOrders}</Badge> */}
               </div>
             </CardContent>
           </Card>
@@ -90,7 +122,7 @@ const AdminDashboard = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalCustomers}</div>
+              <div className="text-2xl font-bold">{totalCustomers}</div>
               <p className="text-sm text-muted-foreground">+5 this month</p>
             </CardContent>
           </Card>
@@ -101,7 +133,7 @@ const AdminDashboard = () => {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">R{stats.monthlyRevenue.toLocaleString()}</div>
+              {/* <div className="text-2xl font-bold">R{monthlyRevenue.toLocaleString()}</div> */}
               <div className="flex items-center space-x-1 text-sm text-success">
                 <TrendingUp className="h-3 w-3" />
                 <span>+12% from last month</span>
@@ -199,8 +231,8 @@ const AdminDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {stats.topProducts.map((product, index) => (
+              {/* <div className="space-y-3">
+                {topProducts.map((product, index) => (
                   <div key={index} className="flex justify-between items-center">
                     <div>
                       <div className="text-sm font-medium">{product.name}</div>
@@ -211,7 +243,7 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </div>

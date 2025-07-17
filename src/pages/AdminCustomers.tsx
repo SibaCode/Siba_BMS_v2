@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState , useEffect} from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { collection, getDocs } from "firebase/firestore";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { db } from "@/firebase"; // adjust the path if needed
+
 import { 
   ArrowLeft, 
   Search, 
@@ -18,52 +21,28 @@ const AdminCustomers = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Mock data - in real app this would come from backend
-  const customers = [
-    {
-      id: 1,
-      name: "John Doe",
-      phone: "078-123-4567",
-      email: "john.doe@email.com",
-      totalOrders: 5,
-      totalSpent: 567.89,
-      lastOrder: "2024-01-15",
-      joinDate: "2023-08-15",
-      status: "Active"
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      phone: "082-987-6543",
-      email: "jane.smith@email.com",
-      totalOrders: 3,
-      totalSpent: 289.45,
-      lastOrder: "2024-01-10",
-      joinDate: "2023-11-20",
-      status: "Active"
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      phone: "071-456-7890",
-      email: "mike.johnson@email.com",
-      totalOrders: 8,
-      totalSpent: 1234.56,
-      lastOrder: "2024-01-12",
-      joinDate: "2023-06-10",
-      status: "VIP"
-    },
-    {
-      id: 4,
-      name: "Sarah Wilson",
-      phone: "079-321-6547",
-      email: "sarah.wilson@email.com",
-      totalOrders: 1,
-      totalSpent: 45.99,
-      lastOrder: "2023-12-20",
-      joinDate: "2023-12-15",
-      status: "New"
-    }
-  ];
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "customers")); // Ensure your collection is named correctly
+        const items = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setCustomers(items);
+      } catch (error) {
+        console.error("Error fetching customers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchCustomers();
+  }, []);
+  
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

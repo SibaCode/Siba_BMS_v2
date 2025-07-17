@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/firebase"; // Adjust path based on your structure
+
 import { 
   ArrowLeft, 
   Plus, 
@@ -18,48 +21,51 @@ import {
   AlertTriangle,
   Package
 } from "lucide-react";
+type OrderItem = {
+  name: string;
+  quantity: number;
+  price: number;
+};
 
+type Order = {
+  id: string;
+  customer: string;
+  phone: string;
+  items: OrderItem[];
+  total: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  deliveryStatus: string;
+  orderDate: string;
+  deliveryDate: string | null;
+};
 const AdminInventory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Mock data - in real app this would come from backend
-  const products = [
-    {
-      id: 1,
-      name: "Premium Apron",
-      category: "Aprons",
-      price: 45.99,
-      stock: 23,
-      type: "Perfect",
-      color: "Navy Blue",
-      size: "Medium",
-      image: "/api/placeholder/150/150"
-    },
-    {
-      id: 2,
-      name: "Coffee Mug Set",
-      category: "Mugs",
-      price: 29.99,
-      stock: 3,
-      type: "Limited Edition",
-      color: "White",
-      size: "Standard",
-      image: "/api/placeholder/150/150"
-    },
-    {
-      id: 3,
-      name: "Travel Umbrella",
-      category: "Umbrellas",
-      price: 59.99,
-      stock: 15,
-      type: "Perfect",
-      color: "Black",
-      size: "Compact",
-      image: "/api/placeholder/150/150"
+  const [products, setProducts] = useState<any[]>([]);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "products")); // Ensure your collection is named "products"
+      const items = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setProducts(items);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  fetchProducts();
+}, []);
 
   const categories = ["all", "Aprons", "Mugs", "Umbrellas"];
 
@@ -214,8 +220,17 @@ const AdminInventory = () => {
             <Card key={product.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
-                  <Package className="h-12 w-12 text-muted-foreground" />
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="object-cover w-full h-full"
+                  />
+                ) : (<Package className="h-12 w-12 text-muted-foreground" /> )}
                 </div>
+                
+
+                
                 <CardTitle className="text-lg">{product.name}</CardTitle>
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary">{product.category}</Badge>
