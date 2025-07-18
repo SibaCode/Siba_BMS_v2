@@ -20,6 +20,7 @@ import ProductDetailsPage from "./pages/ProductDetailsPage";
 import ShoppingCart from "./pages/ShoppingCart";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import { AdminLayout } from "./components/AdminLayout";
 
 const queryClient = new QueryClient();
 
@@ -32,20 +33,57 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/inventory" element={<AdminInventory />} />
-            <Route path="/admin/orders" element={<AdminOrders />} />
-            <Route path="/admin/customers" element={<AdminCustomers />} />
-            <Route path="/admin/invoice/:orderId" element={<AdminInvoice />} />
-            <Route path="/admin/settings/business-info" element={<AdminBusinessInfoPage />} />
-            <Route path="/admin/settings/categories" element={<AdminCategoriesPage />} />
-            <Route path="/admin/finance/expenses" element={<AdminExpensesPage />} />
+            
+            {/* Admin routes with sidebar layout */}
+            <Route path="/admin" element={
+              <AdminLayout title="Dashboard Overview">
+                <AdminDashboard />
+              </AdminLayout>
+            } />
+            <Route path="/admin/inventory" element={
+              <AdminLayout title="Inventory Management">
+                <AdminInventory />
+              </AdminLayout>
+            } />
+            <Route path="/admin/orders" element={
+              <AdminLayout title="Order Management">
+                <AdminOrders />
+              </AdminLayout>
+            } />
+            <Route path="/admin/customers" element={
+              <AdminLayout title="Customer Management">
+                <AdminCustomers />
+              </AdminLayout>
+            } />
+            <Route path="/admin/invoice/:orderId" element={
+              <AdminLayout title="Invoice Details">
+                <AdminInvoice />
+              </AdminLayout>
+            } />
+            <Route path="/admin/settings/business-info" element={
+              <AdminLayout title="Business Information">
+                <AdminBusinessInfoPage />
+              </AdminLayout>
+            } />
+            <Route path="/admin/settings/categories" element={
+              <AdminLayout title="Category Management">
+                <AdminCategoriesPage />
+              </AdminLayout>
+            } />
+            <Route path="/admin/finance/expenses" element={
+              <AdminLayout title="Expense Management">
+                <AdminExpensesPage />
+              </AdminLayout>
+            } />
+            
+            {/* Public store routes */}
             <Route path="/store" element={<PublicStore />} />
             <Route path="/store/product/:productId" element={<ProductDetailsPage />} />
             <Route path="/store/cart" element={<ShoppingCart />} />
             <Route path="/store/checkout" element={<Checkout />} />
             <Route path="/store/success" element={<OrderSuccess />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            
+            {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
