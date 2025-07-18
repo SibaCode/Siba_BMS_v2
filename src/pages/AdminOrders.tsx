@@ -47,14 +47,17 @@ const AdminOrders = () => {
   }, []);
   
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || order.paymentStatus.toLowerCase() === statusFilter;
+    const customerName = order.customerInfo?.name || order.customer || '';
+    const orderId = order.id || '';
+    const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         orderId.toLowerCase().includes(searchTerm.toLowerCase());
+    const paymentStatus = order.paymentStatus || '';
+    const matchesStatus = statusFilter === "all" || paymentStatus.toLowerCase() === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const getStatusBadgeVariant = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case "paid":
         return "default";
       case "pending":
@@ -67,7 +70,7 @@ const AdminOrders = () => {
   };
 
   const getDeliveryStatusBadgeVariant = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case "delivered":
         return "default";
       case "shipped":
@@ -79,8 +82,37 @@ const AdminOrders = () => {
     }
   };
 
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  const pendingOrders = orders.filter(order => order.paymentStatus === "Pending").length;
+  // Calculate reports with safe fallbacks
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const pendingOrders = orders.filter(order => (order.paymentStatus || '').toLowerCase() === "pending").length;
+  const completedOrders = orders.filter(order => (order.paymentStatus || '').toLowerCase() === "paid").length;
+  const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+  
+  // Export CSV functionality
+  const exportToCSV = () => {
+    const csvHeaders = ['Order ID', 'Customer', 'Phone', 'Total', 'Payment Status', 'Delivery Status', 'Order Date'];
+    const csvData = orders.map(order => [
+      order.id || '',
+      order.customerInfo?.name || order.customer || '',
+      order.customerInfo?.phone || order.phone || '',
+      order.total || 0,
+      order.paymentStatus || '',
+      order.deliveryStatus || '',
+      order.orderDate || order.createdAt || ''
+    ]);
+    
+    const csvContent = [csvHeaders, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,7 +130,7 @@ const AdminOrders = () => {
               <h1 className="text-2xl font-bold text-foreground">Order Management</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline">
+              <Button variant="outline" onClick={exportToCSV}>
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
               </Button>
@@ -118,19 +150,19 @@ const AdminOrders = () => {
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-secondary">{pendingOrders}</div>
+              <div className="text-2xl font-bold text-amber-600">{pendingOrders}</div>
               <div className="text-sm text-muted-foreground">Pending Orders</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold">R{totalRevenue.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-green-600">R{totalRevenue.toFixed(2)}</div>
               <div className="text-sm text-muted-foreground">Total Revenue</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold">R{(totalRevenue / orders.length).toFixed(2)}</div>
+              <div className="text-2xl font-bold text-blue-600">R{averageOrderValue.toFixed(2)}</div>
               <div className="text-sm text-muted-foreground">Average Order</div>
             </CardContent>
           </Card>
@@ -183,38 +215,38 @@ const AdminOrders = () => {
               <TableBody>
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell className="font-medium">{order.id || 'N/A'}</TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{order.customer}</div>
-                        <div className="text-sm text-muted-foreground">{order.phone}</div>
+                        <div className="font-medium">{order.customerInfo?.name || order.customer || 'N/A'}</div>
+                        <div className="text-sm text-muted-foreground">{order.customerInfo?.phone || order.phone || 'N/A'}</div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {order.items.map((item, index) => (
+                        {(order.items || []).map((item, index) => (
                           <div key={index}>
-                            {item.name} x{item.quantity}
+                            {item.name || item.productName || 'Product'} x{item.quantity || 1}
                           </div>
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">R{order.total.toFixed(2)}</TableCell>
+                    <TableCell className="font-medium">R{(order.total || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <div>{order.paymentMethod}</div>
+                        <div>{order.paymentMethod || 'N/A'}</div>
                         <Badge variant={getStatusBadgeVariant(order.paymentStatus)} className="mt-1">
-                          {order.paymentStatus}
+                          {order.paymentStatus || 'Unknown'}
                         </Badge>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={getDeliveryStatusBadgeVariant(order.deliveryStatus)}>
-                        {order.deliveryStatus}
+                        {order.deliveryStatus || 'Processing'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">
-                      <div>{order.orderDate}</div>
+                      <div>{order.orderDate || order.createdAt || 'N/A'}</div>
                       {order.deliveryDate && (
                         <div className="text-muted-foreground">Delivered: {order.deliveryDate}</div>
                       )}
