@@ -367,7 +367,10 @@ const AdminInventory = () => {
     setFormData({ ...formData, variants: updatedVariants });
   };
   
-  const lowStockCount = products.filter((p) => p.stock < 5).length;
+  const lowStockCount = products.filter((p) => {
+    const totalStock = p.variants?.reduce((sum: number, variant: any) => sum + (variant.stockQuantity || 0), 0) || 0;
+    return totalStock < 5;
+  }).length;
 
   const categories = ["all", "Aprons", "Mugs", "Umbrellas"];
 
@@ -651,7 +654,14 @@ const AdminInventory = () => {
 
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold">R{products.reduce((sum, p) => sum + (p.price * p.stock), 0).toFixed(2)}</div>
+              <div className="text-2xl font-bold">
+                R{products.reduce((sum, p) => {
+                  const productValue = p.variants?.reduce((variantSum: number, variant: any) => 
+                    variantSum + ((variant.sellingPrice || 0) * (variant.stockQuantity || 0)), 0
+                  ) || 0;
+                  return sum + productValue;
+                }, 0).toFixed(2)}
+              </div>
               <div className="text-sm text-muted-foreground">Total Value</div>
             </CardContent>
           </Card>
@@ -683,83 +693,116 @@ const AdminInventory = () => {
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        
-          {filteredProducts.map((product) => (
-            <Card key={product.productID} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
-                {product.productImage ? (
-                  <img
-                    src={product.productImage}
-                    alt={product.name}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (<Package className="h-12 w-12 text-muted-foreground" /> )}
-                </div>
-                
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map((product) => {
+            const totalStock = product.variants?.reduce((sum: number, variant: any) => sum + (variant.stockQuantity || 0), 0) || 0;
+            const isLowStock = totalStock < 5;
+            const priceRange = product.variants?.length > 1 
+              ? `R${Math.min(...product.variants.map((v: any) => v.sellingPrice || 0))} - R${Math.max(...product.variants.map((v: any) => v.sellingPrice || 0))}`
+              : `R${product.variants?.[0]?.sellingPrice || 0}`;
 
+            return (
+              <Card key={product.productID} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                    {product.productImage ? (
+                      <img
+                        src={product.productImage}
+                        alt={product.name}
+                        className="object-cover w-full h-full rounded-lg"
+                      />
+                    ) : (
+                      <Package className="h-12 w-12 text-muted-foreground" />
+                    )}
+                  </div>
+
+                  <CardTitle className="text-lg">{product.name}</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary">{product.category}</Badge>
+                    <Badge variant={isLowStock ? "destructive" : "default"}>
+                      {isLowStock && <AlertTriangle className="h-3 w-3 mr-1" />}
+                      {totalStock} total stock
+                    </Badge>
+                  </div>
+                </CardHeader>
                 
-                <CardTitle className="text-lg">{product.name}</CardTitle>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary">{product.category}</Badge>
-                  <Badge variant={product.stock < 5 ? "destructive" : "default"}>
-                    {product.stock < 5 && <AlertTriangle className="h-3 w-3 mr-1" />}
-                    {product.stock} in stock
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Price:</span>
-                    <span className="font-semibold">R {product.variants?.[0]?.stockPrice}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Type:</span>
-                    <span> {product.variants?.[0]?.type}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Color:</span>
-                    <span>{product.variants?.[0]?.color}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Size:</span>
-                    <span>{product.variants?.[0]?.size}</span>
+                <CardContent>
+                  <div className="space-y-3 mb-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Price Range:</span>
+                      <span className="font-semibold">{priceRange}</span>
+                    </div>
                     
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Variants:</span>
+                      <span className="font-medium">{product.variants?.length || 0}</span>
+                    </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Supplier:</span>
+                      <span className="truncate ml-2">{product.supplier}</span>
+                    </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Status:</span>
+                      <Badge variant={product.status === "Active" ? "default" : "secondary"} className="text-xs">
+                        {product.status}
+                      </Badge>
+                    </div>
+
+                    {/* Variants Preview */}
+                    {product.variants && product.variants.length > 0 && (
+                      <div className="mt-3 pt-3 border-t">
+                        <div className="text-xs font-medium text-muted-foreground mb-2">Variant Details:</div>
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                          {product.variants.slice(0, 3).map((variant: any, index: number) => (
+                            <div key={index} className="bg-muted/50 p-2 rounded text-xs">
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium">
+                                  {variant.color} {variant.size} {variant.type}
+                                </span>
+                                <Badge variant={variant.stockQuantity < 5 ? "destructive" : "outline"} className="text-xs">
+                                  {variant.stockQuantity}
+                                </Badge>
+                              </div>
+                              <div className="flex justify-between mt-1">
+                                <span>R{variant.sellingPrice}</span>
+                                <span className="text-muted-foreground">Cost: R{variant.stockPrice}</span>
+                              </div>
+                            </div>
+                          ))}
+                          {product.variants.length > 3 && (
+                            <div className="text-center text-xs text-muted-foreground py-1">
+                              +{product.variants.length - 3} more variants
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Desc:</span>
-                    <span>{product.description}</span>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <Button variant="outline" size="sm"  onClick={() => openEditModal(product)}className="flex-1">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button  onClick={() => deleteProduct(product)}size="sm">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                  {/* <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditModal(product)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => deleteProduct(product)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button> */}
                   
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => openEditModal(product)} 
+                      className="flex-1"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => deleteProduct(product)} 
+                      size="sm"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {filteredProducts.length === 0 && (
