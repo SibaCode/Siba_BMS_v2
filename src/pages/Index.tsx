@@ -41,6 +41,12 @@ const Index = () => {
                   Admin Dashboard
                 </Link>
               </Button>
+              <Button asChild variant="outline" size="lg" className="text-lg px-8">
+                <Link to="/storefront">
+                  <Store className="h-5 w-5 mr-2" />
+                  Business Profile
+                </Link>
+              </Button>
             </div>
           </div>
         </div>

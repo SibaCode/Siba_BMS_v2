@@ -16,6 +16,8 @@ import AdminBusinessInfoPage from "./pages/AdminBusinessInfoPage";
 import AdminCategoriesPage from "./pages/AdminCategoriesPage";
 import AdminExpensesPage from "./pages/AdminExpensesPage";
 import PublicStore from "./pages/PublicStore";
+import StorefrontPage from "./pages/StorefrontPage";
+import BusinessInfoPage from "./pages/BusinessInfoPage";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import ShoppingCart from "./pages/ShoppingCart";
 import Checkout from "./pages/Checkout";
@@ -62,9 +64,10 @@ const App = () => (
             } />
             <Route path="/admin/settings/business-info" element={
               <AdminLayout title="Business Information">
-                <AdminBusinessInfoPage />
+                <BusinessInfoPage />
               </AdminLayout>
             } />
+            <Route path="/storefront" element={<StorefrontPage />} />
             <Route path="/admin/settings/categories" element={
               <AdminLayout title="Category Management">
                 <AdminCategoriesPage />
