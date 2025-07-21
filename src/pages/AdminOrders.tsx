@@ -48,11 +48,11 @@ const AdminOrders = () => {
   }, []);
   
   const filteredOrders = orders.filter(order => {
-    const customerName = order.customerInfo?.name || order.customer || '';
-    const orderId = order.id || '';
+    const customerName = String(order.customerInfo?.name || order.customer || '');
+    const orderId = String(order.id || '');
     const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          orderId.toLowerCase().includes(searchTerm.toLowerCase());
-    const paymentStatus = order.paymentStatus || '';
+    const paymentStatus = String(order.paymentStatus || '');
     const matchesStatus = statusFilter === "all" || paymentStatus.toLowerCase() === statusFilter;
     return matchesSearch && matchesStatus;
   });
