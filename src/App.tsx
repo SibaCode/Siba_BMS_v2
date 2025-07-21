@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminInventory from "./pages/AdminInventory";
 import AdminOrders from "./pages/AdminOrders";
+import AdminCreateOrder from "./pages/AdminCreateOrder";
 import AdminCustomers from "./pages/AdminCustomers";
 import AdminInvoice from "./pages/AdminInvoice";
 import AdminBusinessInfoPage from "./pages/AdminBusinessInfoPage";
@@ -52,6 +53,7 @@ const App = () => (
                 <AdminOrders />
               </AdminLayout>
             } />
+            <Route path="/admin/orders/create" element={<AdminCreateOrder />} />
             <Route path="/admin/customers" element={
               <AdminLayout title="Customer Management">
                 <AdminCustomers />

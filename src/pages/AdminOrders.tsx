@@ -16,7 +16,8 @@ import {
   FileText, 
   Download,
   ShoppingCart,
-  Eye
+  Eye,
+  Plus
 } from "lucide-react";
 
 const AdminOrders = () => {
@@ -130,6 +131,12 @@ const AdminOrders = () => {
               <h1 className="text-2xl font-bold text-foreground">Order Management</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <Button asChild className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700">
+                <Link to="/admin/orders/create">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Order
+                </Link>
+              </Button>
               <Button variant="outline" onClick={exportToCSV}>
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
