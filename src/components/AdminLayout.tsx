@@ -164,17 +164,17 @@ function AppSidebar() {
 
 function AdminHeader({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
-    <header className="border-b bg-background px-6 py-4">
-      <div className="flex items-center justify-between">
+    <header className="border-b bg-background px-3 sm:px-6 py-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <SidebarTrigger />
-          <h1 className="text-2xl font-semibold">{title}</h1>
+          <h1 className="text-lg sm:text-2xl font-semibold truncate">{title}</h1>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="relative">
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="relative flex-1 sm:flex-none">
             <Input 
               placeholder="Search..." 
-              className="w-64 pr-10"
+              className="w-full sm:w-64 pr-10"
             />
           </div>
           {children}
@@ -199,7 +199,7 @@ export function AdminLayout({ children, title, headerActions }: AdminLayoutProps
           <AdminHeader title={title}>
             {headerActions}
           </AdminHeader>
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-3 sm:p-6">
             {children}
           </main>
         </SidebarInset>
