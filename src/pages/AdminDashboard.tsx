@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,10 @@ import {
   Truck
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { InventoryOverview } from "@/pages/components/InventoryOverview";
+import RecentOrders from "@/pages/components/RecentOrders";
+import CustomerOverview from "@/pages/components/CustomerOverview";
+
 
 // Mock data for enhanced dashboard
 const stockOverviewData = [
@@ -91,31 +95,268 @@ const cardVariants = {
 };
 
 const AdminDashboard = () => {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [customers, setCustomers] = useState<any[]>([]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const [totalProducts, setTotalProducts] = useState(0);
+  // const [totalOrders, setTotalOrders] = useState(0);
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Calculate dynamic stats
+  const lowStockCategories = stockOverviewData.filter(item => item.isLowStock).length;
+  const totalStockItems = stockOverviewData.reduce((sum, item) => sum + item.units, 0);
+  // const deliveredOrders = orderStatusData.find(item => item.status === 'Delivered')?.count || 0;
+  // const notDeliveredOrders = orderStatusData.find(item => item.status === 'Not Delivered')?.count || 0;
+  const paidAmount = paymentStatusData.find(item => item.status === 'Paid')?.count || 0;
+  const [businessInfo, setBusinessInfo] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchBusinessInfo() {
       try {
-        const ordersCollection = collection(db, "orders");
-        const ordersSnapshot = await getDocs(ordersCollection);
-        const ordersData = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setOrders(ordersData);
-
-        const customersCollection = collection(db, "customers");
-        const customersSnapshot = await getDocs(customersCollection);
-        const customersData = customersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setCustomers(customersData);
+        const businessInfoCol = collection(db, "businessInfo");  
+        const businessInfoSnapshot = await getDocs(businessInfoCol);
+        const businessInfoList = businessInfoSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setBusinessInfo(businessInfoList);
+        console.log(businessInfoList)
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching products:", error);
+      }
+    }
+    fetchBusinessInfo();
+  }, []);
+
+
+  const [todaySales] = useState(850);
+  const [monthlyRevenue] = useState(12340);
+  const [products, setProducts] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  
+console.log(products)
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const productsSnapshot = await getDocs(collection(db, "products"));
+        const ordersSnapshot = await getDocs(collection(db, "orders"));
+        const customersSnapshot = await getDocs(collection(db, "customers"));
+        console.log(productsSnapshot)
+
+        setTotalProducts(productsSnapshot.size);
+        setTotalCustomers(customersSnapshot.size);
+      } catch (err) {
+        console.error("Error fetching stats", err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchData();
+    fetchStats();
   }, []);
+ ;
 
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, "products"));
+      const items = querySnapshot.docs.map(doc => ({
+      docId: doc.id, 
+      ...doc.data()
+    }));
+      console.log(items)
+      setProducts(items);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, "orders"));
+      const items = querySnapshot.docs.map(doc => ({
+        docId: doc.id,
+        ...doc.data(),
+      }));
+      console.log("Orders:", items);
+      setOrders(items);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchCustomers = async () => {
+    setLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, "customers"));
+      const items = querySnapshot.docs.map(doc => ({
+        docId: doc.id,
+        ...doc.data(),
+      }));
+      console.log("Customers:", items);
+      setCustomers(items);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchProducts();
+    fetchOrders();
+    fetchCustomers();
+  }, [])
+const lowStockThreshold = 10;
+
+const categoryStock = products.reduce((acc, product) => {
+  const totalStockForProduct = product.variants.reduce(
+    (sum, variant) => sum + (variant.stockQuantity || 0),
+    0
+  );
+  if (acc[product.category]) {
+    acc[product.category] += totalStockForProduct;
+  } else {
+    acc[product.category] = totalStockForProduct;
+  }
+  return acc;
+}, {} as Record<string, number>);
+
+// Convert to array and add isLow flag
+const categoryStockSummary = Object.entries(categoryStock).map(
+  ([category, totalStock]: [string, number]) => ({
+    category,
+    totalStock,
+    isLow: totalStock < lowStockThreshold,
+  })
+);
+const totalStock = categoryStockSummary.reduce(
+  (sum, { totalStock }) => sum + totalStock,
+  0
+);
+const lowStockCount = categoryStockSummary.filter(c => c.isLow).length;
+const totalOrders = orders.length;
+
+const paidOrders = orders.filter(o => o.paymentStatus?.toLowerCase() === "paid");
+const pendingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "pending");
+const failedPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "failed");
+const processingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "processing");
+console.log(paidOrders)
+const deliveredOrders = orders.filter(
+  o =>
+    o.deliveryStatus?.toLowerCase() === "delivered" ||
+    o.status?.toLowerCase() === "delivered"
+);
+const notDeliveredOrders = orders.length - deliveredOrders.length;
+
+const totalRevenue = paidOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+
+
+const newCustomers = customers.length
+  // Flatten variants for the table
+  const flattenedVariants = products.flatMap((product) =>
+    product.variants.map((variant) => ({
+      docId: product.docId,
+      name: product.name,
+      category: product.category,
+      variantType: variant.type,
+      size: variant.size,
+      color: variant.color,
+      stockQuantity: variant.stockQuantity,
+      sellingPrice: variant.sellingPrice,
+      productImage: product.productImage,
+      status: variant.stockQuantity <= 5 ? "Low Stock" : product.status,
+    }))
+  );
+
+  // Filter based on search input (checks name, category, variantType, color, size)
+  const filteredVariants = flattenedVariants.filter((item) =>
+    [
+      item.name,
+      item.category,
+      item.variantType,
+      item.color,
+      item.size,
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+
+  const LOW_STOCK_THRESHOLD = 5; // define what "low stock" means
+
+  // Calculate total units across all products
+  const totalUnits = products.reduce(
+    (total, product) =>
+      total +
+      product.variants.reduce((sum, variant) => sum + (variant.stockQuantity || 0), 0),
+    0
+  );
+  
+  // For each product, get units and low stock status
+  const productStockInfo = products.map(product => {
+    const units = product.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+    const hasLowStock = product.variants.some(v => (v.stockQuantity || 0) < LOW_STOCK_THRESHOLD);
+    return {
+      name: product.name,
+      units,
+      hasLowStock,
+    };
+  });
+  const paidOrdersCount = React.useMemo(() => {
+    return orders.filter(order => order.paymentStatus?.toLowerCase() === "paid").length;
+  }, [orders]);
+
+
+  const statsCards = [
+    {
+      title: "Total Stock Items",
+      value: `${totalUnits} units`,
+      description: "of inventory",
+      icon: Package,
+      color: "from-blue-500 to-blue-600",
+      details: productStockInfo,
+    },
+    {
+      title: "Total orders",
+      value: `${orders.length} order `,
+      description: "received",
+      icon: CheckCircle,
+      color: "from-green-500 to-emerald-600",
+    },
+    {
+  title: "Paid Orders",
+  value: `${paidOrdersCount}`,
+  description: "orders paid",
+  icon: CreditCard, // or any icon you like
+  color: "from-green-500 to-green-600",
+    },
+    {
+      title: "New Customers",
+      value: loading ? "..." : newCustomers,
+      description: "Recently joined",
+      icon: UserPlus,
+      color: "from-amber-500 to-orange-600",
+      change: "This week"
+    }
+  ];
+
 
   return (
     <motion.div 
@@ -124,387 +365,45 @@ const AdminDashboard = () => {
       initial="hidden"
       animate="visible"
     >
-      {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="card-gradient shadow-elegant transition-smooth hover:shadow-glow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium">Total Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-gradient">{inventory.length}</div>
-              <p className="text-xs text-muted-foreground">Across all categories</p>
-            </CardContent>
-          </Card>
-        </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card className="card-gradient shadow-elegant transition-smooth hover:shadow-glow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium">Total Orders</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-gradient">{orders.length || recentOrders.length}</div>
-              <p className="text-xs text-muted-foreground">All time orders</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="card-gradient shadow-elegant transition-smooth hover:shadow-glow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-gradient">${totalRevenue.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Lifetime earnings</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="card-gradient shadow-elegant transition-smooth hover:shadow-glow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium">Avg. Order Value</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-gradient">${averageOrderValue.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Per order average</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Stock Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  <span className="text-sm sm:text-base">Stock Overview</span>
-                </div>
-                <Badge variant="secondary" className="sm:ml-auto w-fit">
-                  {stockOverviewData.filter(item => item.isLowStock).length} Low Stock
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 sm:space-y-4">
-                {stockOverviewData.map((item, index) => (
-                  <motion.div
-                    key={item.category}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 + index * 0.1 }}
-                    className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-secondary/50"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className={`w-3 h-3 rounded-full ${item.isLowStock ? 'bg-warning' : 'bg-success'}`} />
-                      <span className="font-medium text-sm sm:text-base">{item.category}</span>
-                    </div>
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <span className="text-base sm:text-lg font-bold">{item.units}</span>
-                      <span className="text-xs sm:text-sm text-muted-foreground">units</span>
-                      {item.isLowStock && (
-                        <AlertTriangle className="h-4 w-4 text-warning" />
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  {stockOverviewData.filter(item => item.isLowStock).length} categories need restocking
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Order & Payment Summary */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                <span className="text-sm sm:text-base">Order & Payment Summary</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 sm:space-y-6">
-              {/* Order Status */}
-              <div>
-                <h4 className="font-semibold mb-3 text-sm sm:text-base">Order Status</h4>
-                <div className="space-y-2 sm:space-y-3">
-                  {orderStatusData.map((item, index) => (
-                    <motion.div
-                      key={item.status}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.7 + index * 0.1 }}
-                      className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-secondary/30"
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        {item.status === 'Delivered' ? (
-                          <CheckCircle className="h-4 w-4 text-success" />
-                        ) : (
-                          <Clock className="h-4 w-4 text-warning" />
-                        )}
-                        <span className="text-sm sm:text-base">{item.status}</span>
+           <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+              variants={containerVariants}
+            >
+              {statsCards.map((stat, index) => (
+                <motion.div key={stat.title} variants={cardVariants}>
+                  <Card className="card-hover card-gradient border-0 shadow-elegant overflow-hidden relative">
+                    <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${stat.color} opacity-10 rounded-bl-3xl`} />
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                      <div className={`p-2 rounded-lg bg-gradient-to-br ${stat.color} text-white`}>
+                        <stat.icon className="h-4 w-4" />
                       </div>
-                      <Badge variant="outline" className="text-xs sm:text-sm">
-                        {item.count}
-                      </Badge>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold mb-1">{stat.value}</div>
+                      <div className="text-sm text-muted-foreground mb-2">{stat.description}</div>
+                      <div className="text-xs text-green-600 font-medium">{stat.change}</div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+            <InventoryOverview />
 
-              {/* Payment Status */}
-              <div>
-                <h4 className="font-semibold mb-3 text-sm sm:text-base">Payment Status</h4>
-                <div className="space-y-2 sm:space-y-3">
-                  {paymentStatusData.map((item, index) => (
-                    <motion.div
-                      key={item.status}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.9 + index * 0.1 }}
-                      className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-secondary/30"
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        {item.status === 'Paid' && <CheckCircle className="h-4 w-4 text-success" />}
-                        {item.status === 'Pending' && <Clock className="h-4 w-4 text-warning" />}
-                        {item.status === 'Failed' && <XCircle className="h-4 w-4 text-destructive" />}
-                        <span className="text-sm sm:text-base">{item.status}</span>
-                      </div>
-                      <Badge variant="outline" className="text-xs sm:text-sm">
-                        {item.count}
-                      </Badge>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Recent Activity Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        {/* Recent Customers */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  <span className="text-sm sm:text-base">Recent Customers</span>
-                </div>
-                <Badge variant="outline" className="sm:ml-auto w-fit">
-                  {recentCustomers.length} New
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 sm:space-y-4">
-                {recentCustomers.slice(0, 5).map((customer, index) => (
-                  <motion.div
-                    key={customer.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.0 + index * 0.1 }}
-                    className="flex items-center justify-between p-2 sm:p-3 rounded-lg hover:bg-secondary/50 transition-smooth"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm sm:text-base truncate">{customer.name}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{customer.email}</p>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-xs sm:text-sm font-medium">${customer.totalSpent}</p>
-                      <p className="text-xs text-muted-foreground">{customer.orderCount} orders</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Recent Orders */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.1 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="h-5 w-5 text-primary" />
-                  <span className="text-sm sm:text-base">Recent Orders</span>
-                </div>
-                <Link to="/admin/orders">
-                  <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                    View All
-                  </Button>
-                </Link>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 sm:space-y-4">
-                {recentOrders.slice(0, 5).map((order, index) => (
-                  <motion.div
-                    key={order.id}
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.2 + index * 0.1 }}
-                    className="flex items-center justify-between p-2 sm:p-3 rounded-lg hover:bg-secondary/50 transition-smooth"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                        <p className="font-medium text-sm sm:text-base">{order.id}</p>
-                        <Badge 
-                          variant={order.status === 'Delivered' ? 'default' : 'secondary'}
-                          className="text-xs w-fit"
-                        >
-                          {order.status}
-                        </Badge>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground truncate">{order.customer}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-xs sm:text-sm font-medium">${order.total}</p>
-                      <p className="text-xs text-muted-foreground">{order.items} items</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Complete Inventory Overview */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.3 }}
-        className="mb-6 sm:mb-8"
+            <motion.div 
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        variants={containerVariants}
       >
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-primary" />
-                <span className="text-sm sm:text-base">Complete Inventory Overview</span>
-              </CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                  <Filter className="h-4 w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Filter</span>
-                </Button>
-                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-                  <Plus className="h-4 w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Add Product</span>
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs sm:text-sm">Product</TableHead>
-                    <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Category</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Stock</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Price</TableHead>
-                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Status</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {inventory.map((item, index) => (
-                    <motion.tr
-                      key={item.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1.4 + index * 0.1 }}
-                      className="hover:bg-secondary/50"
-                    >
-                      <TableCell className="font-medium text-xs sm:text-sm">{item.name}</TableCell>
-                      <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{item.category}</TableCell>
-                      <TableCell className="text-xs sm:text-sm">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <span>{item.stock}</span>
-                          {item.stock < 10 && (
-                            <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-warning" />
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs sm:text-sm">${item.price}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <Badge variant={item.status === 'In Stock' ? 'default' : 'secondary'} className="text-xs">
-                          {item.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" className="h-6 w-6 sm:h-8 sm:w-8 p-0">
-                            <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-6 w-6 sm:h-8 sm:w-8 p-0">
-                            <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </motion.tr>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+       
+       <CustomerOverview  />
+
+
+        <RecentOrders />
+      </motion.div> 
+      
+      {/* Complete Inventory Overview */}
+ 
 
       {/* Quick Actions */}
       <motion.div
@@ -536,12 +435,12 @@ const AdminDashboard = () => {
                   <span className="text-xs sm:text-sm">View Customers</span>
                 </Button>
               </Link>
-              <Link to="/admin/finance/expenses">
+              {/* <Link to="/admin/finance/expenses">
                 <Button variant="outline" className="w-full h-auto p-3 sm:p-4 flex flex-col gap-1 sm:gap-2">
                   <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span className="text-xs sm:text-sm">View Reports</span>
                 </Button>
-              </Link>
+              </Link> */}
             </div>
           </CardContent>
         </Card>
