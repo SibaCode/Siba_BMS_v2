@@ -35,8 +35,11 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            
+            {/* <Route path="/" element={<Index />} /> */}
+            <Route path="/" element={       <AdminLayout title="Dashboard Overview">
+                <AdminDashboard />
+              </AdminLayout>} />
+
             {/* Admin routes with sidebar layout */}
             <Route path="/admin" element={
               <AdminLayout title="Dashboard Overview">
