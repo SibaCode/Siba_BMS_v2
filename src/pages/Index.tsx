@@ -25,17 +25,17 @@ const Index = () => {
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
               Professional e-commerce solution with inventory management, order tracking, 
-              customer records, and a beautiful storefront - all in one platform.
+              customer records - all in one platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-lg px-8">
+              {/* <Button asChild size="lg" className="text-lg px-8">
                 <Link to="/store">
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Visit Store
                   <ArrowRight className="h-5 w-5 ml-2" />
                 </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8">
+              </Button> */}
+              <Button asChild  size="lg" className="text-lg px-8">
                 <Link to="/admin">
                   <Settings className="h-5 w-5 mr-2" />
                   Admin Dashboard
@@ -125,7 +125,7 @@ const Index = () => {
             </Card>
 
             {/* Store Features */}
-            <Card className="hover:shadow-lg transition-shadow">
+            {/* <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Store className="h-6 w-6 text-primary" />
@@ -183,7 +183,7 @@ const Index = () => {
                   <Link to="/admin">View Dashboard</Link>
                 </Button>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>

@@ -38,17 +38,22 @@ const OrderPaymentSummaryCard = () => {
   const orderStatusData = [
     {
       status: "Processing",
-      count: normalizedOrders.filter(o => o.deliveryStatus === "processing").length,
+      count: normalizedOrders.filter(o => o.deliveryStatus === "Pending").length,
       color: "#f59e0b",
     },
     {
       status: "Delivered",
-      count: normalizedOrders.filter(o => o.deliveryStatus === "delivered").length,
+      count: normalizedOrders.filter(o => o.deliveryStatus === "Delivered").length,
       color: "#10b981",
     },
     {
       status: "Not Delivered",
-      count: normalizedOrders.filter(o => o.deliveryStatus === "not delivered").length,
+      count: normalizedOrders.filter(o => o.deliveryStatus === "Not delivered").length,
+      color: "#ef4444",
+    },
+    {
+      status: "In_transit",
+      count: normalizedOrders.filter(o => o.deliveryStatus === "In transit").length,
       color: "#ef4444",
     },
   ];
@@ -56,17 +61,17 @@ const OrderPaymentSummaryCard = () => {
   const paymentStatusData = [
     {
       status: "Paid",
-      count: normalizedOrders.filter(o => o.paymentStatus === "paid").length,
+      count: normalizedOrders.filter(o => o.paymentStatus === "Paid").length,
       color: "#10b981",
     },
     {
-      status: "unpaidtoFailed",
-      count: normalizedOrders.filter(o => o.paymentStatus === "unpaidtoFailed").length,
+      status: "Failed",
+      count: normalizedOrders.filter(o => o.paymentStatus === "Failed").length,
       color: "#f59e0b",
     },
     {
-      status: "sibaPending",
-      count: normalizedOrders.filter(o => o.paymentStatus === "sibaPending").length,
+      status: "Processing",
+      count: normalizedOrders.filter(o => o.paymentStatus === "Processing").length,
       color: "#ef4444",
     },
   ];

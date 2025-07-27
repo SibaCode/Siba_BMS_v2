@@ -74,9 +74,9 @@ const AdminOrders = () => {
     switch (status?.toLowerCase()) {
       case "paid":
         return "default";
-      case "unpaidtoFailed":
+      case "Failed":
         return "secondary";
-      case "sibaPending":
+      case "Pending":
         return "destructive";
       default:
         return "secondary";
@@ -97,14 +97,16 @@ const AdminOrders = () => {
   };
 
   // Calculate reports with safe fallbacks
-  const paidCount = orders.filter((o) => o.paymentStatus === "paid").length;
-  const unpaidtoFailedCount = orders.filter((o) => o.paymentStatus === "unpaidtoFailed").length;
-  const processingCount = orders.filter((o) => o.paymentStatus === "sibaPending").length;
+  const paidCount = orders.filter((o) => o.paymentStatus === "Paid").length;
+  const FailedCount = orders.filter((o) => o.paymentStatus === "Failed").length;
+  const pendingCount = orders.filter((o) => o.paymentStatus === "Processing").length;
   
   // Delivery status counts
-  const pendingDeliveryCount = orders.filter((o) => o.deliveryStatus === "pending").length;
-  const inTransitCount = orders.filter((o) => o.deliveryStatus === "in_transit").length;
-  const deliveredCount = orders.filter((o) => o.deliveryStatus === "delivered").length;
+  const pendingDeliveryCount = orders.filter((o) => o.deliveryStatus === "Pending").length;
+  const inTransitCount = orders.filter((o) => o.deliveryStatus === "In_transit").length;
+  const deliveredCount = orders.filter((o) => o.deliveryStatus === "Delivered").length;
+  const notdeliveredCount = orders.filter((o) => o.deliveryStatus === "Not Delivered").length;
+
   // Ensure you have orders loaded before this
 const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
 const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
@@ -187,12 +189,12 @@ const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
         <span className="font-bold text-green-600">{paidCount}</span>
       </div>
       <div className="flex items-center space-x-2">
-        <span>unpaidtoFailed</span>
-        <span className="font-bold text-red-600">{unpaidtoFailedCount}</span>
+        <span>Failed</span>
+        <span className="font-bold text-red-600">{FailedCount}</span>
       </div>
       <div className="flex items-center space-x-2">
-        <span>sibaPending</span>
-        <span className="font-bold text-amber-500">{processingCount}</span>
+        <span>Pending</span>
+        <span className="font-bold text-amber-500">{pendingCount}</span>
       </div>
     </div>
   </CardContent>
@@ -213,6 +215,10 @@ const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
       <div className="flex items-center space-x-2">
         <span>Delivered</span>
         <span className="font-bold text-green-600">{deliveredCount}</span>
+      </div>
+      <div className="flex items-center space-x-2">
+        <span>Not delivered</span>
+        <span className="font-bold text-red-600">{notdeliveredCount}</span>
       </div>
     </div>
   </CardContent>
@@ -247,8 +253,8 @@ const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="unpaidtoFailed">unpaidtoFailed</SelectItem>
-              <SelectItem value="sibaPending">sibaPending</SelectItem>
+              <SelectItem value="Failed">Failed</SelectItem>
+              <SelectItem value="Pending">Pending</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -303,7 +309,7 @@ const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
                     </TableCell>
                     <TableCell>
                       <Badge variant={getDeliveryStatusBadgeVariant(order.deliveryStatus)}>
-                        {order.deliveryStatus || 'sibaPending'}
+                        {order.deliveryStatus || 'Pending'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">

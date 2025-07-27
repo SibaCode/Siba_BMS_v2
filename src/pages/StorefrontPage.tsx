@@ -13,11 +13,12 @@ import {
   Facebook,
   Twitter,
   ExternalLink,
-  ShoppingBag
+  ShoppingBag,
+  Settings
 } from "lucide-react";
 import { useState,useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
-// import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import { db } from "@/firebase"; 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -132,14 +133,16 @@ const StorefrontPage = () => {
         {info.description}
       </p>
       <div className="flex flex-wrap justify-center gap-4">
-        <Button size="lg" className="gradient-primary shadow-elegant">
-          <ShoppingBag className="h-5 w-5 mr-2" />
-          Shop Now
-        </Button>
-        <Button variant="outline" size="lg" className="card-hover">
+        <Button asChild  size="lg" className="text-lg px-8">
+                <Link to="/admin">
+                  <ShoppingBag className="h-5 w-5 mr-2" />
+                  Admin Dashboard
+                </Link>
+              </Button>
+        {/* <Button variant="outline" size="lg" className="card-hover">
           <ExternalLink className="h-5 w-5 mr-2" />
           View Catalog
-        </Button>
+        </Button> */}
       </div>
     </motion.div>
   </motion.div>
