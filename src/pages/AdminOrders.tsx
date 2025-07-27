@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { db } from "@/firebase"; // your Firebase config
 import { collection, getDocs } from "firebase/firestore";
-
+import { useNavigate } from "react-router-dom";
+import { Pencil } from "lucide-react";
 import { 
   ArrowLeft, 
   Search, 
@@ -27,7 +28,19 @@ const AdminOrders = () => {
   // Mock data - in real app this would come from backend
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const openModal = (order) => {
+    setSelectedOrder(order);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedOrder(null);
+    setModalOpen(false);
+  };
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -61,9 +74,9 @@ const AdminOrders = () => {
     switch (status?.toLowerCase()) {
       case "paid":
         return "default";
-      case "pending":
+      case "unpaidtoFailed":
         return "secondary";
-      case "failed":
+      case "sibaPending":
         return "destructive";
       default:
         return "secondary";
@@ -74,9 +87,9 @@ const AdminOrders = () => {
     switch (status?.toLowerCase()) {
       case "delivered":
         return "default";
-      case "shipped":
-        return "secondary";
-      case "processing":
+      case "in_transit":
+        return "destructive";
+      case "pending":
         return "secondary";
       default:
         return "secondary";
@@ -84,11 +97,18 @@ const AdminOrders = () => {
   };
 
   // Calculate reports with safe fallbacks
-  const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
-  const pendingOrders = orders.filter(order => (order.paymentStatus || '').toLowerCase() === "pending").length;
-  const completedOrders = orders.filter(order => (order.paymentStatus || '').toLowerCase() === "paid").length;
-  const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+  const paidCount = orders.filter((o) => o.paymentStatus === "paid").length;
+  const unpaidtoFailedCount = orders.filter((o) => o.paymentStatus === "unpaidtoFailed").length;
+  const processingCount = orders.filter((o) => o.paymentStatus === "sibaPending").length;
   
+  // Delivery status counts
+  const pendingDeliveryCount = orders.filter((o) => o.deliveryStatus === "pending").length;
+  const inTransitCount = orders.filter((o) => o.deliveryStatus === "in_transit").length;
+  const deliveredCount = orders.filter((o) => o.deliveryStatus === "delivered").length;
+  // Ensure you have orders loaded before this
+const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+
   // Export CSV functionality
   const exportToCSV = () => {
     const csvHeaders = ['Order ID', 'Customer', 'Phone', 'Total', 'Payment Status', 'Delivery Status', 'Order Date'];
@@ -149,31 +169,64 @@ const AdminOrders = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Bar */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">{orders.length}</div>
-              <div className="text-sm text-muted-foreground">Total Orders</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-amber-600">{pendingOrders}</div>
-              <div className="text-sm text-muted-foreground">Pending Orders</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-600">R{totalRevenue.toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">Total Revenue</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-600">R{averageOrderValue.toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">Average Order</div>
-            </CardContent>
-          </Card>
-        </div>
+
+     
+  <Card>
+    <CardContent className="p-4">
+      <div className="text-2xl font-bold">{orders.length}</div>
+      <div className="text-sm text-muted-foreground">Total Orders</div>
+    </CardContent>
+  </Card>
+
+  <Card>
+  <CardContent className="p-4">
+    <div className="text-sm font-semibold text-muted-foreground mb-2">Payment Status</div>
+    <div className="space-y-1 text-sm">
+      <div className="flex items-center space-x-2">
+        <span>Paid</span>
+        <span className="font-bold text-green-600">{paidCount}</span>
+      </div>
+      <div className="flex items-center space-x-2">
+        <span>unpaidtoFailed</span>
+        <span className="font-bold text-red-600">{unpaidtoFailedCount}</span>
+      </div>
+      <div className="flex items-center space-x-2">
+        <span>sibaPending</span>
+        <span className="font-bold text-amber-500">{processingCount}</span>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
+<Card>
+  <CardContent className="p-4">
+    <div className="text-sm font-semibold text-muted-foreground mb-2">Delivery Status</div>
+    <div className="space-y-1 text-sm">
+      <div className="flex items-center space-x-2">
+        <span>Pending</span>
+        <span className="font-bold text-amber-600">{pendingDeliveryCount}</span>
+      </div>
+      <div className="flex items-center space-x-2">
+        <span>In Transit</span>
+        <span className="font-bold text-blue-500">{inTransitCount}</span>
+      </div>
+      <div className="flex items-center space-x-2">
+        <span>Delivered</span>
+        <span className="font-bold text-green-600">{deliveredCount}</span>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
+<Card>
+  <CardContent className="p-4">
+    <div className="text-2xl font-bold text-green-600">R{totalRevenue.toFixed(2)}</div>
+    <div className="text-sm text-muted-foreground">Total Revenue</div>
+  </CardContent>
+</Card>
+
+</div>
+
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -194,8 +247,8 @@ const AdminOrders = () => {
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="unpaidtoFailed">unpaidtoFailed</SelectItem>
+              <SelectItem value="sibaPending">sibaPending</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -222,10 +275,11 @@ const AdminOrders = () => {
               <TableBody>
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id || 'N/A'}</TableCell>
+                    <TableCell className="font-medium">{order.orderId || 'N/A'}</TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{order.customerInfo?.name || order.customer || 'N/A'}</div>
+                        <div className="font-medium">{order.customerInfo?.name || `${order.customer?.firstName || ''} ${order.customer?.lastName || ''}`.trim() || 'N/A'}
+                        </div>
                         <div className="text-sm text-muted-foreground">{order.customerInfo?.phone || order.phone || 'N/A'}</div>
                       </div>
                     </TableCell>
@@ -249,7 +303,7 @@ const AdminOrders = () => {
                     </TableCell>
                     <TableCell>
                       <Badge variant={getDeliveryStatusBadgeVariant(order.deliveryStatus)}>
-                        {order.deliveryStatus || 'Processing'}
+                        {order.deliveryStatus || 'sibaPending'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">
@@ -260,12 +314,16 @@ const AdminOrders = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
+                        {/* <Button variant="outline" size="sm">
                           <Eye className="h-4 w-4" />
+                        </Button>
+                         */}
+                        <Button variant="outline" size="sm"  onClick={() => navigate(`/admin/orders/edit/${order.id}`)}>
+                            <FileText className="h-4 w-4" /> Edit
                         </Button>
                         <Button variant="outline" size="sm" asChild>
                           <Link to={`/admin/invoice/${order.id}`}>
-                            <FileText className="h-4 w-4" />
+                            <FileText className="h-4 w-4" /> Download Invoice
                           </Link>
                         </Button>
                       </div>

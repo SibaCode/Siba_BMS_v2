@@ -59,7 +59,7 @@ const App = () => (
                 <AdminCustomers />
               </AdminLayout>
             } />
-            <Route path="/admin/invoice/:orderId" element={
+            <Route path="/admin/invoice/:id" element={
               <AdminLayout title="Invoice Details">
                 <AdminInvoice />
               </AdminLayout>
