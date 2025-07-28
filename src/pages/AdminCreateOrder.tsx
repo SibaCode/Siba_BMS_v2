@@ -204,7 +204,7 @@ const [searchTerm, setSearchTerm] = useState("");
   };
 
   const calculateTotal = () => {
-    return calculateSubtotal() + calculateTax();
+    return calculateSubtotal();
   };
   const filteredCustomers = allCustomers.filter((c) =>
     c.name.toLowerCase().includes(customerInfo.name.toLowerCase())
@@ -267,7 +267,6 @@ const [searchTerm, setSearchTerm] = useState("");
   const createOrder = async () => {
     if (!validateForm()) return;
   
-    // Final stock check before submitting
     for (const item of orderItems) {
       if (item.quantity > item.variant.stockQuantity) {
         toast({
@@ -275,16 +274,24 @@ const [searchTerm, setSearchTerm] = useState("");
           description: `Insufficient stock for ${item.productName} (${item.variant.color}, ${item.variant.size})`,
           variant: "destructive",
         });
-        return; // Stop order creation if stock is insufficient
+        return;
       }
     }
   
     setSubmitting(true);
     try {
-      const { id, ...customerInfoWithoutId } = customerInfo;
+      let customerId = customerInfo.id;
   
+
+      if (!customerId) {
+        const { id, ...customerInfoToSave } = customerInfo;
+        const customerDocRef = await addDoc(collection(db, "customers"), customerInfoToSave);
+        customerId = customerDocRef.id;
+      }
+      
       const orderData = {
-        customerInfo: customerInfoWithoutId,
+        customerId,
+        customerInfo: { ...customerInfo, id: customerId }, // optional: if you want to store full info
         items: orderItems,
         subtotal: calculateSubtotal(),
         tax: calculateTax(),
@@ -300,8 +307,6 @@ const [searchTerm, setSearchTerm] = useState("");
       };
   
       const orderDocRef = await addDoc(collection(db, "orders"), orderData);
-  
-      // Decrease stock for ordered items after successful order creation
       await decreaseStockForOrder(orderItems);
   
       toast({
@@ -321,6 +326,7 @@ const [searchTerm, setSearchTerm] = useState("");
       setSubmitting(false);
     }
   };
+  
   
   
   const updateQuantity = (index: number, newQuantity: number) => {
@@ -359,7 +365,7 @@ const [searchTerm, setSearchTerm] = useState("");
                 </Link>
               </Button>
               <ShoppingCart className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">Create New Order</h1>
+              <h1 className="text-2xl font-bold text-foreground">Create New Order1</h1>
             </div>
           </div>
         </div>
