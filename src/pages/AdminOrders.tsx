@@ -18,7 +18,7 @@ import {
   Download,
   ShoppingCart,
   Eye,
-  Plus
+  Plus,
 } from "lucide-react";
 
 const AdminOrders = () => {

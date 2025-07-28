@@ -83,6 +83,7 @@ const AdminEditOrder = () => {
 
   const [deliveryStatus, setDeliveryStatus] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -162,7 +163,40 @@ const AdminEditOrder = () => {
       });
     }
   };
-
+  const handleCancelOrder = async () => {
+    if (!id) {
+      toast({
+        title: "Error",
+        description: "Missing order ID.",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    try {
+      const orderRef = doc(db, "orders", id);
+      await updateDoc(orderRef, {
+        deliveryStatus: "cancelled",
+        paymentStatus: "cancelled",
+        notes: notes + "\nOrder was cancelled by admin.",
+      });
+  
+      toast({
+        title: "Order Cancelled",
+        description: "The order has been marked as cancelled.",
+      });
+  
+      navigate("/admin/orders");
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel order",
+        variant: "destructive",
+      });
+    }
+  };
+  
   if (loading) return <div>Loading...</div>;
 
   if (!order) return null;
@@ -266,11 +300,44 @@ const AdminEditOrder = () => {
                   Update Order
                 </Button>
               </div>
+              <Button
+                variant="destructive"
+                onClick={() => setShowCancelModal(true)}
+                disabled={deliveryStatus === "cancelled"}
+                className="w-full"
+              >
+                Cancel Order
+              </Button>
+
+
             </CardContent>
           </Card>
         </motion.div>
       </div>
+      {showCancelModal && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 space-y-4">
+      <h2 className="text-lg font-bold">Cancel Order?</h2>
+      <p className="text-sm text-gray-600">
+        Are you sure you want to cancel this order? This action cannot be undone.
+      </p>
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button variant="outline" onClick={() => setShowCancelModal(false)}>
+          Go Back
+        </Button>
+        <Button variant="destructive" onClick={async () => {
+          setShowCancelModal(false);
+          await handleCancelOrder();
+        }}>
+          Confirm Cancel
+        </Button>
+      </div>
     </div>
+  </div>
+)}
+
+    </div>
+    
   );
   
 };

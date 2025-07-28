@@ -24,6 +24,8 @@ import OrderSuccess from "./pages/OrderSuccess";
 import { AdminLayout } from "./components/AdminLayout";
 import AdminCreateOrder from "./pages/AdminCreateOrder";
 import AdminEditOrder from "./pages/AdminEditOrder";
+import Booking from "./pages/Booking";
+import Services from "./pages/Services";
 
 const queryClient = new QueryClient();
 
@@ -82,7 +84,16 @@ const App = () => (
                 <CreateOrderForm />
               </AdminLayout>
             } />  */}
-
+            <Route path="/admin/bookings" element={
+              <AdminLayout title="Bookings">
+                <Booking />
+              </AdminLayout>
+            } />
+               <Route path="/admin/services" element={
+              <AdminLayout title="Service Package Management">
+                <Services />
+              </AdminLayout>
+            } />
             {/* Public store routes */}
             <Route path="/storefront" element={<StorefrontPage />} />
             <Route path="/store" element={<PublicStore />} />

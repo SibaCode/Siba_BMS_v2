@@ -13,7 +13,7 @@ import {
   Receipt,
   TrendingUp,
   Store,
-  ChevronDown
+  ChevronDown,Calendar
 } from "lucide-react";
 import {
   Sidebar,
@@ -60,11 +60,20 @@ const menuItems = [
     ],
   },
   {
+    title: "Services",
+    icon: Calendar,
+    items: [
+      { title: "Manage Services", url: "/admin/services" },
+      // { title: "Customers", url: "/admin/customers" },
+      // { title: "Invoices", url: "/admin/invoice" },
+    ],
+  },
+  {
     title: "Finance",
     icon: DollarSign,
     items: [
       { title: "Expenses", url: "/admin/finance/expenses" },
-      // { title: "Reports", url: "#" },
+      { title: "Bookings", url: "/admin/bookings" },
     ],
   },
   {
@@ -80,7 +89,7 @@ const menuItems = [
 function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
-  const [openGroups, setOpenGroups] = useState<string[]>(["Inventory", "Sales", "Finance", "Settings"]);
+  const [openGroups, setOpenGroups] = useState<string[]>(["Inventory", "Sales", "Finance","Services", "Settings"]);
 
   const toggleGroup = (groupTitle: string) => {
     setOpenGroups(prev => 

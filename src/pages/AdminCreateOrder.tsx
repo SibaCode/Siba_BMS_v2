@@ -21,6 +21,7 @@ import {
   Trash2,
 } from "lucide-react";
 // import React from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface Product {
   docId: string;
@@ -40,16 +41,45 @@ interface Variant {
   description: string;
   images: string[];
 }
-
-interface OrderItem {
-  productId: string;
-  productName: string;
-  variantIndex: number;
-  variant: Variant;
-  quantity: number;
+interface ServicePackage {
+  id: string;
+  name: string;
+  description: string;
   price: number;
-  total: number;
+  duration: string; // optional
 }
+
+interface ServiceOrderItem {
+  serviceId: string;
+  serviceName: string;
+  price: number;
+  quantity: number;
+  total: number;
+
+}
+
+type OrderItem =
+  | {
+      type: "product";
+      productId: string;
+      productName: string;
+      variantIndex: number;
+      variant: Variant; // full Variant type for ease of access
+      price: number;
+      quantity: number;
+      total: number;
+    }
+  | {
+      type: "service";
+      serviceId: string;
+      serviceName: string;
+      price: number;
+      quantity: number;
+      total: number;
+      duration?: string;
+    };
+
+
 
 interface CustomerInfo {
   id?:string;
@@ -66,6 +96,7 @@ interface CustomerInfo {
   totalSpent: number;
 
 }
+
 const emptyCustomer: CustomerInfo = {
   id: undefined,
   name: "",
@@ -94,14 +125,31 @@ const AdminCreateOrder = () => {
   const [showCustomerList, setShowCustomerList] = useState(false);
   const [allCustomers, setAllCustomers] = useState<(CustomerInfo & {id: string})[]>([]); 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [servicePackages, setServicePackages] = useState<ServicePackage[]>([]);
+  const [serviceItems, setServiceItems] = useState<ServiceOrderItem[]>([]);
 
   useEffect(() => {
     fetchProducts();
     fetchCustomers();
-
+fetchServicePackages();
   }, []);
 
+  const fetchServicePackages = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "servicePackages"));
+      const packages: ServicePackage[] = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as ServicePackage[];
+      setServicePackages(packages);
+    } catch (error) {
+      console.error("Error fetching service packages:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const fetchProducts = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "products"));
@@ -167,30 +215,77 @@ const [searchTerm, setSearchTerm] = useState("");
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-    
   const addProductToOrder = (product: Product, variantIndex: number) => {
     const variant = product.variants[variantIndex];
-    const existingItemIndex = orderItems.findIndex(
-      (item) => item.productId === product.docId && item.variantIndex === variantIndex
+    const existingIndex = orderItems.findIndex(
+      (item) =>
+        item.type === "product" &&
+        item.productId === product.docId &&
+        item.variantIndex === variantIndex
     );
-
-    if (existingItemIndex >= 0) {
-      updateQuantity(existingItemIndex, orderItems[existingItemIndex].quantity + 1);
+  
+    if (existingIndex >= 0) {
+      updateQuantity(existingIndex, orderItems[existingIndex].quantity + 1);
     } else {
       const newItem: OrderItem = {
+        type: "product",
         productId: product.docId,
         productName: product.name,
         variantIndex,
         variant,
-        quantity: 1,
         price: variant.sellingPrice,
+        quantity: 1,
         total: variant.sellingPrice,
       };
       setOrderItems([...orderItems, newItem]);
     }
   };
+  
+  const addServiceToOrder = (service: ServicePackage) => {
+    const existingIndex = orderItems.findIndex(
+      (item) => item.productId === service.id && item.isService
+    );
+  
+    if (existingIndex >= 0) {
+      const updated = [...orderItems];
+      const item = updated[existingIndex];
+      updated[existingIndex] = {
+        ...item,
+        quantity: item.quantity + 1,
+        total: item.price * (item.quantity + 1),
+      };
+      setOrderItems(updated);
+    } else {
+      const newItem: OrderItem = {
+        productId: service.id,
+        productName: service.name,
+        price: service.price,
+        quantity: 1,
+        total: service.price,
+        isService: true,
+      };
+      setOrderItems([...orderItems, newItem]);
+    }
+  };
+  
+  
+  
+const updateServiceQuantity = (index: number, newQty: number) => {
+  if (newQty < 1) return;
+  const updated = [...serviceItems];
+  const item = updated[index];
+  updated[index] = {
+    ...item,
+    quantity: newQty,
+    total: item.price * newQty,
+  };
+  setServiceItems(updated);
+};
 
- 
+const removeService = (index: number) => {
+  setServiceItems(serviceItems.filter((_, i) => i !== index));
+};
+
   const removeItem = (itemIndex: number) => {
     setOrderItems(orderItems.filter((_, index) => index !== itemIndex));
   };
@@ -233,42 +328,39 @@ const [searchTerm, setSearchTerm] = useState("");
     return true;
   };
 
-  const decreaseStockForOrder = async (orderItems: OrderItem[]) => {
-    for (const item of orderItems) {
-      try {
-        const productRef = doc(db, "products", item.productId);
-        const productSnap = await getDoc(productRef);
+  const decreaseStock = async (productId: string, variantIndex: number, quantity: number) => {
+    // Fetch product document, update stockQuantity for the variant
+    // You will need to update the product doc's variants array immutably
+    // Example:
+    const productRef = doc(db, "products", productId);
+    const productSnap = await getDoc(productRef);
+    if (!productSnap.exists()) return;
   
-        if (!productSnap.exists()) {
-          console.warn(`Product ${item.productId} not found.`);
-          continue;
-        }
-  
-        const productData = productSnap.data() as Product;
-  
-        const updatedVariants = productData.variants.map((variant, idx) => {
-          if (idx === item.variantIndex) {
-            const newQuantity = variant.stockQuantity - item.quantity;
-            return {
-              ...variant,
-              stockQuantity: newQuantity < 0 ? 0 : newQuantity,
-            };
-          }
-          return variant;
-        });
-  
-        await updateDoc(productRef, { variants: updatedVariants });
-  
-      } catch (err) {
-        console.error(`Error updating stock for ${item.productName}:`, err);
-      }
+    const productData = productSnap.data() as Product;
+    const variants = [...productData.variants];
+    const variant = variants[variantIndex];
+    if (variant.stockQuantity < quantity) {
+      toast({
+        title: "Stock error",
+        description: `Not enough stock to decrease for ${productData.name} variant ${variant.color}, ${variant.size}`,
+        variant: "destructive",
+      });
+      return;
     }
+  
+    variants[variantIndex] = {
+      ...variant,
+      stockQuantity: variant.stockQuantity - quantity,
+    };
+  
+    await updateDoc(productRef, { variants });
   };
+  
   const createOrder = async () => {
     if (!validateForm()) return;
   
     for (const item of orderItems) {
-      if (item.quantity > item.variant.stockQuantity) {
+      if (item.type === "product" && item.quantity > item.variant.stockQuantity) {
         toast({
           title: "Stock error",
           description: `Insufficient stock for ${item.productName} (${item.variant.color}, ${item.variant.size})`,
@@ -282,22 +374,21 @@ const [searchTerm, setSearchTerm] = useState("");
     try {
       let customerId = customerInfo.id;
   
-
       if (!customerId) {
         const { id, ...customerInfoToSave } = customerInfo;
         const customerDocRef = await addDoc(collection(db, "customers"), customerInfoToSave);
         customerId = customerDocRef.id;
       }
-      
+  
       const orderData = {
         customerId,
-        customerInfo: { ...customerInfo, id: customerId }, // optional: if you want to store full info
+        customerInfo: { ...customerInfo, id: customerId },
         items: orderItems,
         subtotal: calculateSubtotal(),
         tax: calculateTax(),
         total: calculateTotal(),
         paymentMethod,
-        orderId: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        orderId: `ORD-${Date.now()}`,
         paymentStatus: "processing",
         deliveryStatus: "pending",
         notes,
@@ -307,7 +398,14 @@ const [searchTerm, setSearchTerm] = useState("");
       };
   
       const orderDocRef = await addDoc(collection(db, "orders"), orderData);
-      await decreaseStockForOrder(orderItems);
+  
+      // decrease stock only for products
+      for (const item of orderItems) {
+        if (item.type === "product") {
+          // Your existing decrease stock logic here
+          await decreaseStock(item.productId, item.variantIndex, item.quantity);
+        }
+      }
   
       toast({
         title: "Success",
@@ -330,16 +428,17 @@ const [searchTerm, setSearchTerm] = useState("");
   
   
   const updateQuantity = (index: number, newQuantity: number) => {
-    if (newQuantity < 1) return; // no zero or negative qty
+    if (newQuantity < 1) return;
   
     const item = orderItems[index];
-    if (newQuantity > item.variant.stockQuantity) {
+  
+    if (item.type === "product" && newQuantity > item.variant.stockQuantity) {
       toast({
         title: "Stock limit reached",
         description: `Only ${item.variant.stockQuantity} units available for ${item.productName} (${item.variant.color}, ${item.variant.size})`,
         variant: "destructive",
       });
-      return; // prevent update
+      return;
     }
   
     const updatedItems = [...orderItems];
@@ -479,113 +578,145 @@ const [searchTerm, setSearchTerm] = useState("");
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
             >
-             <Card className="shadow-lg border-0 bg-white/70 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center space-x-2">
-                  <Package className="h-5 w-5" />
-                  <span>Products</span>
-                </CardTitle>
-              </CardHeader>
+              <Card className="shadow-lg border-0 bg-white/70 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Package className="h-5 w-5" />
+                    <span>Add Items to Order</span>
+                  </CardTitle>
+                </CardHeader>
 
-              <CardContent className="p-4">
-                {loading ? (
-                  <p>Loading products...</p>
-                ) : products.length === 0 ? (
-                  <p>No products found.</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[500px] overflow-hidden">
-                    {/* Left: Search + Product List */}
-                    <div className="col-span-1 border-r pr-2 overflow-y-auto">
-                      <input
-                        type="text"
-                        placeholder="Search products..."
-                        className="w-full mb-2 px-3 py-2 border rounded"
-                        onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-                      />
+                <CardContent className="p-4">
+                  <Tabs defaultValue="products" className="w-full">
+                    
+                    <TabsList className="mb-4">
+                      <TabsTrigger value="products">Products</TabsTrigger>
+                      <TabsTrigger value="services">Services</TabsTrigger>
+                    </TabsList>
 
-                      <ul className="space-y-2">
-                        {products
-                          .filter((p) =>
-                            p.name.toLowerCase().includes(searchTerm || "")
-                          )
-                          .map((product, i) => (
-                            <li
-                              key={product.docId}
-                              className={`p-2 rounded cursor-pointer hover:bg-orange-100 transition ${
-                                selectedProduct?.docId === product.docId ? "bg-orange-200" : ""
-                              }`}
-                              onClick={() => setSelectedProduct(product)}
-                            >
-                              <div className="flex items-center space-x-2">
-                                <img
-                                  src={product.productImage}
-                                  alt={product.name}
-                                  className="w-10 h-10 object-cover rounded"
-                                />
-                                <span className="text-sm">{product.name}</span>
-                              </div>
-                            </li>
-                          ))}
-                      </ul>
-                    </div>
+                    {/* 🔶 Products Tab */}
+                              <TabsContent value="products">
+                                {loading ? (
+                                  <p>Loading products...</p>
+                                ) : products.length === 0 ? (
+                                  <p>No products found.</p>
+                                ) : (
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[500px] overflow-hidden">
+                                    {/* Search + Product List */}
+                                    <div className="col-span-1 border-r pr-2 overflow-y-auto">
+                                      <input
+                                        type="text"
+                                        placeholder="Search products..."
+                                        className="w-full mb-2 px-3 py-2 border rounded"
+                                        onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+                                      />
+                                      <ul className="space-y-2">
+                                        {products
+                                          .filter((p) => p.name.toLowerCase().includes(searchTerm || ""))
+                                          .map((product) => (
+                                            <li
+                                              key={product.docId}
+                                              className={`p-2 rounded cursor-pointer hover:bg-orange-100 transition ${
+                                                selectedProduct?.docId === product.docId ? "bg-orange-200" : ""
+                                              }`}
+                                              onClick={() => setSelectedProduct(product)}
+                                            >
+                                              <div className="flex items-center space-x-2">
+                                                <img
+                                                  src={product.productImage}
+                                                  alt={product.name}
+                                                  className="w-10 h-10 object-cover rounded"
+                                                />
+                                                <span className="text-sm">{product.name}</span>
+                                              </div>
+                                            </li>
+                                          ))}
+                                      </ul>
+                                    </div>
 
-                    {/* Right: Selected Product's Variants */}
-                    <div className="col-span-2 overflow-y-auto px-2">
-                      {selectedProduct ? (
-                        <>
-                          <h3 className="text-lg font-semibold mb-2">
-                            {selectedProduct.name}
-                          </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {selectedProduct.variants.map((variant, index) => {
-                              const isOutOfStock = variant.stockQuantity === 0;
-                              return (
-                                <div
-                                  key={`${selectedProduct.docId}-${index}`}
-                                  className={`p-4 border rounded-lg bg-white shadow-sm transition ${
-                                    isOutOfStock ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"
-                                  }`}
-                                  onClick={() =>
-                                    !isOutOfStock && addProductToOrder(selectedProduct, index)
-                                  }
-                                >
-                                  <div className="flex items-center space-x-4">
-                                    <img
-                                      src={variant.images[0] || selectedProduct.productImage}
-                                      alt={variant.type}
-                                      className="w-16 h-16 object-cover rounded"
-                                    />
-                                    <div className="flex flex-col">
-                                      <p className="font-medium text-sm">{variant.type}</p>
-                                      <p className="text-xs text-gray-500">
-                                        Color: {variant.color} | Size: {variant.size}
-                                      </p>
-                                      <p className="font-bold text-orange-600 text-md">
-                                        R{variant.sellingPrice.toFixed(2)}
-                                      </p>
-                                      <Badge
-                                        variant={isOutOfStock ? "destructive" : "default"}
-                                        className="w-max text-xs mt-1"
-                                      >
-                                        {isOutOfStock ? "Out of Stock" : `${variant.stockQuantity} in stock`}
-                                      </Badge>
+                                    {/* Variant View */}
+                                    <div className="col-span-2 overflow-y-auto px-2">
+                                      {selectedProduct ? (
+                                        <>
+                                          <h3 className="text-lg font-semibold mb-2">{selectedProduct.name}</h3>
+                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {selectedProduct.variants.map((variant, index) => {
+                                              const isOutOfStock = variant.stockQuantity === 0;
+                                              return (
+                                                <div
+                                                  key={`${selectedProduct.docId}-${index}`}
+                                                  className={`p-4 border rounded-lg bg-white shadow-sm transition ${
+                                                    isOutOfStock ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"
+                                                  }`}
+                                                  onClick={() =>
+                                                    !isOutOfStock && addProductToOrder(selectedProduct, index)
+                                                  }
+                                                >
+                                                  <div className="flex items-center space-x-4">
+                                                    <img
+                                                      src={variant.images[0] || selectedProduct.productImage}
+                                                      alt={variant.type}
+                                                      className="w-16 h-16 object-cover rounded"
+                                                    />
+                                                    <div className="flex flex-col">
+                                                      <p className="font-medium text-sm">{variant.type}</p>
+                                                      <p className="text-xs text-gray-500">
+                                                        Color: {variant.color} | Size: {variant.size}
+                                                      </p>
+                                                      <p className="font-bold text-orange-600 text-md">
+                                                        R{variant.sellingPrice.toFixed(2)}
+                                                      </p>
+                                                      <Badge
+                                                        variant={isOutOfStock ? "destructive" : "default"}
+                                                        className="w-max text-xs mt-1"
+                                                      >
+                                                        {isOutOfStock ? "Out of Stock" : `${variant.stockQuantity} in stock`}
+                                                      </Badge>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <p className="text-gray-500">Select a product to view variants.</p>
+                                      )}
                                     </div>
                                   </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </>
-                      ) : (
-                        <p className="text-gray-500">Select a product to view variants.</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                                )}
+                              </TabsContent>
 
-            </motion.div>
+                  {/* 🧰 Services Tab */}
+                  {/* 🧰 Services Tab */}
+                  <TabsContent value="services">
+  {loading ? (
+    <p>Loading services...</p>
+  ) : servicePackages.length === 0 ? (
+    <p>No services available.</p>
+  ) : (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {servicePackages.map((service) => (
+        <div
+          key={service.id}
+          className="border p-4 rounded-lg bg-white shadow hover:shadow-md transition cursor-pointer"
+          onClick={() => addServiceToOrder(service)}
+        >
+          <div className="font-semibold text-sm mb-1">{service.name}</div>
+          <p className="text-xs text-gray-500 mb-1">{service.description}</p>
+          <p className="text-orange-600 font-bold text-md">R{service.price.toFixed(2)}</p>
+        </div>
+      ))}
+    </div>
+  )}
+</TabsContent>
+
+
+      </Tabs>
+    </CardContent>
+  </Card>
+</motion.div>
+
           </div>
 
           {/* Order Summary */}
@@ -614,8 +745,13 @@ const [searchTerm, setSearchTerm] = useState("");
                         <div>
                           <div className="font-semibold">{item.productName}</div>
                           <div className="text-xs text-muted-foreground">
-                            Type: {item.variant.type}, Color: {item.variant.color}, Size: {item.variant.size}
-                          </div>
+                          {!item.isService && item.variant && (
+                            <div className="text-xs text-muted-foreground">
+                              Type: {item.variant.type}, Color: {item.variant.color}, Size: {item.variant.size}
+                            </div>
+                          )}
+                        
+                              </div>
                           <div className="text-xs text-muted-foreground">
                             Price: R{item.price.toFixed(2)} x Quantity: {item.quantity}
                           </div>
