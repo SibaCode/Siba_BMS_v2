@@ -222,11 +222,11 @@ const AdminCustomers = () => {
                     <TableRow>
                       <TableHead>Customer</TableHead>
                       <TableHead>Contact</TableHead>
-                      <TableHead>Orders</TableHead>
-                      <TableHead>Total Spent</TableHead>
-                      <TableHead>Last Order</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                      {/* <TableHead>Orders</TableHead> */}
+                      {/* <TableHead>Total Spent</TableHead> */}
+                      {/* <TableHead>Last Order</TableHead> */}
+                      {/* <TableHead>Status</TableHead> */}
+                      {/* <TableHead>Actions</TableHead> */}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -252,13 +252,13 @@ const AdminCustomers = () => {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                           <div className="text-center">
                             <div className="text-lg font-semibold">{customer.totalOrders || 0}</div>
                             <div className="text-xs text-muted-foreground">orders</div>
                           </div>
-                        </TableCell>
-                        <TableCell>
+                        </TableCell> */}
+                        {/* <TableCell>
                           <div className="font-medium">R{(customer.totalSpent || 0).toFixed(2)}</div>
                           <div className="text-xs text-muted-foreground">
                             Avg: R{(customer.totalOrders > 0
@@ -266,18 +266,18 @@ const AdminCustomers = () => {
                               : 0
                             ).toFixed(2)}
                           </div>
-                        </TableCell>
-                        <TableCell className="text-sm">{getSafeValue(customer.lastOrder)}</TableCell>
+                        </TableCell> */}
+                        {/* <TableCell className="text-sm">{getSafeValue(customer.lastOrder)}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusBadgeVariant(customer.status)}>
                             {getSafeValue(customer.status)}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
+                        </TableCell> */}
+                        {/* <TableCell>
                           <Button variant="outline" size="sm">
                             <Eye className="h-4 w-4" />
                           </Button>
-                        </TableCell>
+                        </TableCell> */}
                       </TableRow>
                     ))}
                   </TableBody>
