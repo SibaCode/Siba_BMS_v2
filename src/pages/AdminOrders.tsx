@@ -74,9 +74,9 @@ const AdminOrders = () => {
     switch (status?.toLowerCase()) {
       case "paid":
         return "default";
-      case "Failed":
+      case "failed":
         return "secondary";
-      case "Pending":
+      case "pending":
         return "destructive";
       default:
         return "secondary";
@@ -89,23 +89,25 @@ const AdminOrders = () => {
         return "default";
       case "in_transit":
         return "destructive";
-      case "pending":
+      case "processing":
         return "secondary";
+        case "not_delivered":
+          return "secondary";
       default:
         return "secondary";
     }
   };
 
   // Calculate reports with safe fallbacks
-  const paidCount = orders.filter((o) => o.paymentStatus === "Paid").length;
-  const FailedCount = orders.filter((o) => o.paymentStatus === "Failed").length;
-  const pendingCount = orders.filter((o) => o.paymentStatus === "Processing").length;
+  const paidCount = orders.filter((o) => o.paymentStatus === "paid").length;
+  const FailedCount = orders.filter((o) => o.paymentStatus === "failed").length;
+  const pendingCount = orders.filter((o) => o.paymentStatus === "processing").length;
   
   // Delivery status counts
-  const pendingDeliveryCount = orders.filter((o) => o.deliveryStatus === "Pending").length;
-  const inTransitCount = orders.filter((o) => o.deliveryStatus === "In_transit").length;
-  const deliveredCount = orders.filter((o) => o.deliveryStatus === "Delivered").length;
-  const notdeliveredCount = orders.filter((o) => o.deliveryStatus === "Not Delivered").length;
+  const pendingDeliveryCount = orders.filter((o) => o.deliveryStatus === "pending").length;
+  const inTransitCount = orders.filter((o) => o.deliveryStatus === "in_transit").length;
+  const deliveredCount = orders.filter((o) => o.deliveryStatus === "delivered").length;
+  const notdeliveredCount = orders.filter((o) => o.deliveryStatus === "not_delivered").length;
 
   // Ensure you have orders loaded before this
 const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
@@ -193,7 +195,7 @@ const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
         <span className="font-bold text-red-600">{FailedCount}</span>
       </div>
       <div className="flex items-center space-x-2">
-        <span>Pending</span>
+        <span>Processing</span>
         <span className="font-bold text-amber-500">{pendingCount}</span>
       </div>
     </div>

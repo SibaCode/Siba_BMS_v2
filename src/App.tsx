@@ -4,13 +4,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { CartProvider } from "./contexts/CartContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminInventory from "./pages/AdminInventory";
 import AdminOrders from "./pages/AdminOrders";
-import AdminCreateOrder from "./pages/AdminCreateOrder";
 import AdminCustomers from "./pages/AdminCustomers";
 import AdminInvoice from "./pages/AdminInvoice";
 import AdminBusinessInfoPage from "./pages/AdminBusinessInfoPage";
@@ -24,13 +22,14 @@ import ShoppingCart from "./pages/ShoppingCart";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import { AdminLayout } from "./components/AdminLayout";
+import AdminCreateOrder from "./pages/AdminCreateOrder";
+import AdminEditOrder from "./pages/AdminEditOrder";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <CartProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -53,7 +52,6 @@ const App = () => (
                 <AdminOrders />
               </AdminLayout>
             } />
-            <Route path="/admin/orders/create" element={<AdminCreateOrder />} />
             <Route path="/admin/customers" element={
               <AdminLayout title="Customer Management">
                 <AdminCustomers />
@@ -69,7 +67,6 @@ const App = () => (
                 <BusinessInfoPage />
               </AdminLayout>
             } />
-            <Route path="/storefront" element={<StorefrontPage />} />
             <Route path="/admin/settings/categories" element={
               <AdminLayout title="Category Management">
                 <AdminCategoriesPage />
@@ -80,19 +77,29 @@ const App = () => (
                 <AdminExpensesPage />
               </AdminLayout>
             } />
-            
+             {/* <Route path="/admin/create-order" element={
+              <AdminLayout title="Expense Management">
+                <CreateOrderForm />
+              </AdminLayout>
+            } />  */}
+
             {/* Public store routes */}
+            <Route path="/storefront" element={<StorefrontPage />} />
             <Route path="/store" element={<PublicStore />} />
-            <Route path="/store/product/:productId" element={<ProductDetailsPage />} />
+            <Route path="/store/product/:id" element={<ProductDetailsPage />} />
             <Route path="/store/cart" element={<ShoppingCart />} />
+            {/* <Route path="/seed" element={<SeedCustomers />} /> */}
+
             <Route path="/store/checkout" element={<Checkout />} />
             <Route path="/store/success" element={<OrderSuccess />} />
-            
+            <Route path="/admin/orders/create" element={<AdminCreateOrder />} />
+            <Route path="/admin/orders/edit/:id" element={<AdminEditOrder />} />
+
+
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </CartProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

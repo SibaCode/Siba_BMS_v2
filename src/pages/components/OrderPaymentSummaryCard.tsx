@@ -34,26 +34,26 @@ const OrderPaymentSummaryCard = () => {
     deliveryStatus: toLowerSafe(order.status || order.deliveryStatus),
     paymentStatus: toLowerSafe(order.paymentStatus),
   }));
-
+console.log(normalizedOrders)
   const orderStatusData = [
     {
-      status: "Processing",
-      count: normalizedOrders.filter(o => o.deliveryStatus === "Pending").length,
+      status: "Pending",
+      count: normalizedOrders.filter(o => o.deliveryStatus === "pending").length,
       color: "#f59e0b",
     },
     {
       status: "Delivered",
-      count: normalizedOrders.filter(o => o.deliveryStatus === "Delivered").length,
+      count: normalizedOrders.filter(o => o.deliveryStatus === "delivered").length,
       color: "#10b981",
     },
     {
       status: "Not Delivered",
-      count: normalizedOrders.filter(o => o.deliveryStatus === "Not delivered").length,
+      count: normalizedOrders.filter(o => o.deliveryStatus === "not_delivered").length,
       color: "#ef4444",
     },
     {
-      status: "In_transit",
-      count: normalizedOrders.filter(o => o.deliveryStatus === "In transit").length,
+      status: "In transit",
+      count: normalizedOrders.filter(o => o.deliveryStatus === "in_transit").length,
       color: "#ef4444",
     },
   ];
@@ -61,17 +61,17 @@ const OrderPaymentSummaryCard = () => {
   const paymentStatusData = [
     {
       status: "Paid",
-      count: normalizedOrders.filter(o => o.paymentStatus === "Paid").length,
+      count: normalizedOrders.filter(o => o.paymentStatus === "paid").length,
       color: "#10b981",
     },
     {
       status: "Failed",
-      count: normalizedOrders.filter(o => o.paymentStatus === "Failed").length,
+      count: normalizedOrders.filter(o => o.paymentStatus === "failed").length,
       color: "#f59e0b",
     },
     {
       status: "Processing",
-      count: normalizedOrders.filter(o => o.paymentStatus === "Processing").length,
+      count: normalizedOrders.filter(o => o.paymentStatus === "processing").length,
       color: "#ef4444",
     },
   ];

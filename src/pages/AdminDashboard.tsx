@@ -119,7 +119,7 @@ const AdminDashboard = () => {
   const totalStockItems = stockOverviewData.reduce((sum, item) => sum + item.units, 0);
   // const deliveredOrders = orderStatusData.find(item => item.status === 'Delivered')?.count || 0;
   // const notDeliveredOrders = orderStatusData.find(item => item.status === 'Not Delivered')?.count || 0;
-  const paidAmount = paymentStatusData.find(item => item.status === 'Paid')?.count || 0;
+  const paidAmount = paymentStatusData.find(item => item.status === 'paid')?.count || 0;
   const [businessInfo, setBusinessInfo] = useState<any[]>([]);
 
   useEffect(() => {

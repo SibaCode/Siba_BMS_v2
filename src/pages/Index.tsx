@@ -189,7 +189,7 @@ const Index = () => {
       </div>
 
       {/* Payment Methods */}
-      <div className="bg-muted/30 py-16">
+      {/* <div className="bg-muted/30 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Payment Methods</h2>
@@ -205,7 +205,7 @@ const Index = () => {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Footer */}
       <footer className="border-t py-8">

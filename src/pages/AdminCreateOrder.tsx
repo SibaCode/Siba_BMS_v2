@@ -291,8 +291,8 @@ const [searchTerm, setSearchTerm] = useState("");
         total: calculateTotal(),
         paymentMethod,
         orderId: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        paymentStatus: paymentMethod === "cash" ? "paid" : "pending",
-        deliveryStatus: "Pending",
+        paymentStatus: "processing",
+        deliveryStatus: "pending",
         notes,
         orderDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
@@ -359,7 +359,7 @@ const [searchTerm, setSearchTerm] = useState("");
                 </Link>
               </Button>
               <ShoppingCart className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">Create New Order1</h1>
+              <h1 className="text-2xl font-bold text-foreground">Create New Order</h1>
             </div>
           </div>
         </div>
@@ -384,43 +384,43 @@ const [searchTerm, setSearchTerm] = useState("");
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  
-{/* Select customer dropdown */}
-<div className="mb-4">
-  <Label htmlFor="selectCustomer">Customer</Label>
-  <select
-    id="selectCustomer"
-    className="mt-1 w-full border rounded px-3 py-2"
-    onChange={(e) => {
-      const selectedId = e.target.value;
-      if (selectedId === "new") {
-        setCustomerInfo(emptyCustomer); // New customer selected
-      } else {
-        const selected = allCustomers.find((c) => c.id === selectedId);
-        if (selected) setCustomerInfo(selected); // Existing customer
-      }
-    }}
-    value={customerInfo.id ?? "new"}
-  >
-    <option value="new">➕ New Customer</option>
-    {allCustomers.map((c) => (
-      <option key={c.id} value={c.id}>
-        {c.name} ({c.phone})
-      </option>
-    ))}
-  </select>
-</div>
+                    {/* Select customer dropdown */}
+                    <div className="mb-4">
+                      <Label htmlFor="selectCustomer">Customer</Label>
+                      <select
+                        id="selectCustomer"
+                        className="mt-1 w-full border rounded px-3 py-2"
+                        onChange={(e) => {
+                          const selectedId = e.target.value;
+                          if (selectedId === "new") {
+                            setCustomerInfo(emptyCustomer); // New customer selected
+                          } else {
+                            const selected = allCustomers.find((c) => c.id === selectedId);
+                            if (selected) setCustomerInfo(selected); // Existing customer
+                          }
+                        }}
+                        value={customerInfo.id ?? "new"}
+                      >
+                        <option value="new">➕ New Customer</option>
+                        {allCustomers.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} ({c.phone})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-{/* Inputs to fill out customer details */}
-<div className="mb-4">
-  <Label htmlFor="name">Full Name *</Label>
-  <Input
-    id="name"
-    value={customerInfo.name}
-    onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-    placeholder="John Doe"
-    className="mt-1 w-full border rounded px-3 py-2"
-  />
-</div>
+                    {/* Inputs to fill out customer details */}
+                    <div className="mb-4">
+                      <Label htmlFor="name">Full Name *</Label>
+                      <Input
+                        id="name"
+                        value={customerInfo.name}
+                        onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
+                        placeholder="John Doe"
+                        className="mt-1 w-full border rounded px-3 py-2"
+                      />
+                    </div>
                       {/* Customer Full Name */}
    
                     <div>
@@ -474,110 +474,110 @@ const [searchTerm, setSearchTerm] = useState("");
               transition={{ duration: 0.3, delay: 0.1 }}
             >
              <Card className="shadow-lg border-0 bg-white/70 backdrop-blur-sm">
-  <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
-    <CardTitle className="flex items-center space-x-2">
-      <Package className="h-5 w-5" />
-      <span>Products</span>
-    </CardTitle>
-  </CardHeader>
+              <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center space-x-2">
+                  <Package className="h-5 w-5" />
+                  <span>Products</span>
+                </CardTitle>
+              </CardHeader>
 
-  <CardContent className="p-4">
-    {loading ? (
-      <p>Loading products...</p>
-    ) : products.length === 0 ? (
-      <p>No products found.</p>
-    ) : (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[500px] overflow-hidden">
-        {/* Left: Search + Product List */}
-        <div className="col-span-1 border-r pr-2 overflow-y-auto">
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="w-full mb-2 px-3 py-2 border rounded"
-            onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-          />
+              <CardContent className="p-4">
+                {loading ? (
+                  <p>Loading products...</p>
+                ) : products.length === 0 ? (
+                  <p>No products found.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[500px] overflow-hidden">
+                    {/* Left: Search + Product List */}
+                    <div className="col-span-1 border-r pr-2 overflow-y-auto">
+                      <input
+                        type="text"
+                        placeholder="Search products..."
+                        className="w-full mb-2 px-3 py-2 border rounded"
+                        onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+                      />
 
-          <ul className="space-y-2">
-            {products
-              .filter((p) =>
-                p.name.toLowerCase().includes(searchTerm || "")
-              )
-              .map((product, i) => (
-                <li
-                  key={product.docId}
-                  className={`p-2 rounded cursor-pointer hover:bg-orange-100 transition ${
-                    selectedProduct?.docId === product.docId ? "bg-orange-200" : ""
-                  }`}
-                  onClick={() => setSelectedProduct(product)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <img
-                      src={product.productImage}
-                      alt={product.name}
-                      className="w-10 h-10 object-cover rounded"
-                    />
-                    <span className="text-sm">{product.name}</span>
-                  </div>
-                </li>
-              ))}
-          </ul>
-        </div>
-
-        {/* Right: Selected Product's Variants */}
-        <div className="col-span-2 overflow-y-auto px-2">
-          {selectedProduct ? (
-            <>
-              <h3 className="text-lg font-semibold mb-2">
-                {selectedProduct.name}
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {selectedProduct.variants.map((variant, index) => {
-                  const isOutOfStock = variant.stockQuantity === 0;
-                  return (
-                    <div
-                      key={`${selectedProduct.docId}-${index}`}
-                      className={`p-4 border rounded-lg bg-white shadow-sm transition ${
-                        isOutOfStock ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"
-                      }`}
-                      onClick={() =>
-                        !isOutOfStock && addProductToOrder(selectedProduct, index)
-                      }
-                    >
-                      <div className="flex items-center space-x-4">
-                        <img
-                          src={variant.images[0] || selectedProduct.productImage}
-                          alt={variant.type}
-                          className="w-16 h-16 object-cover rounded"
-                        />
-                        <div className="flex flex-col">
-                          <p className="font-medium text-sm">{variant.type}</p>
-                          <p className="text-xs text-gray-500">
-                            Color: {variant.color} | Size: {variant.size}
-                          </p>
-                          <p className="font-bold text-orange-600 text-md">
-                            R{variant.sellingPrice.toFixed(2)}
-                          </p>
-                          <Badge
-                            variant={isOutOfStock ? "destructive" : "default"}
-                            className="w-max text-xs mt-1"
-                          >
-                            {isOutOfStock ? "Out of Stock" : `${variant.stockQuantity} in stock`}
-                          </Badge>
-                        </div>
-                      </div>
+                      <ul className="space-y-2">
+                        {products
+                          .filter((p) =>
+                            p.name.toLowerCase().includes(searchTerm || "")
+                          )
+                          .map((product, i) => (
+                            <li
+                              key={product.docId}
+                              className={`p-2 rounded cursor-pointer hover:bg-orange-100 transition ${
+                                selectedProduct?.docId === product.docId ? "bg-orange-200" : ""
+                              }`}
+                              onClick={() => setSelectedProduct(product)}
+                            >
+                              <div className="flex items-center space-x-2">
+                                <img
+                                  src={product.productImage}
+                                  alt={product.name}
+                                  className="w-10 h-10 object-cover rounded"
+                                />
+                                <span className="text-sm">{product.name}</span>
+                              </div>
+                            </li>
+                          ))}
+                      </ul>
                     </div>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <p className="text-gray-500">Select a product to view variants.</p>
-          )}
-        </div>
-      </div>
-    )}
-  </CardContent>
-</Card>
+
+                    {/* Right: Selected Product's Variants */}
+                    <div className="col-span-2 overflow-y-auto px-2">
+                      {selectedProduct ? (
+                        <>
+                          <h3 className="text-lg font-semibold mb-2">
+                            {selectedProduct.name}
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {selectedProduct.variants.map((variant, index) => {
+                              const isOutOfStock = variant.stockQuantity === 0;
+                              return (
+                                <div
+                                  key={`${selectedProduct.docId}-${index}`}
+                                  className={`p-4 border rounded-lg bg-white shadow-sm transition ${
+                                    isOutOfStock ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"
+                                  }`}
+                                  onClick={() =>
+                                    !isOutOfStock && addProductToOrder(selectedProduct, index)
+                                  }
+                                >
+                                  <div className="flex items-center space-x-4">
+                                    <img
+                                      src={variant.images[0] || selectedProduct.productImage}
+                                      alt={variant.type}
+                                      className="w-16 h-16 object-cover rounded"
+                                    />
+                                    <div className="flex flex-col">
+                                      <p className="font-medium text-sm">{variant.type}</p>
+                                      <p className="text-xs text-gray-500">
+                                        Color: {variant.color} | Size: {variant.size}
+                                      </p>
+                                      <p className="font-bold text-orange-600 text-md">
+                                        R{variant.sellingPrice.toFixed(2)}
+                                      </p>
+                                      <Badge
+                                        variant={isOutOfStock ? "destructive" : "default"}
+                                        className="w-max text-xs mt-1"
+                                      >
+                                        {isOutOfStock ? "Out of Stock" : `${variant.stockQuantity} in stock`}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-gray-500">Select a product to view variants.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             </motion.div>
           </div>
@@ -644,14 +644,9 @@ const [searchTerm, setSearchTerm] = useState("");
 
                     <div className="border-t pt-4 space-y-2 text-right">
                       <div>
-                        Subtotal: <span className="font-semibold">R{calculateSubtotal().toFixed(2)}</span>
+                        Total: <span className="font-semibold">R{calculateTotal().toFixed(2)}</span>
                       </div>
-                      <div>
-                        VAT (15%): <span className="font-semibold">R{calculateTax().toFixed(2)}</span>
-                      </div>
-                      <div className="text-lg font-bold">
-                        Total: <span>R{calculateTotal().toFixed(2)}</span>
-                      </div>
+                     
                     </div>
 
                     <div className="mt-6 space-y-4">
@@ -663,8 +658,7 @@ const [searchTerm, setSearchTerm] = useState("");
                         onChange={(e) => setPaymentMethod(e.target.value)}
                       >
                         <option value="cash">Cash</option>
-                        <option value="credit">Credit Card</option>
-                        <option value="eft">EFT</option>
+                        <option value="transfer">Bank Transfer</option>
                       </select>
 
                       <Label htmlFor="notes">Order Notes</Label>
