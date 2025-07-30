@@ -20,7 +20,6 @@ function VariantsSection({ formData, setFormData }) {
       stockPrice: "",
       stockQuantity: "",
       description: "",
-      images: [""],
     });
     setEditingIndex(null);
     setIsModalOpen(true);
@@ -77,7 +76,6 @@ function VariantsSection({ formData, setFormData }) {
       color: '',
       size: '',
       sellingPrice: '',
-      images: [],
       stockQuantity: 0,
     });
   };
@@ -97,7 +95,6 @@ function VariantsSection({ formData, setFormData }) {
                 <th className="border border-gray-300 p-2 text-left">Color</th>
                 <th className="border border-gray-300 p-2 text-left">Size</th>
                 <th className="border border-gray-300 p-2 text-left">Selling Price (R)</th>
-                <th className="border border-gray-300 p-2 text-left">Image</th>
                 <th className="border border-gray-300 p-2 text-left">Stock Quantity</th>
                 <th className="border border-gray-300 p-2 text-left">Actions</th>
               </tr>
@@ -109,17 +106,7 @@ function VariantsSection({ formData, setFormData }) {
               <td className="border border-gray-300 p-2">{variant.color}</td>
               <td className="border border-gray-300 p-2">{variant.size}</td>
               <td className="border border-gray-300 p-2">{variant.sellingPrice}</td>
-              <td className="border border-gray-300 p-2">
-                {variant.images && variant.images[0] ? (
-                    <img 
-                    src={variant.images[0]} 
-                    alt="Variant" 
-                    className="max-h-20 object-contain"
-                    />
-                ) : (
-                    <span>No image</span>
-                )}
-                </td>
+             
 
               <td className="border border-gray-300 p-2">{variant.stockQuantity}</td>
               <td className="p-2 space-x-2">
@@ -146,7 +133,7 @@ function VariantsSection({ formData, setFormData }) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded max-w-md w-full">
             <h5 className="text-lg font-semibold mb-4">
-              {editingIndex !== null ? "Edit product ariant" : "Add new product ariant"}
+              {editingIndex !== null ? "Edit product ariant" : "Add new product variant"}
             </h5>
 
             <div className="space-y-3">
@@ -229,30 +216,6 @@ function VariantsSection({ formData, setFormData }) {
                   className="w-full border rounded p-1"
                 />
               </div>
-              <div>
-                <label htmlFor="modal-image" className="block font-medium">Image URL</label>
-                <input
-                    id="modal-image"
-                    placeholder="https://example.com/image.jpg"
-                    type="text"
-                    value={currentVariant.images?.[0] || ""}
-                    onChange={(e) =>
-                    setCurrentVariant(prev => ({
-                        ...prev,
-                        images: [e.target.value],
-                    }))
-                    }
-                    className="w-full border rounded p-1"
-                />
-                {/* Image preview */}
-                {currentVariant.images?.[0] && (
-                    <img
-                    src={currentVariant.images[0]}
-                    alt="Variant Preview"
-                    className="mt-2 max-h-40 object-contain border rounded"
-                    />
-                )}
-                </div>
 
             </div>
 

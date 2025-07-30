@@ -131,7 +131,7 @@ const AdminInventory = () => {
   // Generate next numeric id by getting max id + 1
   const generateNextId = () => {
     if (products.length === 0) return 1;
-    const maxId = Math.max(...products.map((p) => p.id || 0));
+    const maxId = Math.max(...products.map((p) => p.docId || 0));
     return maxId + 1;
   };
 
@@ -355,7 +355,7 @@ const AdminInventory = () => {
           size: "",
           sellingPrice: "",
           stockPrice: "",
-          category: "",
+          // category: "",
           stockQuantity: "",
           description: "",
           images: [],
@@ -420,7 +420,7 @@ const navigate = useNavigate();
             </div>
 
             <div className="flex items-center space-x-4">
-            <Button onClick={() => navigate("/products/add")}>
+            <Button onClick={() => navigate("/admin/inventory/add")}>
       <Plus className="h-4 w-4 mr-2" />
       Add Product
     </Button>
@@ -739,18 +739,20 @@ const navigate = useNavigate();
                   </div>
                   
                   <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => openEditModal(product)} 
-                      className="flex-1"
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
+                    <Button
+  variant="outline"
+  size="sm"
+  onClick={() => navigate(`/admin/inventory/edit/${product.docId}`)}
+  className="flex items-center justify-center gap-2 flex-1
+             border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white
+             font-poppins font-medium transition-colors duration-200"
+>
+  <Edit className="h-4 w-4" />
+  Edit
+</Button>
                     <Button 
                       variant="destructive" 
-                      disabled
+                      
                       onClick={() => deleteProduct(product)} 
                       size="sm"
                     >

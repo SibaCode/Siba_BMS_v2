@@ -106,8 +106,8 @@ const App = () => (
             <Route path="/store/success" element={<OrderSuccess />} />
             <Route path="/admin/orders/create" element={<AdminCreateOrder />} />
             <Route path="/admin/orders/edit/:id" element={<AdminEditOrder />} />
-            <Route path="/products/add" element={<ProductFormPage />} />
-            <Route path="/products/edit/:id" element={<ProductFormPage />} />
+            <Route path="/admin/inventory/add" element={<ProductFormPage />} />
+            <Route path="/admin/inventory/edit/:id" element={<ProductFormPage />} />
 
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
