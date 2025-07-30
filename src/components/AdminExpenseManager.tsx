@@ -57,7 +57,9 @@ const AdminExpenseManager = () => {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { toast } = useToast();
-
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  
   const form = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -167,10 +169,16 @@ const AdminExpenseManager = () => {
     }
   };
 
-  const filteredExpenses = expenses.filter(expense => 
-    categoryFilter === "all" || expense.category === categoryFilter
-  );
-
+  const filteredExpenses = expenses.filter((expense) => {
+    const categoryMatch = categoryFilter === "all" || expense.category === categoryFilter;
+  
+    const dateMatch =
+      (!startDate || expense.date >= startDate) &&
+      (!endDate || expense.date <= endDate);
+  
+    return categoryMatch && dateMatch;
+  });
+  
   const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   if (loading) {
@@ -180,15 +188,15 @@ const AdminExpenseManager = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle className="flex items-center space-x-2">
             <DollarSign className="h-5 w-5" />
             <span>Expense Manager</span>
           </CardTitle>
-          
+  
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button onClick={openAddModal}>
+              <Button className="w-full sm:w-auto" onClick={openAddModal}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Expense
               </Button>
@@ -199,9 +207,10 @@ const AdminExpenseManager = () => {
                   {editingExpense ? "Edit Expense" : "Add New Expense"}
                 </DialogTitle>
               </DialogHeader>
-              
+  
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  {/* Title */}
                   <FormField
                     control={form.control}
                     name="title"
@@ -215,7 +224,8 @@ const AdminExpenseManager = () => {
                       </FormItem>
                     )}
                   />
-
+  
+                  {/* Amount */}
                   <FormField
                     control={form.control}
                     name="amount"
@@ -235,7 +245,8 @@ const AdminExpenseManager = () => {
                       </FormItem>
                     )}
                   />
-
+  
+                  {/* Category */}
                   <FormField
                     control={form.control}
                     name="category"
@@ -260,7 +271,8 @@ const AdminExpenseManager = () => {
                       </FormItem>
                     )}
                   />
-
+  
+                  {/* Date */}
                   <FormField
                     control={form.control}
                     name="date"
@@ -277,11 +289,7 @@ const AdminExpenseManager = () => {
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
+                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </FormControl>
@@ -295,7 +303,6 @@ const AdminExpenseManager = () => {
                                 date > new Date() || date < new Date("1900-01-01")
                               }
                               initialFocus
-                              className="pointer-events-auto"
                             />
                           </PopoverContent>
                         </Popover>
@@ -303,7 +310,8 @@ const AdminExpenseManager = () => {
                       </FormItem>
                     )}
                   />
-
+  
+                  {/* Notes */}
                   <FormField
                     control={form.control}
                     name="notes"
@@ -317,7 +325,8 @@ const AdminExpenseManager = () => {
                       </FormItem>
                     )}
                   />
-
+  
+                  {/* Buttons */}
                   <div className="flex justify-end space-x-2">
                     <Button
                       type="button"
@@ -336,84 +345,135 @@ const AdminExpenseManager = () => {
           </Dialog>
         </div>
       </CardHeader>
-      
+  
       <CardContent>
         {/* Filter and Total */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <Filter className="h-4 w-4" />
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {expenseCategories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {expenseCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+  
+            {/* Start Date */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-40 justify-start text-left font-normal">
+                  {startDate ? format(startDate, "PPP") : "Start date"}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  disabled={(date) => date > new Date()}
+                />
+              </PopoverContent>
+            </Popover>
+  
+            {/* End Date */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-40 justify-start text-left font-normal">
+                  {endDate ? format(endDate, "PPP") : "End date"}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={setEndDate}
+                  disabled={(date) => date > new Date()}
+                />
+              </PopoverContent>
+            </Popover>
+  
+            {/* Clear Filters Button */}
+            <Button variant="ghost" size="sm" onClick={() => {
+              setCategoryFilter("all");
+              setStartDate(null);
+              setEndDate(null);
+            }}>
+              Clear Filters
+            </Button>
           </div>
-          
+  
           <div className="text-lg font-semibold">
             Total: R{totalExpenses.toFixed(2)}
           </div>
         </div>
-
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Notes</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredExpenses.length === 0 ? (
+  
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
-                  No expenses found. Add your first expense!
-                </TableCell>
+                <TableHead>Date</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Notes</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
-            ) : (
-              filteredExpenses.map((expense) => (
-                <TableRow key={expense.id}>
-                  <TableCell>{format(expense.date, "MMM dd, yyyy")}</TableCell>
-                  <TableCell className="font-medium">{expense.title}</TableCell>
-                  <TableCell>{expense.category}</TableCell>
-                  <TableCell>R{expense.amount.toFixed(2)}</TableCell>
-                  <TableCell>{expense.notes || "—"}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEditModal(expense)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => deleteExpense(expense.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {filteredExpenses.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">
+                    No expenses found. Add your first expense!
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredExpenses.map((expense) => (
+                  <TableRow key={expense.id}>
+                    <TableCell>{format(expense.date, "MMM dd, yyyy")}</TableCell>
+                    <TableCell className="font-medium">{expense.title}</TableCell>
+                    <TableCell>{expense.category}</TableCell>
+                    <TableCell>R{expense.amount.toFixed(2)}</TableCell>
+                    <TableCell>{expense.notes || "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditModal(expense)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteExpense(expense.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
+  
 };
 
 export default AdminExpenseManager;

@@ -88,41 +88,50 @@ function VariantsSection({ formData, setFormData }) {
      
       {/* Variants Table/List */}
       {/* {formData.variants.length > 0 ? ( */}
-      <table className="w-full table-auto border-collapse border border-gray-200">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-gray-300 p-2 text-left">Type</th>
-                <th className="border border-gray-300 p-2 text-left">Color</th>
-                <th className="border border-gray-300 p-2 text-left">Size</th>
-                <th className="border border-gray-300 p-2 text-left">Selling Price (R)</th>
-                <th className="border border-gray-300 p-2 text-left">Stock Quantity</th>
-                <th className="border border-gray-300 p-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-          {formData.variants.map((variant, index) => (
-            <tr key={index} className="border-t">
-              <td className="border border-gray-300 p-2">{variant.type}</td>
-              <td className="border border-gray-300 p-2">{variant.color}</td>
-              <td className="border border-gray-300 p-2">{variant.size}</td>
-              <td className="border border-gray-300 p-2">{variant.sellingPrice}</td>
-             
+      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+  <table className="min-w-full table-auto bg-white">
+    <thead>
+      <tr className="bg-gray-100 text-gray-700 text-sm">
+        <th className="px-4 py-3 text-left">Variant</th>
+        <th className="px-4 py-3 text-left">Details</th>
+        <th className="px-4 py-3 text-left">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {formData.variants.map((variant, index) => (
+        <tr key={index} className="border-t hover:bg-gray-50">
+          <td className="px-4 py-2 text-sm text-gray-800">
+            {variant.type} - {variant.color} - {variant.size}
+          </td>
+          <td className="px-4 py-2 text-sm text-gray-800">
+            R{variant.sellingPrice} - {variant.stockQuantity} in stock
+          </td>
+          <td className="px-4 py-2 flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openEditModal(variant, index)}
+              className="flex items-center gap-1"
+            >
+              <Edit className="h-4 w-4" />
+              Edit
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => removeVariant(index)}
+              className="flex items-center gap-1"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </Button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 
-              <td className="border border-gray-300 p-2">{variant.stockQuantity}</td>
-              <td className="p-2 space-x-2">
-                 <Button variant="outline" size="sm"  onClick={() => openEditModal(variant, index)} className="flex-1">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button   onClick={() => removeVariant(index)} size="sm">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-          
-          </table>
 
 {/* ) : (
     <p className="text-sm text-gray-500 italic mb-4">No variants added yet.</p>
