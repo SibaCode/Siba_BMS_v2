@@ -90,8 +90,8 @@ const CustomerOverview = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium">{customer.orders} orders</div>
-                    <div className="text-xs text-muted-foreground">{customer.joinDate}</div>
+                    {/* <div className="text-sm font-medium">{customer.orders} orders</div> */}
+                    {/* <div className="text-xs text-muted-foreground">{customer.joinDate}</div> */}
                   </div>
                 </motion.div>
               ))}

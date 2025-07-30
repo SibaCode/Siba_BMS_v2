@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { db } from "@/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { UserPlus, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 import {
   Package,
   AlertTriangle,
@@ -160,9 +164,13 @@ export const InventoryOverview = () => {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
 
+      <Button asChild variant="outline" size="sm" className="w-full mt-3 card-hover">
+                <Link to="/admin/inventory">View All Inventory</Link>
+              </Button>
+        </CardContent>
+        
+      </Card>
       {/* Order & Payment Summary */}
       <OrderPaymentSummaryCard />
 

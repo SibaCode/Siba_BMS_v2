@@ -3,7 +3,9 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase"; // Adjust this import to your actual Firebase setup
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Truck, ShoppingCart, CreditCard, CheckCircle, Clock } from "lucide-react";
-
+import { Link } from "react-router-dom";
+import { UserPlus, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
 const OrderPaymentSummaryCard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,6 +137,9 @@ console.log(normalizedOrders)
             ))}
           </div>
         </div>
+        <Button asChild variant="outline" size="sm" className="w-full mt-3 card-hover">
+                <Link to="/admin/orders">View All Orders</Link>
+              </Button>
       </CardContent>
     </Card>
   );
