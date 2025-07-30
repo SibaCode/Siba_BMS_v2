@@ -27,6 +27,7 @@ import AdminEditOrder from "./pages/AdminEditOrder";
 import Booking from "./pages/Booking";
 import Services from "./pages/Services";
 import  ProductFormPage  from "./pages/components/ProductFormPage";
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +109,8 @@ const App = () => (
             <Route path="/admin/orders/edit/:id" element={<AdminEditOrder />} />
             <Route path="/admin/inventory/add" element={<ProductFormPage />} />
             <Route path="/admin/inventory/edit/:id" element={<ProductFormPage />} />
+            <Route path="/landing" element={<LandingPage />} />
+
 
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
