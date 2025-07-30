@@ -13,7 +13,7 @@ import { db } from "@/firebase"; // Adjust path based on your structure
 import { Checkbox } from "@/components/ui/checkbox";
 import VariantsSection from "@/pages/components/VariantsSection"
 import CategorySelector from "@/pages/components/CategorySelector"
-
+import { useNavigate } from "react-router-dom";
 import {
   addDoc,
   updateDoc,
@@ -403,6 +403,7 @@ const totalStockValue = products.reduce((total, product) => {
   }, 0) || 0;
   return total + productValue;
 }, 0);
+const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
@@ -419,133 +420,10 @@ const totalStockValue = products.reduce((total, product) => {
             </div>
 
             <div className="flex items-center space-x-4">
-
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={openAddModal}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Product
-                </Button>
-                
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
-                </DialogHeader>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Core Product Fields */}
-                  <div>
-                    <Label htmlFor="productID">Product ID *</Label>
-                    <Input
-                      id="productID"
-                      type="text"
-                      placeholder="e.g. PRD123"
-                      value={formData.productID}
-                      onChange={(e) => handleInputChange("productID", e.target.value)}
-                      disabled={!!editingProduct}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="name">Product Name *</Label>
-                    <Input
-                      id="name"
-                      placeholder="Product name"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                  <Label htmlFor="category">Category *</Label>
-
-                        <CategorySelector
-                          value={formData.category}
-                          onChange={(value) => handleInputChange("category", value)}
-                        />
-
-                   </div>
-
-                  <div>
-                    <Label htmlFor="supplier">Supplier *</Label>
-                    <Input
-                      id="supplier"
-                      placeholder="Supplier name"
-                      value={formData.supplier}
-                      onChange={(e) => handleInputChange("supplier", e.target.value)}
-                    />
-                  </div>
-                  <div>
-              <Label htmlFor="productImage">Product Image *</Label>
-              <Input
-                id="productImage"
-                placeholder="Product Image URL"
-                value={formData.productImage}
-                onChange={(e) => handleInputChange("productImage", e.target.value)}
-              />
-              {/* Image preview */}
-              {formData.productImage && (
-                <img
-                  src={formData.productImage}
-                  alt="Product Preview"
-                  className="mt-2 max-h-40 object-contain border rounded"
-                />
-              )}
-            </div>
-
-
-                  <div>
-                    <Label htmlFor="batchNumber">Batch Number *</Label>
-                    <Input
-                      id="batchNumber"
-                      placeholder="Batch #"
-                      value={formData.batchNumber}
-                      onChange={(e) => handleInputChange("batchNumber", e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="status">Status *</Label>
-                    <Input
-                      id="status"
-                      placeholder="e.g. Active / Inactive"
-                      value={formData.status}
-                      onChange={(e) => handleInputChange("status", e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="lastRestocked">Last Restocked</Label>
-                    <Input
-                      id="lastRestocked"
-                      type="date"
-                      value={formData.lastRestocked}
-                      onChange={(e) => handleInputChange("lastRestocked", e.target.value)}
-                    />
-                  </div>
-                </div>
-
-
-                <VariantsSection formData={formData} setFormData={setFormData} />
-
-
-                <div className="mt-6 flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      resetForm();
-                      setIsModalOpen(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={editingProduct ? updateProduct : addProduct}>
-                    {editingProduct ? "Update Product" : "Add new product"}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => navigate("/products/add")}>
+      <Plus className="h-4 w-4 mr-2" />
+      Add Product
+    </Button>
   
             </div>
           </div>
