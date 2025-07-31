@@ -37,6 +37,16 @@ const Index = () => {
             >
               <a href="/contact">Get Started</a>
             </Button>
+            <Button asChild size="lg">
+                <Link to="/admin">
+                  <Settings className="h-5 w-5 mr-2" /> Admin Dashboard
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link to="/storefront">
+                  <Store className="h-5 w-5 mr-2" /> Business Profile
+                </Link>
+              </Button>
           </div>
         </div>
 
