@@ -109,7 +109,7 @@ const App = () => (
             <Route path="/admin/orders/edit/:id" element={<AdminEditOrder />} />
             <Route path="/admin/inventory/add" element={<ProductFormPage />} />
             <Route path="/admin/inventory/edit/:id" element={<ProductFormPage />} />
-            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/admin/landing" element={<LandingPage />} />
 
 
             {/* Catch-all route */}
