@@ -42,7 +42,7 @@ const Index = () => {
 
         <div className="md:w-1/2 max-w-md mx-auto">
           <img
-            src="/src/lib/image.png"
+            src="https://i.ibb.co/rGv5R48Z/Screenshot-from-2025-07-30-18-19-34.png"
             alt="Business app preview"
             className="rounded-3xl shadow-2xl w-full"
             loading="lazy"
