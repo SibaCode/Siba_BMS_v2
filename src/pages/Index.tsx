@@ -27,7 +27,7 @@ const Index = () => {
             Anywhere, Anytime
           </h1>
           <p className="mb-8 text-lg sm:text-xl drop-shadow-sm max-w-md mx-auto md:mx-0">
-            Manage your inventory, sales, and customers all from your phone with ease.
+            Manage your inventory, sales, and customers with ease.
           </p>
           <div className="flex justify-center md:justify-start gap-4">
             <Button
