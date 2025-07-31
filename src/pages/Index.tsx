@@ -1,189 +1,175 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
+  ShoppingBag,
+  BarChart2,
+  Users,
+  Package,
   Store,
   Settings,
   ShoppingCart,
-  Package,
-  Users,
   TrendingUp,
   DollarSign,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-white text-gray-800">
+    <div className="min-h-screen bg-gradient-to-tr from-blue-600 via-blue-400 to-white  font-sans">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-blue-100 py-20">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col-reverse lg:flex-row items-center justify-between gap-12">
-          <div className="lg:w-1/2 text-center lg:text-left">
-            <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-gray-900 leading-tight">
-              Manage Your Business Smartly
-            </h1>
-            <p className="text-lg text-gray-600 mb-6">
-              From inventory tracking to order and customer management, everything in one beautiful dashboard.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button asChild size="lg">
-                <Link to="/admin">
-                  <Settings className="h-5 w-5 mr-2" /> Admin Dashboard
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/storefront">
-                  <Store className="h-5 w-5 mr-2" /> Business Profile
-                </Link>
-              </Button>
-            </div>
-          </div>
-          <div className="lg:w-1/2">
-            <img src="https://i.ibb.co/rGv5R48Z/Screenshot-from-2025-07-30-18-19-34.png" alt="Dashboard preview" className="rounded-lg shadow-xl w-full" />
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold">Features</h2>
-            <p className="text-gray-600 mt-2">Everything you need to run your business smoothly</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card>
-              <CardHeader className="flex items-center gap-2">
-                <TrendingUp className="text-blue-600" />
-                <CardTitle>Smart Dashboard</CardTitle>
-              </CardHeader>
-              <CardContent className="text-gray-600">
-                <ul className="space-y-2">
-                  <li>Total stock and order overview</li>
-                  <li>Recent customers and orders</li>
-                  <li>Order and payment summary</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex items-center gap-2">
-                <Package className="text-blue-600" />
-                <CardTitle>Inventory Management</CardTitle>
-              </CardHeader>
-              <CardContent className="text-gray-600">
-                <ul className="space-y-2">
-                  <li>Add/edit products & categories</li>
-                  <li>Low/out of stock alerts</li>
-                  <li>Stock value & batch tracking</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex items-center gap-2">
-                <ShoppingCart className="text-blue-600" />
-                <CardTitle>Order Management</CardTitle>
-              </CardHeader>
-              <CardContent className="text-gray-600">
-                <ul className="space-y-2">
-                  <li>Track order and delivery status</li>
-                  <li>Printable invoices</li>
-                  <li>Payment status updates</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex items-center gap-2">
-                <Users className="text-blue-600" />
-                <CardTitle>Customer Management</CardTitle>
-              </CardHeader>
-              <CardContent className="text-gray-600">
-                <ul className="space-y-2">
-                  <li>Customer profiles and history</li>
-                  <li>Purchase tracking</li>
-                  <li>Contact details</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex items-center gap-2">
-                <DollarSign className="text-blue-600" />
-                <CardTitle>Expense Management</CardTitle>
-              </CardHeader>
-              <CardContent className="text-gray-600">
-                <ul className="space-y-2">
-                  <li>Track daily/monthly expenses</li>
-                  <li>Manage cost categories</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold mb-6">What Can This System Do For You?</h2>
-          <p className="text-gray-600 text-lg mb-10">
-            Save time and reduce manual errors with a system built to streamline your business operations.
+      <section className="flex flex-col md:flex-row items-center max-w-7xl mx-auto px-6 py-20 md:py-32 gap-10">
+        <div className="md:w-1/2 text-center md:text-left">
+          <h1 className="text-4xl sm:text-5xl font-extrabold mb-6 leading-tight drop-shadow-md">
+            Take Control of Your Business
+            <br />
+            Anywhere, Anytime
+          </h1>
+          <p className="mb-8 text-lg sm:text-xl drop-shadow-sm max-w-md mx-auto md:mx-0">
+            Manage your inventory, sales, and customers all from your phone with ease.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-            <div className="bg-blue-50 p-6 rounded-lg">
-              <CheckCircle className="text-blue-600 mb-4" />
-              <h4 className="font-semibold mb-2">Centralized Control</h4>
-              <p className="text-gray-600">Monitor inventory, sales, and customer activity from one place.</p>
-            </div>
-            <div className="bg-blue-50 p-6 rounded-lg">
-              <CheckCircle className="text-blue-600 mb-4" />
-              <h4 className="font-semibold mb-2">Improve Efficiency</h4>
-              <p className="text-gray-600">Spend less time on admin tasks and more on growing your business.</p>
-            </div>
-            <div className="bg-blue-50 p-6 rounded-lg">
-              <CheckCircle className="text-blue-600 mb-4" />
-              <h4 className="font-semibold mb-2">Data-Driven Decisions</h4>
-              <p className="text-gray-600">Get insights to make informed decisions about products and customers.</p>
-            </div>
+          <div className="flex justify-center md:justify-start gap-4">
+            <Button
+              asChild
+              size="lg"
+              className="bg-blue-700 text-white font-bold shadow-lg hover:bg-blue-800 "
+            >
+              <a href="/contact">Get Started</a>
+            </Button>
           </div>
         </div>
+
+        <div className="md:w-1/2 max-w-md mx-auto">
+          <img
+            src="/src/lib/image.png"
+            alt="Business app preview"
+            className="rounded-3xl shadow-2xl w-full"
+            loading="lazy"
+          />
+        </div>
       </section>
+
+     {/* Features Section */}
+<section className="py-20 bg-gray-50">
+  <div className="max-w-7xl mx-auto px-6">
+    <div className="text-center mb-16">
+      <h2 className="text-4xl font-bold text-gray-900">Powerful Features</h2>
+      <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
+        Save time, reduce errors, and grow your business with tools built to make running your operations effortless.
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+      {[
+        {
+          icon: <TrendingUp className="h-6 w-6" />,
+          title: "Smart Dashboard",
+          features: [
+            "Total stock & order overview",
+            "Recent customers & orders",
+            "Order & payment summary",
+          ],
+        },
+        {
+          icon: <Package className="h-6 w-6" />,
+          title: "Inventory Management",
+          features: [
+            "Add/edit products & categories",
+            "Low/out of stock alerts",
+            "Real-time stock value",
+          ],
+        },
+        {
+          icon: <ShoppingCart className="h-6 w-6" />,
+          title: "Order Management",
+          features: [
+            "Track order & delivery status",
+            "Printable invoices",
+            "Payment status updates",
+          ],
+        },
+        {
+          icon: <Users className="h-6 w-6" />,
+          title: "Customer Management",
+          features: [
+            "Customer profiles & history",
+            "Purchase tracking",
+            "Contact details",
+          ],
+        },
+        {
+          icon: <DollarSign className="h-6 w-6" />,
+          title: "Expense Management",
+          features: [
+            "Daily/monthly expense tracking",
+            "Manage cost categories",
+            "Detailed expense breakdowns",
+          ],
+        },
+      ].map((item, idx) => (
+        <div
+          key={idx}
+          className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all p-6 flex flex-col items-start space-y-4"
+        >
+          <div className="bg-blue-100 text-blue-700 p-3 rounded-full">
+            {item.icon}
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">{item.title}</h3>
+          <ul className="text-gray-600 list-disc list-inside space-y-1 pl-2">
+            {item.features.map((feat, i) => (
+              <li key={i}>{feat}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
 
       {/* Pricing Section */}
-      <section className="py-20 bg-gray-100">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold mb-6">Affordable Pricing</h2>
-          <p className="text-gray-600 text-lg mb-10">
-            Start managing your business today for just <span className="font-bold text-blue-600">R100/month</span>
-          </p>
-          <Card className="max-w-md mx-auto p-8 shadow-xl border border-gray-200">
-            <h3 className="text-2xl font-semibold mb-4">Basic Plan</h3>
-            <p className="text-gray-600 mb-6">Perfect for small businesses just starting out</p>
-            <ul className="text-gray-600 mb-6 space-y-2 text-left">
-              <li>✔ Full Dashboard Access</li>
-              <li>✔ Inventory and Orders</li>
-              <li>✔ Customers & Expenses</li>
-              <li>✔ Monthly Updates</li>
-              <li>✔ Support & Onboarding</li>
-            </ul>
-            <Button size="lg">Subscribe Now - R99/mo</Button>
-          </Card>
-        </div>
-      </section>
+   {/* Pricing Section */}
+<section className="bg-blue-50 py-20 px-6">
+  <div className="max-w-4xl mx-auto text-center mb-12">
+    <h2 className="text-4xl font-bold text-blue-900 mb-4">Simple Pricing</h2>
+    <p className="text-blue-700 text-lg">
+      One plan. Everything you need to manage your business.
+    </p>
+  </div>
 
-      {/* Footer */}
-      <footer className="border-t py-10 bg-white">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="text-sm text-gray-500">
-            © 2025 Smart Business Management System. Designed with care.
-          </p>
-        </div>
-      </footer>
+  <div className="max-w-md mx-auto">
+    <div className="bg-white border border-blue-700 rounded-2xl shadow-lg p-8 flex flex-col justify-between hover:shadow-xl transition">
+      <div>
+        <h3 className="text-2xl font-semibold text-blue-900 mb-2">Business Plan</h3>
+        <p className="text-4xl font-extrabold text-blue-700 mb-6">R99/month</p>
+        <ul className="text-left text-blue-800 list-disc list-inside space-y-3">
+          <li>Dashboard with real-time insights</li>
+          <li>Manage up to 100 products</li>
+          <li>Track orders and payments</li>
+          <li>Low stock and out-of-stock alerts</li>
+          <li>Customer & expense management</li>
+          <li>Printable invoices</li>
+        </ul>
+      </div>
+
+      <Button
+        size="lg"
+        className="mt-8 w-full bg-blue-700 text-white hover:bg-blue-800 font-semibold transition"
+      >
+        Get Started
+      </Button>
+    </div>
+  </div>
+</section>
+
+
+
+{/* Footer */}
+<footer className="bg-gray-100 text-gray-500 text-center text-sm py-6 mt-32 border-t border-gray-200">
+  © 2025 Your Business Name. All rights reserved.
+</footer>
+
     </div>
   );
 };

@@ -1,14 +1,30 @@
+import {
+  ShoppingBag,
+  BarChart2,
+  Users,
+  Package,
+  Store,
+  Settings,
+  ShoppingCart,
+  TrendingUp,
+  DollarSign,
+  CheckCircle,
+  ArrowRight,
+} from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, BarChart2, Users, Package } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-blue-600 via-blue-400 to-white text-indigo-900 font-sans">
-      {/* Hero */}
+    <div className="min-h-screen bg-gradient-to-tr from-blue-600 via-blue-400 to-white  font-sans">
+      {/* Hero Section */}
       <section className="flex flex-col md:flex-row items-center max-w-7xl mx-auto px-6 py-20 md:py-32 gap-10">
         <div className="md:w-1/2 text-center md:text-left">
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-6 leading-tight drop-shadow-md">
-            Take Control of Your Business<br />Anywhere, Anytime
+            Take Control of Your Business
+            <br />
+            Anywhere, Anytime
           </h1>
           <p className="mb-8 text-lg sm:text-xl drop-shadow-sm max-w-md mx-auto md:mx-0">
             Manage your inventory, sales, and customers all from your phone with ease.
@@ -17,20 +33,13 @@ const LandingPage = () => {
             <Button
               asChild
               size="lg"
-              className="bg-blue-700 text-white font-bold shadow-lg hover:bg-blue-800 transition"
+              className="bg-blue-700 text-white font-bold shadow-lg hover:bg-blue-800 "
             >
-              <a href="/admin">Go to Dashboard</a>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-blue-700 text-blue-700 hover:bg-blue-100 transition"
-            >
-              <a href="/storefront">View Storefront</a>
+              <a href="/contact">Get Started</a>
             </Button>
           </div>
         </div>
+
         <div className="md:w-1/2 max-w-md mx-auto">
           <img
             src="/src/lib/image.png"
@@ -41,132 +50,126 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="bg-white text-indigo-900 py-16 px-6">
-        <div className="max-w-5xl mx-auto grid gap-12 sm:grid-cols-2 md:grid-cols-4">
-          {[
-            {
-              icon: <ShoppingBag className="h-10 w-10 text-blue-600" />,
-              title: "Manage Orders",
-              description: "Track sales & shipments with one tap.",
-            },
-            {
-              icon: <Package className="h-10 w-10 text-blue-600" />,
-              title: "Inventory Control",
-              description: "Add, update, and get alerts on stock levels.",
-            },
-            {
-              icon: <Users className="h-10 w-10 text-blue-600" />,
-              title: "Customer Insights",
-              description: "Know your customers better for targeted marketing.",
-            },
-            {
-              icon: <BarChart2 className="h-10 w-10 text-blue-600" />,
-              title: "Sales Analytics",
-              description: "Get visual reports and optimize your business.",
-            },
-          ].map((feature) => (
-            <div
-              key={feature.title}
-              className="flex flex-col items-center text-center space-y-4"
-            >
-              <div className="p-4 rounded-full bg-blue-100">{feature.icon}</div>
-              <h3 className="font-semibold text-lg">{feature.title}</h3>
-              <p className="text-gray-700 text-sm">{feature.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+     {/* Features Section */}
+<section className="py-20 bg-gray-50">
+  <div className="max-w-7xl mx-auto px-6">
+    <div className="text-center mb-16">
+      <h2 className="text-4xl font-bold text-gray-900">Powerful Features</h2>
+      <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
+        Save time, reduce errors, and grow your business with tools built to make running your operations effortless.
+      </p>
+    </div>
 
-      {/* Pricing */}
-      <section className="bg-blue-50 py-16 px-6">
-        <div className="max-w-5xl mx-auto text-center mb-12">
-          <h2 className="text-3xl font-extrabold text-blue-900 mb-4">
-            Simple Pricing Plans
-          </h2>
-          <p className="text-blue-700 max-w-xl mx-auto">
-            Choose the plan that suits your business needs. No hidden fees, cancel anytime.
-          </p>
-        </div>
-
-        <div className="max-w-5xl mx-auto grid gap-8 sm:grid-cols-1 md:grid-cols-3">
-          {[
-            {
-              name: "Starter",
-              price: "$9/mo",
-              features: [
-                "Manage up to 100 products",
-                "Basic sales reports",
-                "Email support",
-              ],
-            },
-            {
-              name: "Professional",
-              price: "$29/mo",
-              features: [
-                "Unlimited products",
-                "Advanced analytics",
-                "Priority support",
-                "Mobile app access",
-              ],
-              popular: true,
-            },
-            {
-              name: "Enterprise",
-              price: "Contact Us",
-              features: [
-                "Custom integrations",
-                "Dedicated account manager",
-                "24/7 support",
-                "Onboarding assistance",
-              ],
-            },
-          ].map((plan) => (
-            <div
-              key={plan.name}
-              className={`rounded-xl p-8 shadow-lg border ${
-                plan.popular ? "border-blue-700 bg-white" : "border-transparent bg-white/90"
-              } flex flex-col justify-between`}
-            >
-              <div>
-                <h3 className="text-xl font-bold mb-2 text-blue-900">{plan.name}</h3>
-                <p className="text-3xl font-extrabold mb-6 text-blue-700">{plan.price}</p>
-                <ul className="mb-8 text-left text-blue-800 list-disc list-inside space-y-2">
-                  {plan.features.map((feat) => (
-                    <li key={feat}>{feat}</li>
-                  ))}
-                </ul>
-              </div>
-              <Button
-                size="lg"
-                className={`w-full font-semibold ${
-                  plan.popular
-                    ? "bg-blue-700 text-white hover:bg-blue-800"
-                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                } transition`}
-              >
-                {plan.popular ? "Get Started" : "Learn More"}
-              </Button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Sticky Mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-blue-700 shadow-lg p-4 flex justify-center md:hidden z-50">
-        <Button
-          asChild
-          size="lg"
-          className="w-full max-w-md bg-white text-blue-700 font-bold"
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+      {[
+        {
+          icon: <TrendingUp className="h-6 w-6" />,
+          title: "Smart Dashboard",
+          features: [
+            "Total stock & order overview",
+            "Recent customers & orders",
+            "Order & payment summary",
+          ],
+        },
+        {
+          icon: <Package className="h-6 w-6" />,
+          title: "Inventory Management",
+          features: [
+            "Add/edit products & categories",
+            "Low/out of stock alerts",
+            "Real-time stock value",
+          ],
+        },
+        {
+          icon: <ShoppingCart className="h-6 w-6" />,
+          title: "Order Management",
+          features: [
+            "Track order & delivery status",
+            "Printable invoices",
+            "Payment status updates",
+          ],
+        },
+        {
+          icon: <Users className="h-6 w-6" />,
+          title: "Customer Management",
+          features: [
+            "Customer profiles & history",
+            "Purchase tracking",
+            "Contact details",
+          ],
+        },
+        {
+          icon: <DollarSign className="h-6 w-6" />,
+          title: "Expense Management",
+          features: [
+            "Daily/monthly expense tracking",
+            "Manage cost categories",
+            "Detailed expense breakdowns",
+          ],
+        },
+      ].map((item, idx) => (
+        <div
+          key={idx}
+          className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all p-6 flex flex-col items-start space-y-4"
         >
-          <a href="/admin">Open Dashboard</a>
-        </Button>
+          <div className="bg-blue-100 text-blue-700 p-3 rounded-full">
+            {item.icon}
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">{item.title}</h3>
+          <ul className="text-gray-600 list-disc list-inside space-y-1 pl-2">
+            {item.features.map((feat, i) => (
+              <li key={i}>{feat}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+
+      {/* Pricing Section */}
+   {/* Pricing Section */}
+<section className="bg-blue-50 py-20 px-6">
+  <div className="max-w-4xl mx-auto text-center mb-12">
+    <h2 className="text-4xl font-bold text-blue-900 mb-4">Simple Pricing</h2>
+    <p className="text-blue-700 text-lg">
+      One plan. Everything you need to manage your business.
+    </p>
+  </div>
+
+  <div className="max-w-md mx-auto">
+    <div className="bg-white border border-blue-700 rounded-2xl shadow-lg p-8 flex flex-col justify-between hover:shadow-xl transition">
+      <div>
+        <h3 className="text-2xl font-semibold text-blue-900 mb-2">Business Plan</h3>
+        <p className="text-4xl font-extrabold text-blue-700 mb-6">R99/month</p>
+        <ul className="text-left text-blue-800 list-disc list-inside space-y-3">
+          <li>Dashboard with real-time insights</li>
+          <li>Manage up to 100 products</li>
+          <li>Track orders and payments</li>
+          <li>Low stock and out-of-stock alerts</li>
+          <li>Customer & expense management</li>
+          <li>Printable invoices</li>
+        </ul>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-blue-800 text-blue-200 text-center text-sm py-6 mt-20">
-        © 2025 Your Business Name. All rights reserved.
-      </footer>
+      <Button
+        size="lg"
+        className="mt-8 w-full bg-blue-700 text-white hover:bg-blue-800 font-semibold transition"
+      >
+        Get Started
+      </Button>
+    </div>
+  </div>
+</section>
+
+
+
+{/* Footer */}
+<footer className="bg-gray-100 text-gray-500 text-center text-sm py-6 mt-32 border-t border-gray-200">
+  © 2025 Your Business Name. All rights reserved.
+</footer>
+
     </div>
   );
 };
