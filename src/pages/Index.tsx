@@ -167,8 +167,12 @@ const Index = () => {
 
 {/* Footer */}
 <footer className="bg-gray-100 text-gray-500 text-center text-sm py-6 mt-32 border-t border-gray-200">
-  © 2025 Your Business Name. All rights reserved.
+  © 2025 Your Business Name. All rights reserved.{' '}
+  <a href="/dashboard" className="text-blue-600 hover:underline">
+    Go to Dashboard
+  </a>
 </footer>
+
 
     </div>
   );
