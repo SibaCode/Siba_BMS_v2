@@ -1,9 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -26,98 +25,188 @@ import AdminCreateOrder from "./pages/AdminCreateOrder";
 import AdminEditOrder from "./pages/AdminEditOrder";
 import Booking from "./pages/Booking";
 import Services from "./pages/Services";
-import  ProductFormPage  from "./pages/components/ProductFormPage";
+import ProductFormPage from "./pages/components/ProductFormPage";
 import LandingPage from "./pages/LandingPage";
 import ContactPage from "./pages/ContactPage";
+import LoginPage from "./pages/auth/LoginPage"; // import your login page here
+
+import { useAuth } from "./contexts/AuthContext"; // assuming you have this
+import RegisterPage from "./pages/auth/RegisterPage"; // adjust path if needed
+import ProtectedRoute from "./pages/components/ProtectedRoute";
+
 
 const queryClient = new QueryClient();
+
+// ProtectedRoute component
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            
-            {/* Admin routes with sidebar layout */}
-            <Route path="/admin" element={
-              <AdminLayout title="Dashboard Overview">
-                <AdminDashboard />
-              </AdminLayout>
-            } />
-            <Route path="/admin/inventory" element={
-              <AdminLayout title="Inventory Management">
-                <AdminInventory />
-              </AdminLayout>
-            } />
-            <Route path="/admin/orders" element={
-              <AdminLayout title="Order Management">
-                <AdminOrders />
-              </AdminLayout>
-            } />
-            <Route path="/admin/customers" element={
-              <AdminLayout title="Customer Management">
-                <AdminCustomers />
-              </AdminLayout>
-            } />
-            <Route path="/admin/invoice/:id" element={
-              <AdminLayout title="Invoice Details">
-                <AdminInvoice />
-              </AdminLayout>
-            } />
-            <Route path="/admin/settings/business-info" element={
-              <AdminLayout title="Business Information">
-                <BusinessInfoPage />
-              </AdminLayout>
-            } />
-            <Route path="/admin/settings/categories" element={
-              <AdminLayout title="Category Management">
-                <AdminCategoriesPage />
-              </AdminLayout>
-            } />
-            <Route path="/admin/finance/expenses" element={
-              <AdminLayout title="Expense Management">
-                <AdminExpensesPage />
-              </AdminLayout>
-            } />
-             {/* <Route path="/admin/create-order" element={
-              <AdminLayout title="Expense Management">
-                <CreateOrderForm />
-              </AdminLayout>
-            } />  */}
-            <Route path="/admin/bookings" element={
-              <AdminLayout title="Bookings">
-                <Booking />
-              </AdminLayout>
-            } />
-               <Route path="/admin/services" element={
-              <AdminLayout title="Service Package Management">
-                <Services />
-              </AdminLayout>
-            } />
-            {/* Public store routes */}
-            <Route path="/storefront" element={<StorefrontPage />} />
-            <Route path="/store" element={<PublicStore />} />
-            <Route path="/store/product/:id" element={<ProductDetailsPage />} />
-            <Route path="/store/cart" element={<ShoppingCart />} />
-            {/* <Route path="/seed" element={<SeedCustomers />} /> */}
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
 
-            <Route path="/store/checkout" element={<Checkout />} />
-            <Route path="/store/success" element={<OrderSuccess />} />
-            <Route path="/admin/orders/create" element={<AdminCreateOrder />} />
-            <Route path="/admin/orders/edit/:id" element={<AdminEditOrder />} />
-            <Route path="/admin/inventory/add" element={<ProductFormPage />} />
-            <Route path="/admin/inventory/edit/:id" element={<ProductFormPage />} />
-            <Route path="/admin/landing" element={<LandingPage />} />
-            <Route path="/contact" element={<ContactPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
+          {/* Admin routes protected */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Dashboard Overview">
+                  <AdminDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/inventory"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Inventory Management">
+                  <AdminInventory />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Order Management">
+                  <AdminOrders />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/customers"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Customer Management">
+                  <AdminCustomers />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/invoice/:id"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Invoice Details">
+                  <AdminInvoice />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings/business-info"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Business Information">
+                  <BusinessInfoPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings/categories"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Category Management">
+                  <AdminCategoriesPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/finance/expenses"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Expense Management">
+                  <AdminExpensesPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/bookings"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Bookings">
+                  <Booking />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/services"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Service Package Management">
+                  <Services />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/orders/create"
+            element={
+              <ProtectedRoute>
+                <AdminCreateOrder />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/orders/edit/:id"
+            element={
+              <ProtectedRoute>
+                <AdminEditOrder />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/inventory/add"
+            element={
+              <ProtectedRoute>
+                <ProductFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/inventory/edit/:id"
+            element={
+              <ProtectedRoute>
+                <ProductFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/landing"
+            element={
+              <ProtectedRoute>
+                <LandingPage />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+          {/* Public store routes */}
+          <Route path="/storefront" element={<StorefrontPage />} />
+          <Route path="/store" element={<PublicStore />} />
+          <Route path="/store/product/:id" element={<ProductDetailsPage />} />
+          <Route path="/store/cart" element={<ShoppingCart />} />
+          <Route path="/store/checkout" element={<Checkout />} />
+          <Route path="/store/success" element={<OrderSuccess />} />
+          <Route path="/contact" element={<ContactPage />} />
+
+          {/* Catch-all route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

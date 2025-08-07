@@ -35,6 +35,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAuth } from "../contexts/AuthContext";
 
 const menuItems = [
   {
@@ -98,6 +99,7 @@ function AppSidebar() {
         : [...prev, groupTitle]
     );
   };
+  const { user, bizName, logout } = useAuth();
 
   const isActive = (url: string) => currentPath === url;
   const isGroupActive = (items: { url: string }[]) => 
@@ -108,7 +110,18 @@ function AppSidebar() {
       <SidebarHeader className="border-b px-6 py-4">
         <div className="flex items-center space-x-2">
           <Store className="h-8 w-8 text-primary" />
-          <div className="text-xl font-bold">Admin Panel</div>
+          <div className="text-xl font-bold">
+          {user && (
+        <div>
+        <strong>{bizName}</strong>
+           {user && (
+    <Button size="sm" variant="ghost" onClick={logout} className="self-start">
+      Logout
+    </Button>
+  )}
+        </div>
+      )}
+          </div>
         </div>
       </SidebarHeader>
 
