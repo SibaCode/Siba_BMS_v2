@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 // Your Firebase config object
 const firebaseConfig = {
@@ -29,6 +30,7 @@ const db = getFirestore(app);
 
 // Initialize Firebase Authentication
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 // Export these so you can import them elsewhere in your app
-export { db, analytics, auth };
+export { db, analytics, auth, storage};

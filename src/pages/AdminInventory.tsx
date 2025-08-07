@@ -8,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, where } from "firebase/firestore";
 import { db } from "@/firebase"; // Adjust path based on your structure
 import { Checkbox } from "@/components/ui/checkbox";
 import VariantsSection from "@/pages/components/VariantsSection"
 import CategorySelector from "@/pages/components/CategorySelector"
 import { useNavigate } from "react-router-dom";
+import { getAuth } from "firebase/auth";
+
 import {
   addDoc,
   updateDoc,
@@ -83,26 +85,36 @@ const AdminInventory = () => {
     ],
   });
   
+
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
+  const loggedInUserId = currentUser?.uid;
   useEffect(() => {
     fetchProducts();
   }, []);
 
+
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      // Order by 'id' descending, limit 100 (adjust if needed)
-      // const q = query(collection(db, "products"), orderBy("id", "desc"), limit(100));
-      // const querySnapshot = await getDocs(q);
-      // const items = querySnapshot.docs.map((doc) => ({
-      //   docId: doc.id, // Firestore doc ID (string)
-      //   ...doc.data(),
-      // }));
-      const querySnapshot = await getDocs(collection(db, "products"));
+      if (!currentUser) {
+        console.warn("No user logged in");
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+  
+      // Query products where uid == current user's uid
+      const productsRef = collection(db, "products");
+      const q = query(productsRef, where("uid", "==", currentUser.uid));
+      const querySnapshot = await getDocs(q);
+  
       const items = querySnapshot.docs.map(doc => ({
-      docId: doc.id,   // "apron", "mug", etc.
-      ...doc.data()
-    }));
-      console.log(items)
+        docId: doc.id,
+        ...doc.data()
+      }));
+  
+      console.log("User's products:", items);
       setProducts(items);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -110,7 +122,7 @@ const AdminInventory = () => {
       setLoading(false);
     }
   };
-
+  
  
   const resetForm = () => {
     setFormData({
@@ -318,10 +330,15 @@ const AdminInventory = () => {
     const matchesSearch = product.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
+  
     const matchesCategory =
-    categoryFilter === "all" || product.category?.toLowerCase() === categoryFilter.toLowerCase();
-    return matchesSearch && matchesCategory;
+      categoryFilter === "all" || product.category?.toLowerCase() === categoryFilter.toLowerCase();
+  
+    const matchesUser = product.uid === loggedInUserId;  // use uid here
+  
+    return matchesSearch && matchesCategory && matchesUser;
   });
+  
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -545,84 +562,6 @@ const navigate = useNavigate();
   </CardContent>
 </Card>
 </Card>
-    {/* </div> */}
-
-        {/* <Card>
-    <CardContent className="p-4 flex items-start gap-4">
-      <Package className="text-primary h-8 w-8 mt-1" />
-      <div>
-        <div className="text-xl font-bold">{products.length}</div>
-        <div className="text-sm text-muted-foreground">Total Products</div>
-        <p className="text-xs text-muted-foreground">All listed product types</p>
-      </div>
-    </CardContent>
-  </Card>
-  <Card>
-  <CardContent className="p-4 flex items-start gap-4">
-    <AlertCircle className="text-orange-500 h-8 w-8 mt-1" />
-    <div>
-      <div className="text-xl font-bold text-orange-600">{productsWithLowStock}</div>
-      <div className="text-sm font-semibold text-orange-700">Products Affected</div>
-      <p className="text-xs text-muted-foreground">Have at least 1 low-stock variant</p>
-    </div>
-  </CardContent>
-</Card>
-
-  <Card>
-    <CardContent className="p-4 flex items-start gap-4">
-      <AlertTriangle className="text-red-600 h-8 w-8 mt-1" />
-      <div>
-        <div className="text-xl font-bold text-red-600">{lowStockCount}</div>
-        <div className="text-sm font-semibold text-red-700">Low Stock Alerts</div>
-        <p className="text-xs text-muted-foreground">Items with &lt; 5 units left</p>
-      </div>
-    </CardContent>
-  </Card>
-
-  <Card>
-    <CardContent className="p-4 flex items-start gap-4">
-      <Layers className="text-blue-600 h-8 w-8 mt-1" />
-      <div>
-        <div className="text-xl font-bold">{categories.length - 1}</div>
-        <div className="text-sm text-muted-foreground">Product Categories</div>
-        <p className="text-xs text-muted-foreground">Excludes default "All"</p>
-      </div>
-    </CardContent>
-  </Card>
-
-  <Card>
-    <CardContent className="p-4 flex items-start gap-4">
-      <DollarSign className="text-green-600 h-8 w-8 mt-1" />
-      <div>
-        <div className="text-xl font-bold">
-          R{products.reduce((sum, p) => {
-            const productValue = p.variants?.reduce((variantSum: number, variant: any) =>
-              variantSum + ((variant.sellingPrice || 0) * (variant.stockQuantity || 0)), 0
-            ) || 0;
-            return sum + productValue;
-          }, 0).toFixed(2)}
-        </div>
-        <div className="text-sm text-muted-foreground">Total Stock Value</div>
-        <p className="text-xs text-muted-foreground">Calculated from price × quantity</p>
-      </div>
-    </CardContent>
-  </Card>
-
-  <Card>
-    <CardContent className="p-4 flex items-start gap-4">
-      <Boxes className="text-purple-600 h-8 w-8 mt-1" />
-      <div>
-        <div className="text-xl font-bold">
-          {products.reduce((total, product) => {
-            return total + (product.variants?.reduce((sum: number, v: any) =>
-              sum + (v.stockQuantity || 0), 0) || 0);
-          }, 0)}
-        </div>
-        <div className="text-sm text-muted-foreground">Total Units Available</div>
-        <p className="text-xs text-muted-foreground">All units across all variants</p>
-      </div>
-    </CardContent>
-  </Card> */}
         </div>
 
         {/* Filters */}
@@ -651,6 +590,7 @@ const navigate = useNavigate();
         </div>
 
         {/* Products Grid */}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => {
             const totalUnits = product.variants?.reduce(
@@ -671,8 +611,9 @@ const navigate = useNavigate();
               : `R${product.variants?.[0]?.sellingPrice || 0}`;
 
             return (
-              
-              <Card key={product.productID} className="hover:shadow-lg transition-shadow">
+              <Card key={product.docId} className="hover:shadow-lg transition-shadow">
+
+              {/* <Card key={product.productID} className="hover:shadow-lg transition-shadow"> */}
                 <CardHeader className="pb-3">
                   <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                     {product.productImage ? (
@@ -688,7 +629,7 @@ const navigate = useNavigate();
 
                   <CardTitle className="text-lg">{product.name}</CardTitle>
                   <div className="flex items-center justify-between">
-                    <Badge variant="secondary">{product.category}</Badge>
+                    <Badge variant="secondary">{product.uid}</Badge>
                     <Badge variant={isLowStock ? "destructive" : "default"}>
                       {isLowStock && <AlertTriangle className="h-3 w-3 mr-1" />}
                       {totalStock} total stock
@@ -712,8 +653,13 @@ const navigate = useNavigate();
                       <div className="mt-3 pt-3 border-t">
                         <div className="text-xs font-medium text-muted-foreground mb-2">Variant Details:</div>
                         <div className="space-y-2 max-h-32 overflow-y-auto">
-                          {product.variants.slice(0, 3).map((variant: any, index: number) => (
-                            <div key={index} className="bg-muted/50 p-2 rounded text-xs">
+                          {/* {product.variants.slice(0, 3).map((variant: any, index: number) => ( */}
+                              {product.variants.slice(0, 3).map((variant: any) => (
+
+                              <div
+                                key={variant.id || `${variant.color}-${variant.size}-${variant.type}`}
+                                className="bg-muted/50 p-2 rounded text-xs"
+                                >
                               <div className="flex justify-between items-center">
                                 <span className="font-medium">
                                   {variant.color} {variant.size} {variant.type}
