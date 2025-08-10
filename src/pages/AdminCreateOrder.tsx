@@ -409,7 +409,12 @@ const removeService = (index: number) => {
   
       if (!customerId) {
         const { id, ...customerInfoToSave } = customerInfo;
-        const customerDocRef = await addDoc(collection(db, "customers"), customerInfoToSave);
+        const customerDataWithUid = {
+          ...customerInfoToSave,
+          uid: currentUser ? currentUser.uid : null,  // <-- Add uid here
+        };
+  
+        const customerDocRef = await addDoc(collection(db, "customers"), customerDataWithUid);
         customerId = customerDocRef.id;
       }
   
