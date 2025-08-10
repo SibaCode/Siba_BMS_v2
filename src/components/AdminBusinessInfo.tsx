@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Building2, Save } from "lucide-react";
 
+const auth = getAuth();
+const currentUser = auth.currentUser;
 const businessInfoSchema = z.object({
   storeName: z.string().min(1, "Store name is required"),
   ownerName: z.string().min(1, "Owner name is required"),

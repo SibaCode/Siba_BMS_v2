@@ -22,7 +22,8 @@ import {
 } from "lucide-react";
 // import React from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged  } from "firebase/auth";
+import { query, where } from "firebase/firestore";
 
 interface Product {
   docId: string;
@@ -144,12 +145,13 @@ const AdminCreateOrder = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [servicePackages, setServicePackages] = useState<ServicePackage[]>([]);
   const [serviceItems, setServiceItems] = useState<ServiceOrderItem[]>([]);
+  const [currentUserUid, setCurrentUserUid] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchProducts();
-    fetchCustomers();
-fetchServicePackages();
-  }, []);
+//   useEffect(() => {
+//     fetchProducts();
+//     fetchCustomers();
+// fetchServicePackages();
+//   }, []);
 
   const fetchServicePackages = async () => {
     try {
@@ -186,14 +188,18 @@ fetchServicePackages();
     }
   };
   const fetchCustomers = async () => {
+    if (!currentUserUid) return;  // Wait until you have the user
+  
     try {
-      const querySnapshot = await getDocs(collection(db, "customers"));
+      const customersRef = collection(db, "customers");
+      const q = query(customersRef, where("uid", "==", currentUserUid));
+      const querySnapshot = await getDocs(q);
+  
       const customersData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...(doc.data() as CustomerInfo),
       }));
       setAllCustomers(customersData);
-      console.log(customersData)
     } catch (error) {
       console.error("Error fetching customers:", error);
       toast({
@@ -220,17 +226,30 @@ fetchServicePackages();
     });
     setShowCustomerList(false);
   };
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest("#name")) {
-        setShowCustomerList(false);
-      }
-    };
-  
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+ // Auth listener
+ useEffect(() => {
+  const auth = getAuth();
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      setCurrentUserUid(user.uid);
+    } else {
+      setCurrentUserUid(null);
+    }
+  });
+  return unsubscribe;
+}, []);
+
+useEffect(() => {
+  fetchProducts();
+  fetchServicePackages();
+
+  if (currentUserUid) {
+    fetchCustomers();
+  }
+}, [currentUserUid]);
+
+
   const addProductToOrder = (product: Product, variantIndex: number) => {
     const variant = product.variants[variantIndex];
     const existingIndex = orderItems.findIndex(
@@ -256,7 +275,14 @@ fetchServicePackages();
       setOrderItems([...orderItems, newItem]);
     }
   };
+  useEffect(() => {
+    fetchProducts();
+    fetchServicePackages();
   
+    if (currentUserUid) {
+      fetchCustomers();
+    }
+  }, [currentUserUid]);
   function addServiceToOrder(service: Service) {
     const newServiceItem: OrderItem = {
       type: "service",
@@ -472,7 +498,7 @@ const removeService = (index: number) => {
                 </Link>
               </Button>
               <ShoppingCart className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">Create New Order1</h1>
+              <h1 className="text-2xl font-bold text-foreground">Create New Order</h1>
             </div>
           </div>
         </div>
