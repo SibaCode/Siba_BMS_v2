@@ -248,7 +248,7 @@ console.log(businessInfo)
                 <InputField
                   icon={Building2}
                   label="Business Name"
-                  field="businessName"
+                  field="name"
                   placeholder="Enter business name"
                 />
                 <InputField

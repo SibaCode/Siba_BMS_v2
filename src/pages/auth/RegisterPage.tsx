@@ -32,7 +32,7 @@ export default function RegisterPage() {
   
       // Save business info separately in "businessInfo"
       await setDoc(doc(db, "businessInfo", user.uid), {
-        businessName: bizName,
+        name: bizName,
         email: email,
         createdAt: new Date(),
         // Add any other business-specific fields here

@@ -6,7 +6,7 @@ import { collection, addDoc, Timestamp } from "firebase/firestore";
 const ContactPage = () => {
   const [form, setForm] = useState({
     fullName: "",
-    businessName: "",
+    name: "",
     email: "",
     phone: "",
     message: "",
@@ -25,7 +25,7 @@ const ContactPage = () => {
     try {
       await addDoc(collection(db, "contact"), {
         fullName: form.fullName,
-        businessName: form.businessName,
+        name: form.name,
         email: form.email,
         phone: form.phone,
         message: form.message,
@@ -75,8 +75,8 @@ const ContactPage = () => {
           <span className="text-gray-700 font-semibold">Business Name *</span>
           <input
             type="text"
-            name="businessName"
-            value={form.businessName}
+            name="name"
+            value={form.name}
             onChange={handleChange}
             required
             className="mt-1 block w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-600 focus:ring focus:ring-blue-200 outline-none"

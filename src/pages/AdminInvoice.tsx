@@ -9,6 +9,7 @@ import { doc, getDoc , collection , getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 interface Variant {
   images: string[];
@@ -56,7 +57,7 @@ interface InvoiceData {
   deliveryStatus: string;
 }
 interface BusinessInfo {
-  businessName: string;
+  name: string;
   createdAt: { seconds: number; nanoseconds: number }; // Firestore timestamp
   email: string;
 }
@@ -65,16 +66,15 @@ const AdminInvoice = () => {
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [loading, setLoading] = useState(true);
 console.log(invoice)
-// const { businessInfo } = useBusinessInfo();
-  // const [businessInfo, setBusinessInfo] = useState([]);
-  // const [businessInfo, setBusinessInfo] = useState<any[]>([]);
-  // console.log(businessInfo)
-  const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null);
-  const [loadingBusinessInfo, setLoadingBusinessInfo] = useState(true);
+// const [businessInfo, setBusinessInfo] = useState(null);
+//   const [loadingBusinessInfo, setLoadingBusinessInfo] = useState(true);
+
+const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null);
+const [loadingBusinessInfo, setLoadingBusinessInfo] = useState(true);
   // Helper to safely format currency numbers
   const formatCurrency = (num?: number) =>
     typeof num === "number" ? num.toFixed(2) : "0.00";
-
+console.log(businessInfo)
   // Ref for the invoice DOM element we want to export
   const invoiceRef = document.getElementById("invoice-content");
 
@@ -121,24 +121,33 @@ console.log(invoice)
     fetchInvoice();
   }, [id]);
   useEffect(() => {
-    async function fetchBusinessInfo() {
-      try {
-        const docRef = doc(db, "businessInfo", "ZRlmCHexDtPeBlM5JXFVklFqbgz1");
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data() as BusinessInfo;
-          setBusinessInfo(data);
-        } else {
-          console.error("No businessInfo found with that ID");
+    const auth = getAuth();
+  
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const docRef = doc(db, "businessInfo", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data() as BusinessInfo;
+            setBusinessInfo(data);
+          } else {
+            console.error("No businessInfo found with that ID");
+            setBusinessInfo(null);
+          }
+        } catch (error) {
+          console.error("Error fetching businessInfo:", error);
+          setBusinessInfo(null);
+        } finally {
+          setLoadingBusinessInfo(false);
         }
-      } catch (error) {
-        console.error("Error fetching businessInfo:", error);
-      } finally {
+      } else {
+        setBusinessInfo(null);
         setLoadingBusinessInfo(false);
       }
-    }
-
-    fetchBusinessInfo();
+    });
+  
+    return () => unsubscribe();
   }, []);
   if (loading) return <div className="text-center mt-20">Loading invoice...</div>;
   if (!invoice) return <div className="text-center mt-20 text-red-500">Invoice not found.</div>;
@@ -193,7 +202,7 @@ console.log(invoice)
             {/* Header */}
             <div className="flex justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-primary">{businessInfo.businessName}</h2>
+                <h2 className="text-2xl font-bold text-primary">{businessInfo?.name}</h2>
                 <div className="text-sm text-muted-foreground">
                   {/* <p>{businessInfo?.[0]?.address}</p>
                   <p>{businessInfo?.[0]?.phone}</p> */}
