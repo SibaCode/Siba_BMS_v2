@@ -4,9 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, query, where, onSnapshot  } from "firebase/firestore";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { db } from "@/firebase";
+// import { auth } from "@/firebase";
+import { getAuth,  onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+
 
 import {
   ArrowLeft,
@@ -17,14 +21,16 @@ import {
   Mail
 } from "lucide-react";
 
+const auth = getAuth();
 const AdminCustomers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [customer, setCustomer] = useState<any>(null);
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+// console.log(currentUserId)
   // Form state for new customer
   const [newCustomer, setNewCustomer] = useState({
     email: "",
@@ -41,24 +47,37 @@ const AdminCustomers = () => {
   });
 
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "customers"));
-        const items = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setCustomers(items);
-      } catch (error) {
-        console.error("Error fetching customers:", error);
-      } finally {
+    const auth = getAuth();
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUserId(user.uid);
+      } else {
+        setCurrentUserId(null);
+        setCustomers([]);
         setLoading(false);
       }
-    };
-
-    fetchCustomers();
+    });
+    return () => unsubscribeAuth();
   }, []);
 
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    setLoading(true);
+    const customersRef = collection(db, "customers");
+    const q = query(customersRef, where("uid", "==", currentUserId));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const custs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setCustomers(custs);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [currentUserId]);
   const getSafeValue = (value: any) =>
     typeof value === "string" || typeof value === "number" ? value : "N/A";
 

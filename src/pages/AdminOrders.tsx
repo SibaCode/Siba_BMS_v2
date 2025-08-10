@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import React,{ useState,useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,10 +6,25 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { db } from "@/firebase"; // your Firebase config
-import { collection, getDocs } from "firebase/firestore";
+import { db , auth} from "@/firebase"; // your Firebase config
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Pencil } from "lucide-react";
+import { onAuthStateChanged } from "firebase/auth";
+
+interface CustomerInfo {
+  name: string;
+  email: string;
+}
+
+interface Order {
+  id: string;
+  customerInfo?: CustomerInfo;
+  customer?: string;
+  uid?: string; // uid field to match logged-in user
+  paymentStatus?: string;
+  total?: number | string | null;
+}
 import { 
   ArrowLeft, 
   Search, 
@@ -31,7 +46,8 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
-
+  const [currentuid, setCurrentuid] = useState<string | null>(null);
+ console.log(orders)
   const openModal = (order) => {
     setSelectedOrder(order);
     setModalOpen(true);
@@ -42,13 +58,34 @@ const AdminOrders = () => {
     setModalOpen(false);
   };
   useEffect(() => {
+    // Subscribe to auth state changes to get current uid
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentuid(user.uid);
+      } else {
+        setCurrentuid(null);
+        setOrders([]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!currentuid) {
+      setLoading(false);
+      return; // no user logged in, no orders to fetch
+    }
+
     const fetchOrders = async () => {
+      setLoading(true);
       try {
-        const snapshot = await getDocs(collection(db, "orders"));
+        // Query orders only for the logged-in user's uid
+        const q = query(collection(db, "orders"), where("userId", "==", currentuid));
+        const snapshot = await getDocs(q);
         const ordersData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-        }));
+        })) as Order[];
         setOrders(ordersData);
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -56,20 +93,22 @@ const AdminOrders = () => {
         setLoading(false);
       }
     };
-  
+
     fetchOrders();
-  }, []);
-  
+  }, [currentuid]);
   const filteredOrders = orders.filter(order => {
-    const customerName = String(order.customerInfo?.name || order.customer || '');
-    const orderId = String(order.id || '');
+    // Filter by search term (customer name or order id)
+    const customerName = String(order.customerInfo?.name || order.customer || "");
+    const orderId = String(order.id || "");
     const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         orderId.toLowerCase().includes(searchTerm.toLowerCase());
-    const paymentStatus = String(order.paymentStatus || '');
-    const matchesStatus = statusFilter === "all" || paymentStatus.toLowerCase() === statusFilter;
+      orderId.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Filter by payment status
+    const paymentStatus = String(order.paymentStatus || "");
+    const matchesStatus = statusFilter === "all" || paymentStatus.toLowerCase() === statusFilter.toLowerCase();
+
     return matchesSearch && matchesStatus;
   });
-
   const getStatusBadgeVariant = (status: string) => {
     switch (status?.toLowerCase()) {
       case "paid":

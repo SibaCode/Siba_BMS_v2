@@ -50,7 +50,7 @@ const AdminCategoryManager = () => {
 
   const auth = getAuth();
 
-  // Monitor auth state to get current user UID
+  // Monitor auth state to get current user uid
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) setCurrentUser({ uid: user.uid });

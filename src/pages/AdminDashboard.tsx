@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useMemo } from "react";
+
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs , query, where , addDoc  } from "firebase/firestore";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { db } from "@/firebase";
 import { 
@@ -32,6 +33,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { InventoryOverview } from "@/pages/components/InventoryOverview";
 import RecentOrders from "@/pages/components/RecentOrders";
 import CustomerOverview from "@/pages/components/CustomerOverview";
+
+import { getAuth } from "firebase/auth";
 
 
 // Mock data for enhanced dashboard
@@ -93,34 +96,189 @@ const cardVariants = {
     y: 0
   }
 };
+interface CategoryStock {
+  category: string;
+  totalStock: number;
+  isLow: boolean;
+}
+const AdminDashboard = ({ userId, searchTerm }) => {
 
-const AdminDashboard = () => {
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const [totalProducts, setTotalProducts] = useState(0);
-  // const [totalOrders, setTotalOrders] = useState(0);
-  const [totalCustomers, setTotalCustomers] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
+  // const userId = currentUser?.uid;
+    const [totalProducts, setTotalProducts] = useState(0);
+    // const [totalOrders, setTotalOrders] = useState(0);
+    const [totalCustomers, setTotalCustomers] = useState(0);
+    const [loading, setLoading] = useState(true);
+    // const [searchTerm, setSearchTerm] = useState("");
+    
+    // Calculate dynamic stats
+    const lowStockCategories = stockOverviewData.filter(item => item.isLowStock).length;
+    const totalStockItems = stockOverviewData.reduce((sum, item) => sum + item.units, 0);
+    // const deliveredOrders = orderStatusData.find(item => item.status === 'Delivered')?.count || 0;
+    // const notDeliveredOrders = orderStatusData.find(item => item.status === 'Not Delivered')?.count || 0;
+    const paidAmount = paymentStatusData.find(item => item.status === 'paid')?.count || 0;
+    const [businessInfo, setBusinessInfo] = useState<any[]>([]);
+    const [todaySales] = useState(850);
+  const [monthlyRevenue] = useState(12340);
+  const [products, setProducts] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
   
-  // Calculate dynamic stats
-  const lowStockCategories = stockOverviewData.filter(item => item.isLowStock).length;
-  const totalStockItems = stockOverviewData.reduce((sum, item) => sum + item.units, 0);
-  // const deliveredOrders = orderStatusData.find(item => item.status === 'Delivered')?.count || 0;
-  // const notDeliveredOrders = orderStatusData.find(item => item.status === 'Not Delivered')?.count || 0;
-  const paidAmount = paymentStatusData.find(item => item.status === 'paid')?.count || 0;
-  const [businessInfo, setBusinessInfo] = useState<any[]>([]);
+
+  // Combined fetch function
+  const fetchAllData = async () => {
+    if (!userId) {
+      setProducts([]);
+      setOrders([]);
+      setCustomers([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const [productsSnap, ordersSnap, customersSnap] = await Promise.all([
+        getDocs(query(collection(db, "products"), where("userId", "==", userId))),
+        getDocs(query(collection(db, "orders"), where("userId", "==", userId))),
+        getDocs(query(collection(db, "customers"), where("userId", "==", userId))),
+      ]);
+
+      setProducts(productsSnap.docs.map(doc => ({ docId: doc.id, ...doc.data() })));
+      setOrders(ordersSnap.docs.map(doc => ({ docId: doc.id, ...doc.data() })));
+      setCustomers(customersSnap.docs.map(doc => ({ docId: doc.id, ...doc.data() })));
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllData();
+  }, [userId]);
+  const categoryStock = products.reduce((acc, product) => {
+    const totalStockForProduct = product.variants.reduce(
+      (sum, variant) => sum + (variant.stockQuantity || 0),
+      0
+    );
+    if (acc[product.category]) {
+      acc[product.category] += totalStockForProduct;
+    } else {
+      acc[product.category] = totalStockForProduct;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // // Memoize category stock summary
+  // const categoryStockSummary: CategoryStock[] = Object.entries(categoryStock).map(
+  //   ([category, totalStock]) => ({
+  //     category,
+  //     totalStock,
+  //     isLow: totalStock < lowStockThreshold,
+  //   })
+  // );
+  const categoryStockSummary = Object.entries(categoryStock).map(
+      ([category, totalStock]: [string, number]) => ({
+        category,
+        totalStock,
+        isLow: totalStock < lowStockThreshold,
+      })
+    );
+  const totalStock = useMemo(() => {
+    return categoryStockSummary.reduce((sum, c) => sum + c.totalStock, 0);
+  }, [categoryStockSummary]);
+
+  // Total stock across all categories
+  // const totalStock = useMemo(() => {
+  //   return categoryStockSummary.reduce((sum, c) => sum + c.totalStock, 0);
+  // }, [categoryStockSummary]);
+
+  // Count how many categories have low stock
+  const lowStockCount = useMemo(() => {
+    return categoryStockSummary.filter(c => c.isLow).length;
+  }, [categoryStockSummary]);
+
+  // Orders stats
+  const totalOrders = orders.length;
+
+  const paidOrders = useMemo(() => 
+    orders.filter(o => o.paymentStatus?.toLowerCase() === "paid"), [orders]);
+
+  const pendingPayments = useMemo(() => 
+    orders.filter(o => o.paymentStatus?.toLowerCase() === "pending"), [orders]);
+
+  const failedPayments = useMemo(() => 
+    orders.filter(o => o.paymentStatus?.toLowerCase() === "failed"), [orders]);
+
+  const processingPayments = useMemo(() => 
+    orders.filter(o => o.paymentStatus?.toLowerCase() === "processing"), [orders]);
+
+  const deliveredOrders = useMemo(() => 
+    orders.filter(o =>
+      o.deliveryStatus?.toLowerCase() === "delivered" || o.status?.toLowerCase() === "delivered"
+    ), [orders]);
+
+  const notDeliveredOrders = useMemo(() => totalOrders - deliveredOrders.length, [totalOrders, deliveredOrders]);
+
+  const totalRevenue = useMemo(() => 
+    paidOrders.reduce((sum, order) => sum + (order.total || 0), 0),
+  [paidOrders]);
+
+  // Customers count
+  const newCustomersCount = customers.length;
+
+  // Flatten variants for table and filter by searchTerm
+  const filteredVariants = useMemo(() => {
+    if (!products.length) return [];
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+
+    const flattenedVariants = products.flatMap(product =>
+      (product.variants || []).map(variant => ({
+        docId: product.docId,
+        name: product.name,
+        category: product.category,
+        variantType: variant.type,
+        size: variant.size,
+        color: variant.color,
+        stockQuantity: variant.stockQuantity,
+        sellingPrice: variant.sellingPrice,
+        productImage: product.productImage,
+        status: variant.stockQuantity <= LOW_STOCK_THRESHOLD ? "Low Stock" : product.status,
+      }))
+    );
+
+    return flattenedVariants.filter(item =>
+      `${item.name} ${item.category} ${item.variantType} ${item.color} ${item.size}`
+        .toLowerCase()
+        .includes(lowerSearchTerm)
+    );
+  }, [products, searchTerm]);
+
+  // Product stock info summary
+  const productStockInfo = useMemo(() => {
+    return products.map(product => {
+      const units = (product.variants || []).reduce(
+        (sum, v) => sum + (v.stockQuantity || 0),
+        0
+      );
+      const hasLowStock = (product.variants || []).some(v => (v.stockQuantity || 0) < LOW_STOCK_THRESHOLD);
+      return {
+        name: product.name,
+        units,
+        hasLowStock,
+      };
+    });
+  }, [products]);
+
+
+
+
+
+
+
+
+
 
   useEffect(() => {
     async function fetchBusinessInfo() {
@@ -141,12 +299,7 @@ const AdminDashboard = () => {
   }, []);
 
 
-  const [todaySales] = useState(850);
-  const [monthlyRevenue] = useState(12340);
-  const [products, setProducts] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [customers, setCustomers] = useState<any[]>([]);
-  
+
 console.log(products)
   useEffect(() => {
     const fetchStats = async () => {
@@ -169,102 +322,125 @@ console.log(products)
   }, []);
  ;
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(db, "products"));
-      const items = querySnapshot.docs.map(doc => ({
-      docId: doc.id, 
-      ...doc.data()
-    }));
-      console.log(items)
-      setProducts(items);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(db, "orders"));
-      const items = querySnapshot.docs.map(doc => ({
-        docId: doc.id,
-        ...doc.data(),
-      }));
-      console.log("Orders:", items);
-      setOrders(items);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const fetchCustomers = async () => {
-    setLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(db, "customers"));
-      const items = querySnapshot.docs.map(doc => ({
-        docId: doc.id,
-        ...doc.data(),
-      }));
-      console.log("Customers:", items);
-      setCustomers(items);
-    } catch (error) {
-      console.error("Error fetching customers:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchProducts();
-    fetchOrders();
-    fetchCustomers();
-  }, [])
+ const fetchProducts = async (userId: string) => {
+  if (!userId) return [];
+  try {
+    const productsQuery = query(collection(db, "products"), where("userId", "==", userId));
+    const querySnapshot = await getDocs(productsQuery);
+    return querySnapshot.docs.map(doc => ({
+      docId: doc.id,
+      ...doc.data(),
+    })) as ProductType[]; // make sure to type this according to your data
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return [];
+  }
+};
+
+const fetchOrders = async (userId: string) => {
+  if (!userId) return [];
+  try {
+    const ordersQuery = query(collection(db, "orders"), where("userId", "==", userId));
+    const querySnapshot = await getDocs(ordersQuery);
+    return querySnapshot.docs.map(doc => ({
+      docId: doc.id,
+      ...doc.data(),
+    })) as OrderType[];
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return [];
+  }
+};
+
+// const fetchCustomers = async (userId: string) => {
+//   if (!userId) return [];
+//   try {
+//     const customersQuery = query(collection(db, "customers"), where("userId", "==", userId));
+//     const querySnapshot = await getDocs(customersQuery);
+//     return querySnapshot.docs.map(doc => ({
+//       docId: doc.id,
+//       ...doc.data(),
+//     })) as CustomerType[];
+//   } catch (error) {
+//     console.error("Error fetching customers:", error);
+//     return [];
+//   }
+// };
+
+// const fetchOrders = async () => {
+//   setLoading(true);
+//   try {
+//     if (!userId) return;
+//     const ordersQuery = query(collection(db, "orders"), where("userId", "==", userId));
+//     const querySnapshot = await getDocs(ordersQuery);
+//     const items = querySnapshot.docs.map(doc => ({
+//       docId: doc.id,
+//       ...doc.data(),
+//     }));
+//     setOrders(items);
+//   } catch (error) {
+//     console.error("Error fetching orders:", error);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+// const fetchCustomers = async () => {
+//   setLoading(true);
+//   try {
+//     if (!userId) return;
+//     const customersQuery = query(collection(db, "customers"), where("userId", "==", userId));
+//     const querySnapshot = await getDocs(customersQuery);
+//     const items = querySnapshot.docs.map(doc => ({
+//       docId: doc.id,
+//       ...doc.data(),
+//     }));
+//     setCustomers(items);
+//   } catch (error) {
+//     console.error("Error fetching customers:", error);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+//   useEffect(() => {
+//     if (userId) {
+//       fetchProducts();
+//       fetchOrders();
+//       fetchCustomers();
+//     }
+//   }, [userId]);
 const lowStockThreshold = 10;
 
-const categoryStock = products.reduce((acc, product) => {
-  const totalStockForProduct = product.variants.reduce(
-    (sum, variant) => sum + (variant.stockQuantity || 0),
-    0
-  );
-  if (acc[product.category]) {
-    acc[product.category] += totalStockForProduct;
-  } else {
-    acc[product.category] = totalStockForProduct;
-  }
-  return acc;
-}, {} as Record<string, number>);
 
-// Convert to array and add isLow flag
-const categoryStockSummary = Object.entries(categoryStock).map(
-  ([category, totalStock]: [string, number]) => ({
-    category,
-    totalStock,
-    isLow: totalStock < lowStockThreshold,
-  })
-);
-const totalStock = categoryStockSummary.reduce(
-  (sum, { totalStock }) => sum + totalStock,
-  0
-);
-const lowStockCount = categoryStockSummary.filter(c => c.isLow).length;
-const totalOrders = orders.length;
+// // Convert to array and add isLow flag
+// const categoryStockSummary = Object.entries(categoryStock).map(
+//   ([category, totalStock]: [string, number]) => ({
+//     category,
+//     totalStock,
+//     isLow: totalStock < lowStockThreshold,
+//   })
+// );
+// const totalStock = categoryStockSummary.reduce(
+//   (sum, { totalStock }) => sum + totalStock,
+//   0
+// );
+// const lowStockCount = categoryStockSummary.filter(c => c.isLow).length;
+// const totalOrders = orders.length;
 
-const paidOrders = orders.filter(o => o.paymentStatus?.toLowerCase() === "paid");
-const pendingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "pending");
-const failedPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "failed");
-const processingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "processing");
-console.log(paidOrders)
-const deliveredOrders = orders.filter(
-  o =>
-    o.deliveryStatus?.toLowerCase() === "delivered" ||
-    o.status?.toLowerCase() === "delivered"
-);
-const notDeliveredOrders = orders.length - deliveredOrders.length;
+// const paidOrders = orders.filter(o => o.paymentStatus?.toLowerCase() === "paid");
+// const pendingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "pending");
+// const failedPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "failed");
+// const processingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "processing");
+// console.log(paidOrders)
+// const deliveredOrders = orders.filter(
+//   o =>
+//     o.deliveryStatus?.toLowerCase() === "delivered" ||
+//     o.status?.toLowerCase() === "delivered"
+// );
+// const notDeliveredOrders = orders.length - deliveredOrders.length;
 
-const totalRevenue = paidOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+// const totalRevenue = paidOrders.reduce((sum, order) => sum + (order.total || 0), 0);
 
 
 const newCustomers = customers.length
@@ -285,18 +461,18 @@ const newCustomers = customers.length
   );
 
   // Filter based on search input (checks name, category, variantType, color, size)
-  const filteredVariants = flattenedVariants.filter((item) =>
-    [
-      item.name,
-      item.category,
-      item.variantType,
-      item.color,
-      item.size,
-    ]
-      .join(" ")
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+  // const filteredVariants = flattenedVariants.filter((item) =>
+  //   [
+  //     item.name,
+  //     item.category,
+  //     item.variantType,
+  //     item.color,
+  //     item.size,
+  //   ]
+  //     .join(" ")
+  //     .toLowerCase()
+  //     .includes(searchTerm.toLowerCase())
+  // );
 
 
   const LOW_STOCK_THRESHOLD = 5; // define what "low stock" means
@@ -310,15 +486,15 @@ const newCustomers = customers.length
   );
   
   // For each product, get units and low stock status
-  const productStockInfo = products.map(product => {
-    const units = product.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
-    const hasLowStock = product.variants.some(v => (v.stockQuantity || 0) < LOW_STOCK_THRESHOLD);
-    return {
-      name: product.name,
-      units,
-      hasLowStock,
-    };
-  });
+  // const productStockInfo = products.map(product => {
+  //   const units = product.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
+  //   const hasLowStock = product.variants.some(v => (v.stockQuantity || 0) < LOW_STOCK_THRESHOLD);
+  //   return {
+  //     name: product.name,
+  //     units,
+  //     hasLowStock,
+  //   };
+  // });
   const paidOrdersCount = React.useMemo(() => {
     return orders.filter(order => order.paymentStatus?.toLowerCase() === "paid").length;
   }, [orders]);
