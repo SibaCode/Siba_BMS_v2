@@ -122,22 +122,27 @@ const AdminCustomers = () => {
 
   // Save new customer (add to Firebase and update local state)
   const handleSaveNewCustomer = async () => {
-    // Basic validation (name and email required)
     if (!newCustomer.name.trim() || !newCustomer.email.trim()) {
       alert("Name and Email are required.");
       return;
     }
-
+  
     try {
+      // Create a new customer object with uid added
+      const customerToAdd = {
+        ...newCustomer,
+        uid: currentUserId,  // <-- attach current user's uid here
+      };
+  
       // Add to Firestore
-      const docRef = await addDoc(collection(db, "customers"), newCustomer);
-
+      const docRef = await addDoc(collection(db, "customers"), customerToAdd);
+  
       // Update local state
       setCustomers(prev => [
         ...prev,
-        { id: docRef.id, ...newCustomer }
+        { id: docRef.id, ...customerToAdd }
       ]);
-
+  
       // Reset form and close modal
       setNewCustomer({
         email: "",
@@ -147,8 +152,8 @@ const AdminCustomers = () => {
         phone: "",
         preferredContactMethod: 0,
         referredBy: "",
-        status: "active",               // default to active
-        joinDate: new Date().toISOString().split("T")[0],  // YYYY-MM-DD format
+        status: "active",
+        joinDate: new Date().toISOString().split("T")[0],
         totalOrders: 0,
         totalSpent: 0,
       });
@@ -158,7 +163,7 @@ const AdminCustomers = () => {
       alert("Failed to add customer, please try again.");
     }
   };
-
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
