@@ -55,7 +55,11 @@ interface InvoiceData {
   createdAt: string;
   deliveryStatus: string;
 }
-
+interface BusinessInfo {
+  businessName: string;
+  createdAt: { seconds: number; nanoseconds: number }; // Firestore timestamp
+  email: string;
+}
 const AdminInvoice = () => {
   const { id } = useParams();
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
@@ -63,9 +67,10 @@ const AdminInvoice = () => {
 console.log(invoice)
 // const { businessInfo } = useBusinessInfo();
   // const [businessInfo, setBusinessInfo] = useState([]);
-  const [businessInfo, setBusinessInfo] = useState<any[]>([]);
-  console.log(businessInfo)
-
+  // const [businessInfo, setBusinessInfo] = useState<any[]>([]);
+  // console.log(businessInfo)
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null);
+  const [loadingBusinessInfo, setLoadingBusinessInfo] = useState(true);
   // Helper to safely format currency numbers
   const formatCurrency = (num?: number) =>
     typeof num === "number" ? num.toFixed(2) : "0.00";
@@ -118,18 +123,21 @@ console.log(invoice)
   useEffect(() => {
     async function fetchBusinessInfo() {
       try {
-        const businessInfoCol = collection(db, "businessInfo");  
-        const businessInfoSnapshot = await getDocs(businessInfoCol);
-        const businessInfoList = businessInfoSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setBusinessInfo(businessInfoList);
-        console.log(businessInfoList)
+        const docRef = doc(db, "businessInfo", "ZRlmCHexDtPeBlM5JXFVklFqbgz1");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data() as BusinessInfo;
+          setBusinessInfo(data);
+        } else {
+          console.error("No businessInfo found with that ID");
+        }
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching businessInfo:", error);
+      } finally {
+        setLoadingBusinessInfo(false);
       }
     }
+
     fetchBusinessInfo();
   }, []);
   if (loading) return <div className="text-center mt-20">Loading invoice...</div>;
@@ -185,11 +193,11 @@ console.log(invoice)
             {/* Header */}
             <div className="flex justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-primary">{businessInfo?.[0]?.name}</h2>
+                <h2 className="text-2xl font-bold text-primary">{businessInfo.businessName}</h2>
                 <div className="text-sm text-muted-foreground">
-                  <p>{businessInfo?.[0]?.address}</p>
-                  <p>{businessInfo?.[0]?.phone}</p>
-                  <p>{businessInfo?.[0]?.email}</p>
+                  {/* <p>{businessInfo?.[0]?.address}</p>
+                  <p>{businessInfo?.[0]?.phone}</p> */}
+                  <p>{businessInfo?.email}</p>
                 </div>
               </div>
               <div className="text-right text-sm">
