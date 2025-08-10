@@ -612,8 +612,6 @@ const navigate = useNavigate();
 
             return (
               <Card key={product.docId} className="hover:shadow-lg transition-shadow">
-
-              {/* <Card key={product.productID} className="hover:shadow-lg transition-shadow"> */}
                 <CardHeader className="pb-3">
                   <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                     {product.productImage ? (
@@ -629,7 +627,7 @@ const navigate = useNavigate();
 
                   <CardTitle className="text-lg">{product.name}</CardTitle>
                   <div className="flex items-center justify-between">
-                    <Badge variant="secondary">{product.uid}</Badge>
+                    <Badge variant="secondary">{product.category}</Badge>
                     <Badge variant={isLowStock ? "destructive" : "default"}>
                       {isLowStock && <AlertTriangle className="h-3 w-3 mr-1" />}
                       {totalStock} total stock
@@ -641,19 +639,11 @@ const navigate = useNavigate();
                   <div className="space-y-3 mb-4">
                   
 
-                    {/* <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Status:</span>
-                      <Badge variant={product.status === "Active" ? "default" : "secondary"} className="text-xs">
-                        {product.status}
-                      </Badge>
-                    </div> */}
-
                     {/* Variants Preview */}
                     {product.variants && product.variants.length > 0 && (
                       <div className="mt-3 pt-3 border-t">
                         <div className="text-xs font-medium text-muted-foreground mb-2">Variant Details:</div>
                         <div className="space-y-2 max-h-32 overflow-y-auto">
-                          {/* {product.variants.slice(0, 3).map((variant: any, index: number) => ( */}
                               {product.variants.slice(0, 3).map((variant: any) => (
 
                               <div
