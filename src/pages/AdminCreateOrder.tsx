@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 // import React from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { getAuth } from "firebase/auth";
 
 interface Product {
   docId: string;
@@ -58,13 +59,20 @@ interface ServiceOrderItem {
 
 }
 
+type Service = {
+  id: string;
+  name: string;
+  price: number;
+  duration?: string;
+};
+
 type OrderItem =
   | {
       type: "product";
       productId: string;
       productName: string;
       variantIndex: number;
-      variant: Variant; // full Variant type for ease of access
+      variant: Variant;
       price: number;
       quantity: number;
       total: number;
@@ -79,7 +87,15 @@ type OrderItem =
       duration?: string;
     };
 
-
+    function processItem(item: OrderItem) {
+      if (item.type === "product") {
+        // TypeScript knows item is product variant here
+        console.log(item.productId);
+      } else {
+        // item is service variant
+        console.log(item.serviceId);
+      }
+    }
 
 interface CustomerInfo {
   id?:string;
@@ -241,32 +257,20 @@ fetchServicePackages();
     }
   };
   
-  const addServiceToOrder = (service: ServicePackage) => {
-    const existingIndex = orderItems.findIndex(
-      (item) => item.productId === service.id && item.isService
-    );
+  function addServiceToOrder(service: Service) {
+    const newServiceItem: OrderItem = {
+      type: "service",
+      serviceId: service.id,
+      serviceName: service.name,
+      price: service.price,
+      quantity: 1,
+      total: service.price * 1,
+      duration: service.duration, // optional
+    };
   
-    if (existingIndex >= 0) {
-      const updated = [...orderItems];
-      const item = updated[existingIndex];
-      updated[existingIndex] = {
-        ...item,
-        quantity: item.quantity + 1,
-        total: item.price * (item.quantity + 1),
-      };
-      setOrderItems(updated);
-    } else {
-      const newItem: OrderItem = {
-        productId: service.id,
-        productName: service.name,
-        price: service.price,
-        quantity: 1,
-        total: service.price,
-        isService: true,
-      };
-      setOrderItems([...orderItems, newItem]);
-    }
-  };
+    setOrderItems(prevItems => [...prevItems, newServiceItem]);
+  }
+  
   
   
   
@@ -372,6 +376,9 @@ const removeService = (index: number) => {
   
     setSubmitting(true);
     try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+  
       let customerId = customerInfo.id;
   
       if (!customerId) {
@@ -394,7 +401,8 @@ const removeService = (index: number) => {
         notes,
         orderDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
-        createdBy: "admin",
+        createdBy: currentUser ? currentUser.uid : "admin",
+
       };
   
       const orderDocRef = await addDoc(collection(db, "orders"), orderData);

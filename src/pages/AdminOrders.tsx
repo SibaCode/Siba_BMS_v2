@@ -1,4 +1,4 @@
-import React,{ useState,useEffect } from "react";
+import { useState,useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,25 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { db , auth} from "@/firebase"; // your Firebase config
+import { db } from "@/firebase"; // your Firebase config
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Pencil } from "lucide-react";
-import { onAuthStateChanged } from "firebase/auth";
-
-interface CustomerInfo {
-  name: string;
-  email: string;
-}
-
-interface Order {
-  id: string;
-  customerInfo?: CustomerInfo;
-  customer?: string;
-  uid?: string; // uid field to match logged-in user
-  paymentStatus?: string;
-  total?: number | string | null;
-}
 import { 
   ArrowLeft, 
   Search, 
@@ -35,7 +20,7 @@ import {
   Eye,
   Plus,
 } from "lucide-react";
-
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 const AdminOrders = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -46,8 +31,7 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
-  const [currentuid, setCurrentuid] = useState<string | null>(null);
- console.log(orders)
+  const [currentUid, setCurrentUid] = useState<string | null>(null);
   const openModal = (order) => {
     setSelectedOrder(order);
     setModalOpen(true);
@@ -58,34 +42,35 @@ const AdminOrders = () => {
     setModalOpen(false);
   };
   useEffect(() => {
-    // Subscribe to auth state changes to get current uid
+    const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setCurrentuid(user.uid);
+        setCurrentUid(user.uid);
       } else {
-        setCurrentuid(null);
+        setCurrentUid(null);
         setOrders([]);
+        setLoading(false);
       }
     });
+
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (!currentuid) {
-      setLoading(false);
-      return; // no user logged in, no orders to fetch
+    if (!currentUid) {
+      return;
     }
 
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        // Query orders only for the logged-in user's uid
-        const q = query(collection(db, "orders"), where("userId", "==", currentuid));
+        // Query orders where createdBy equals current user UID
+        const q = query(collection(db, "orders"), where("createdBy", "==", currentUid));
         const snapshot = await getDocs(q);
         const ordersData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
-        })) as Order[];
+        }));
         setOrders(ordersData);
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -95,49 +80,56 @@ const AdminOrders = () => {
     };
 
     fetchOrders();
-  }, [currentuid]);
+  }, [currentUid]);
+  
   const filteredOrders = orders.filter(order => {
-    // Filter by search term (customer name or order id)
-    const customerName = String(order.customerInfo?.name || order.customer || "");
-    const orderId = String(order.id || "");
+    const customerName = String(order.customerInfo?.name || order.customer || '');
+    const orderId = String(order.id || '');
     const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      orderId.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Filter by payment status
-    const paymentStatus = String(order.paymentStatus || "");
-    const matchesStatus = statusFilter === "all" || paymentStatus.toLowerCase() === statusFilter.toLowerCase();
-
+                         orderId.toLowerCase().includes(searchTerm.toLowerCase());
+    const paymentStatus = String(order.paymentStatus || '');
+    const matchesStatus = statusFilter === "all" || paymentStatus.toLowerCase() === statusFilter;
     return matchesSearch && matchesStatus;
   });
-  const getStatusBadgeVariant = (status: string) => {
+
+
+  const getPaymentMethodBadgeClassName = (status: string) => {
     switch (status?.toLowerCase()) {
-      case "paid":
-        return "default";
-      case "failed":
-        return "secondary";
-      case "pending":
-        return "destructive";
+      case "cash":
+        return "text-g-500 border border-amber-500 bg-transparent";
+      case "transfer":
+        return "text-green-500 border border-green-500 bg-transparent";
       default:
-        return "secondary";
+        return "text-grey-500 border border-grey-500 bg-transparent";
     }
   };
 
-  const getDeliveryStatusBadgeVariant = (status: string) => {
+  const getDeliveryStatusBadgeClassName = (status: string) => {
     switch (status?.toLowerCase()) {
       case "delivered":
-        return "default";
+        return "bg-green-500 text-white";
       case "in_transit":
-        return "destructive";
-      case "processing":
-        return "secondary";
-        case "not_delivered":
-          return "secondary";
+        return "bg-red-600 text-white";
+      case "pending":
+        return "bg-amber-500 text-white  ";
+      case "not_delivered":
+        return "bg-gray-400 text-white";
       default:
-        return "secondary";
+        return "bg-gray-300 text-black";
     }
   };
-
-  // Calculate reports with safe fallbacks
+  const getStatusBadgeClassName = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "paid":
+        return "bg-green-500 text-white";
+      case "failed":
+        return "bg-red-600 text-white";
+      case "processing":
+        return "bg-amber-500 text-white  ";
+      default:
+        return "bg-gray-300 text-black";
+    }
+  };
   const paidCount = orders.filter((o) => o.paymentStatus === "paid").length;
   const FailedCount = orders.filter((o) => o.paymentStatus === "failed").length;
   const pendingCount = orders.filter((o) => o.paymentStatus === "processing").length;
@@ -342,15 +334,17 @@ const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
                     <TableCell className="font-medium">R{(order.total || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <div>{order.paymentMethod || 'N/A'}</div>
-                        <Badge variant={getStatusBadgeVariant(order.paymentStatus)} className="mt-1">
-                          {order.paymentStatus || 'Unknown'}
-                        </Badge>
+                        <Badge className={getPaymentMethodBadgeClassName(order.paymentMethod)}>
+                        {order.paymentMethod || 'N/A'}
+                      </Badge>
+                        <Badge className={getStatusBadgeClassName(order.paymentStatus)}>
+                        {order.paymentStatus}
+                      </Badge>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getDeliveryStatusBadgeVariant(order.deliveryStatus)}>
-                        {order.deliveryStatus || 'Pending'}
+                      <Badge className={getDeliveryStatusBadgeClassName(order.deliveryStatus)}>
+                        {order.deliveryStatus}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">
