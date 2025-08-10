@@ -746,51 +746,57 @@ const removeService = (index: number) => {
                 ) : (
                   <>
                     {orderItems.map((item, index) => (
-                      <div
-                        key={index}
-                        className="border rounded p-3 bg-gray-50 flex justify-between items-center"
-                      >
-                        <div>
-                          <div className="font-semibold">{item.productName}</div>
-                          <div className="text-xs text-muted-foreground">
-                          {!item.isService && item.variant && (
-                            <div className="text-xs text-muted-foreground">
-                              Type: {item.variant.type}, Color: {item.variant.color}, Size: {item.variant.size}
-                            </div>
-                          )}
-                        
-                              </div>
-                          <div className="text-xs text-muted-foreground">
-                            Price: R{item.price.toFixed(2)} x Quantity: {item.quantity}
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateQuantity(index, item.quantity - 1)}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span>{item.quantity}</span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateQuantity(index, item.quantity + 1)}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-red-500"
-                            onClick={() => removeItem(index)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+  <div
+    key={index}
+    className="border rounded p-3 bg-gray-50 flex justify-between items-center"
+  >
+    <div>
+      {/* Render productName or serviceName based on type */}
+      <div className="font-semibold">
+        {item.type === "product" ? item.productName : item.serviceName}
+      </div>
+
+      {/* Render variant info only if product */}
+      {item.type === "product" && item.variant && (
+        <div className="text-xs text-muted-foreground">
+          Type: {item.variant.type}, Color: {item.variant.color}, Size: {item.variant.size}
+        </div>
+      )}
+
+      {/* Price and Quantity (both types have these) */}
+      <div className="text-xs text-muted-foreground">
+        Price: R{item.price.toFixed(2)} x Quantity: {item.quantity}
+      </div>
+    </div>
+
+    <div className="flex items-center space-x-2">
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => updateQuantity(index, item.quantity - 1)}
+      >
+        <Minus className="h-3 w-3" />
+      </Button>
+      <span>{item.quantity}</span>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => updateQuantity(index, item.quantity + 1)}
+      >
+        <Plus className="h-3 w-3" />
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="text-red-500"
+        onClick={() => removeItem(index)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  </div>
+))}
+
 
                     <div className="border-t pt-4 space-y-2 text-right">
                       <div>

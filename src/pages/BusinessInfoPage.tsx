@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, getDoc, doc, updateDoc } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "@/firebase";
 import {
   Building2,
@@ -45,27 +46,43 @@ const BusinessInfoPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [businessInfo, setBusinessInfo] = useState<any>({});
-  // const [businessInfo, setBusinessInfo] = useState<any[]>([]);
-
+  const [userId, setUserId] = useState<string | null>(null);
+console.log(businessInfo)
   useEffect(() => {
-    async function fetchBusinessInfo() {
-      try {
-        const businessInfoCol = collection(db, "businessInfo");
-        const snapshot = await getDocs(businessInfoCol);
-        if (!snapshot.empty) {
-          const docData = snapshot.docs[0];
-          setBusinessInfo({
-            id: docData.id,
-            ...docData.data(),
+    const auth = getAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserId(user.uid);
+
+        try {
+          const docRef = doc(db, "businessInfo", user.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            setBusinessInfo({
+              id: docSnap.id,
+              ...docSnap.data(),
+            });
+          } else {
+            setBusinessInfo({});
+          }
+        } catch (error) {
+          console.error("Error fetching user business info:", error);
+          toast({
+            title: "Fetch error",
+            description: "Could not load your business info.",
+            variant: "destructive",
           });
         }
-      } catch (error) {
-        console.error("Error fetching business info:", error);
+      } else {
+        setUserId(null);
+        setBusinessInfo({});
       }
-    }
+    });
 
-    fetchBusinessInfo();
-  }, []);
+    return () => unsubscribe();
+  }, [toast]);
 
   const handleInputChange = (field: string, value: string) => {
     setBusinessInfo((prev: any) => ({
@@ -75,12 +92,12 @@ const BusinessInfoPage = () => {
   };
 
   const handleSave = async () => {
-    if (!businessInfo.id) return;
+    if (!userId) return;
 
     setIsSaving(true);
 
     try {
-      const businessDocRef = doc(db, "businessInfo", businessInfo.id);
+      const businessDocRef = doc(db, "businessInfo", userId);
       const { id, ...dataToUpdate } = businessInfo;
       await updateDoc(businessDocRef, dataToUpdate);
 
@@ -151,7 +168,6 @@ const BusinessInfoPage = () => {
       )}
     </div>
   );
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <motion.div
@@ -175,7 +191,10 @@ const BusinessInfoPage = () => {
           </div>
           <div className="flex gap-3">
             {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)} className="gradient-primary shadow-elegant">
+              <Button
+                onClick={() => setIsEditing(true)}
+                className="gradient-primary shadow-elegant"
+              >
                 <Edit3 className="h-4 w-4 mr-2" />
                 Edit Info
               </Button>
@@ -196,7 +215,11 @@ const BusinessInfoPage = () => {
                   {isSaving ? (
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                       className="h-4 w-4 mr-2"
                     >
                       <Save className="h-4 w-4" />
@@ -222,12 +245,42 @@ const BusinessInfoPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <InputField icon={Building2} label="Business Name" field="businessName" placeholder="Enter business name" />
-                <InputField icon={FileText} label="Industry Type" field="industryType" placeholder="Enter industry type" />
-                <InputField icon={Hash} label="Registration Number" field="registrationNumber" placeholder="Enter registration number" />
-                <InputField icon={Hash} label="VAT Number" field="vatNumber" placeholder="Enter VAT number" />
-                <InputField icon={Calendar} label="Founded Year" field="foundedYear" placeholder="Enter founding year" />
-                <InputField icon={User} label="Employee Count" field="employeeCount" placeholder="e.g., 15-25" />
+                <InputField
+                  icon={Building2}
+                  label="Business Name"
+                  field="businessName"
+                  placeholder="Enter business name"
+                />
+                <InputField
+                  icon={FileText}
+                  label="Industry Type"
+                  field="industryType"
+                  placeholder="Enter industry type"
+                />
+                <InputField
+                  icon={Hash}
+                  label="Registration Number"
+                  field="registrationNumber"
+                  placeholder="Enter registration number"
+                />
+                <InputField
+                  icon={Hash}
+                  label="VAT Number"
+                  field="vatNumber"
+                  placeholder="Enter VAT number"
+                />
+                <InputField
+                  icon={Calendar}
+                  label="Founded Year"
+                  field="foundedYear"
+                  placeholder="Enter founding year"
+                />
+                <InputField
+                  icon={User}
+                  label="Employee Count"
+                  field="employeeCount"
+                  placeholder="e.g., 15-25"
+                />
               </CardContent>
             </Card>
           </motion.div>
@@ -242,69 +295,43 @@ const BusinessInfoPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <InputField icon={Mail} label="Email Address" field="email" type="email" placeholder="Enter email" />
-                <InputField icon={Phone} label="Phone Number" field="phone" type="tel" placeholder="Enter phone" />
-                <InputField icon={Globe} label="Website" field="website" placeholder="Enter website URL" />
-                <InputField icon={MapPin} label="Business Address" field="address" placeholder="Enter address" />
-                <InputField icon={FileText} label="Business Description" field="description" placeholder="Describe business" textarea />
+                <InputField
+                  icon={Mail}
+                  label="Email Address"
+                  field="email"
+                  type="email"
+                  placeholder="Enter email"
+                />
+                <InputField
+                  icon={Phone}
+                  label="Phone Number"
+                  field="phone"
+                  type="tel"
+                  placeholder="Enter phone"
+                />
+                <InputField
+                  icon={Globe}
+                  label="Website"
+                  field="website"
+                  placeholder="Enter website URL"
+                />
+                <InputField
+                  icon={MapPin}
+                  label="Business Address"
+                  field="address"
+                  placeholder="Enter address"
+                />
+                <InputField
+                  icon={FileText}
+                  label="Business Description"
+                  field="description"
+                  textarea
+                  placeholder="Describe your business"
+                />
               </CardContent>
             </Card>
           </motion.div>
         </div>
-
-        {/* Management Info */}
-        <motion.div variants={cardVariants}>
-          <Card className="card-hover shadow-elegant">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-6 w-6 text-primary" />
-                Management Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField icon={User} label="Business Owner" field="ownerName" placeholder="Enter owner's name" />
-                <InputField icon={User} label="General Manager" field="managerName" placeholder="Enter manager's name" />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Quick Stats */}
-        {/* <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-4" variants={containerVariants}>
-          {[
-            {
-              label: "Years in Business",
-              value: businessInfo.foundedYear ? new Date().getFullYear() - parseInt(businessInfo.foundedYear) : "-",
-              icon: Calendar,
-            },
-            {
-              label: "Team Size",
-              value: businessInfo.employeeCount || "-",
-              icon: User,
-            },
-            {
-              label: "Active Since",
-              value: businessInfo.foundedYear || "-",
-              icon: Building2,
-            },
-            {
-              label: "Industry",
-              value: businessInfo.industryType || "-",
-              icon: FileText,
-            },
-          ].map((stat) => (
-            <motion.div key={stat.label} variants={cardVariants}>
-              <Card className="card-hover shadow-elegant text-center">
-                <CardContent className="pt-6">
-                  <stat.icon className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gradient">{stat.value}</div>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div> */}
       </motion.div>
     </div>
   );

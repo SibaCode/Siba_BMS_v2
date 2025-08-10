@@ -23,19 +23,29 @@ export default function RegisterPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
+  
+      // Save basic user info in "users"
       await setDoc(doc(db, "users", user.uid), {
         email,
         bizName,
       });
-
-      navigate("/admin");
+  
+      // Save business info separately in "businessInfo"
+      await setDoc(doc(db, "businessInfo", user.uid), {
+        businessName: bizName,
+        email: email,
+        createdAt: new Date(),
+        // Add any other business-specific fields here
+      });
+  
+      navigate("/login");
     } catch (err: any) {
       setError(err.message || "Registration failed.");
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

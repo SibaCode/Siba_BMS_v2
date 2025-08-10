@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import { db } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -27,9 +27,16 @@ const businessInfoSchema = z.object({
 
 type BusinessInfoFormData = z.infer<typeof businessInfoSchema>;
 
+interface UserProfile {
+  businessId?: string;
+  // other fields if you have
+}
+
 const AdminBusinessInfo = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { toast } = useToast();
 
   const form = useForm<BusinessInfoFormData>({
@@ -47,17 +54,75 @@ const AdminBusinessInfo = () => {
   });
 
   useEffect(() => {
-    fetchBusinessInfo();
+    const auth = getAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
+        loadUserProfile(user.uid);
+      } else {
+        setCurrentUser(null);
+        setUserProfile(null);
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const fetchBusinessInfo = async () => {
+  // Fetch user profile to get businessId
+  const loadUserProfile = async (uid: string) => {
     try {
-      const docRef = doc(db, "businessInfo", "main");
+      const userDocRef = doc(db, "users", uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const profileData = userDocSnap.data() as UserProfile;
+        setUserProfile(profileData);
+        if (profileData.businessId) {
+          await fetchBusinessInfo(profileData.businessId);
+        } else {
+          toast({
+            title: "No business linked",
+            description: "Your account is not linked to any business info.",
+            variant: "destructive"
+          });
+          setLoading(false);
+        }
+      } else {
+        toast({
+          title: "Profile not found",
+          description: "User profile data not found in database.",
+          variant: "destructive"
+        });
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Error loading user profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load user profile.",
+        variant: "destructive"
+      });
+      setLoading(false);
+    }
+  };
+
+  // Fetch business info by businessId
+  const fetchBusinessInfo = async (businessId: string) => {
+    try {
+      const docRef = doc(db, "businessInfo", businessId);
       const docSnap = await getDoc(docRef);
-      
+
       if (docSnap.exists()) {
         const data = docSnap.data();
         form.reset(data as BusinessInfoFormData);
+      } else {
+        toast({
+          title: "No business info found",
+          description: "No business info exists for your account.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error("Error fetching business info:", error);
@@ -71,12 +136,22 @@ const AdminBusinessInfo = () => {
     }
   };
 
+  // Save form data back to the user's business document
   const onSubmit = async (data: BusinessInfoFormData) => {
+    if (!userProfile?.businessId) {
+      toast({
+        title: "Error",
+        description: "No business linked to your user account.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setSaving(true);
     try {
-      const docRef = doc(db, "businessInfo", "main");
+      const docRef = doc(db, "businessInfo", userProfile.businessId);
       await setDoc(docRef, data, { merge: true });
-      
+
       toast({
         title: "Success",
         description: "Business information saved successfully"
@@ -102,7 +177,7 @@ const AdminBusinessInfo = () => {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Building2 className="h-5 w-5" />
-          <span>Business Information</span>
+          <span>Business Information11</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -123,7 +198,7 @@ const AdminBusinessInfo = () => {
                 )}
               />
 
-              <FormField
+<FormField
                 control={form.control}
                 name="ownerName"
                 render={({ field }) => (
