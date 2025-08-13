@@ -155,7 +155,7 @@ const Services: React.FC = () => {
                   rows={3}
                 />
               </div>
-              <div>
+              {/* <div>
                 <Label htmlFor="duration">Duration (minutes)</Label>
                 <Input
                   id="duration"
@@ -164,7 +164,7 @@ const Services: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
                   placeholder="Duration in minutes"
                 />
-              </div>
+              </div> */}
               <div>
                 <Label htmlFor="price">Price </Label>
                 <Input
@@ -279,7 +279,7 @@ const Services: React.FC = () => {
                 rows={3}
               />
             </div>
-            <div>
+            {/* <div>
               <Label htmlFor="edit-duration">Duration (minutes)</Label>
               <Input
                 id="edit-duration"
@@ -288,7 +288,7 @@ const Services: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
                 placeholder="Duration in minutes"
               />
-            </div>
+            </div> */}
             <div>
               <Label htmlFor="edit-price">Price</Label>
               <Input
