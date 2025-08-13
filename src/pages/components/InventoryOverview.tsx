@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { db } from "@/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { UserPlus, Users } from "lucide-react";
@@ -40,10 +40,18 @@ export const InventoryOverview = () => {
 
   const lowStockThreshold = 8;
 
+  // Replace this with actual current user from Firebase Auth
+  const currentUser = { uid: "USER_UID_HERE" };
+
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "products"));
+      const q = query(
+        collection(db, "products"),
+        where("uid", "==", currentUser.uid) // filter by user
+      );
+
+      const querySnapshot = await getDocs(q);
       const fetched = querySnapshot.docs.map(doc => ({
         docId: doc.id,
         ...doc.data()
@@ -59,7 +67,12 @@ export const InventoryOverview = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "orders"));
+      const q = query(
+        collection(db, "orders"),
+        where("uid", "==", currentUser.uid) // filter by user
+      );
+
+      const querySnapshot = await getDocs(q);
       const items = querySnapshot.docs.map(doc => ({
         docId: doc.id,
         ...doc.data()
@@ -134,9 +147,6 @@ export const InventoryOverview = () => {
                           isLowStock ? "bg-red-500" : "bg-green-500"
                         }`}
                       />
-                      {/* <span className="font-medium capitalize">
-                        {product.category}
-                      </span> */}
                       <span className="font-medium capitalize">
                         {product.name}
                       </span>
@@ -165,15 +175,14 @@ export const InventoryOverview = () => {
             </div>
           )}
 
-      <Button asChild variant="outline" size="sm" className="w-full mt-3 card-hover">
-                <Link to="/admin/inventory">View All Inventory</Link>
-              </Button>
+          <Button asChild variant="outline" size="sm" className="w-full mt-3 card-hover">
+            <Link to="/admin/inventory">View All Inventory</Link>
+          </Button>
         </CardContent>
-        
       </Card>
+      
       {/* Order & Payment Summary */}
       <OrderPaymentSummaryCard />
-
     </div>
   );
 };

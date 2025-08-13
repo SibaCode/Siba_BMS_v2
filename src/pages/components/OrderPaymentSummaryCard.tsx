@@ -1,19 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where  } from "firebase/firestore";
 import { db } from "@/firebase"; // Adjust this import to your actual Firebase setup
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Truck, ShoppingCart, CreditCard, CheckCircle, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { UserPlus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { auth } from "@/firebase";
+
+
 const OrderPaymentSummaryCard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const currentUser = auth.currentUser; // get logged-in user directly
 
+  // const { currentUser } = useAuth(); 
   useEffect(() => {
     const fetchOrders = async () => {
+      if (!currentUser) return; // prevent fetching if user not loaded
       try {
-        const snapshot = await getDocs(collection(db, "orders"));
+        // <-- Filter by UID here
+        const q = query(
+          collection(db, "orders"),
+          where("uid", "==", currentUser.uid)
+        );
+        const snapshot = await getDocs(q);
         const ordersData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
@@ -27,7 +39,7 @@ const OrderPaymentSummaryCard = () => {
     };
 
     fetchOrders();
-  }, []);
+  }, [currentUser]);
 
   const toLowerSafe = (value: any) =>
     typeof value === "string" ? value.trim().toLowerCase() : "unknown";

@@ -449,7 +449,7 @@ const newCustomers = customers.length
                     <CardContent>
                       <div className="text-2xl font-bold mb-1">{stat.value}</div>
                       <div className="text-sm text-muted-foreground mb-2">{stat.description}</div>
-                      <div className="text-xs text-green-600 font-medium">{stat.change}</div>
+                      {/* <div className="text-xs text-green-600 font-medium">{stat.change}</div> */}
                     </CardContent>
                   </Card>
                 </motion.div>

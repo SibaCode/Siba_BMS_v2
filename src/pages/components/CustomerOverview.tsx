@@ -6,6 +6,9 @@ import { Link } from "react-router-dom";
 import { UserPlus, Users } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext"; // adjust path
+import { query, where } from "firebase/firestore";
+import { auth } from "@/firebase";
 
 interface Customer {
   docId: string;
@@ -23,11 +26,17 @@ const cardVariants = {
 const CustomerOverview = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
+  const currentUser = auth.currentUser; // get logged-in user directly
 
   const fetchCustomers = async () => {
+    if (!currentUser) return; // wait until user is loaded
     setLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "customers"));
+      const q = query(
+        collection(db, "customers"),
+        where("userId", "==", currentUser.uid) // filter by current user
+      );
+      const querySnapshot = await getDocs(q);
       const items = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
@@ -35,10 +44,9 @@ const CustomerOverview = () => {
           name: data.name || "Unknown",
           email: data.email || "-",
           orders: data.totalOrders || 0,
-          joinDate: data.joinDate || "N/A", // fallback if not available
+          joinDate: data.joinDate || "N/A",
         };
       });
-      console.log("Customers:", items);
       setCustomers(items);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -49,7 +57,7 @@ const CustomerOverview = () => {
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [currentUser]);
 
   const recentCustomers = customers.slice(0, 5); // Show only recent 5
 

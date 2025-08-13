@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { getDocs, collection } from "firebase/firestore";
-import { db } from "@/firebase"; // adjust your path
+import { getDocs, collection , query, where } from "firebase/firestore";
+import { db ,  auth,} from "@/firebase"; // adjust your path
 import { motion } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent} from "@/components/ui/card"; // your UI components
 import { TrendingUp , CheckCircle , Clock,ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.1 } },
@@ -17,21 +16,29 @@ const RecentOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
 console.log(orders)
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(db, "orders"));
-      const items = querySnapshot.docs.map(doc => ({
-        docId: doc.id,
-        ...doc.data(),
-      }));
-      setOrders(items);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchOrders = async () => {
+  if (!auth.currentUser) return; // make sure the user is logged in
+
+  setLoading(true);
+  try {
+    const q = query(
+      collection(db, "orders"),
+      where("uid", "==", auth.currentUser.uid) // filter by current user
+    );
+
+    const querySnapshot = await getDocs(q);
+    const items = querySnapshot.docs.map(doc => ({
+      docId: doc.id,
+      ...doc.data(),
+    }));
+
+    setOrders(items);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchOrders();

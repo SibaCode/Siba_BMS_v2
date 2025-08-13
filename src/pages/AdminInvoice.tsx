@@ -212,7 +212,7 @@ console.log(businessInfo)
               <div className="text-right text-sm">
                 <p><strong>Invoice #:</strong> {invoice.orderId}</p>
                 <p><strong>Order Date:</strong> {invoice.createdAt || "N/A"}</p>
-                <p><strong>Due Date:</strong> {invoice.createdAt || "N/A"}</p>
+                {/* <p><strong>Due Date:</strong> {invoice.createdAt || "N/A"}</p> */}
               </div>
             </div>
 
@@ -224,10 +224,10 @@ console.log(businessInfo)
                 <div className="bg-muted p-4 rounded">
                   <p className="font-medium">{invoice.customerInfo?.name || "N/A"}</p>
                   <p className="text-sm text-muted-foreground">
-                    {invoice.customerInfo?.address || "N/A"}
+                    {/* {invoice.customerInfo?.address || "N/A"} */}
                   </p>
                   <p className="text-sm">{invoice.customerInfo?.phone || "N/A"}</p>
-                  <p className="text-sm">{invoice.customerInfo?.email || "N/A"}</p>
+                  {/* <p className="text-sm">{invoice.customerInfo?.email || "N/A"}</p> */}
                 </div>
               </div>
 
