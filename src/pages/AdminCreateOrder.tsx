@@ -209,7 +209,9 @@ const AdminCreateOrder = () => {
       });
     }
   };
-  
+  const removeItemFromOrder = (index: number) => {
+    setOrderItems((prev) => prev.filter((_, i) => i !== index));
+  };
   const handleCustomerSelect = (customer: CustomerInfo) => {
     setCustomerInfo({
       name: customer.name,
@@ -634,98 +636,79 @@ const removeService = (index: number) => {
                     </TabsList>
 
                     {/* 🔶 Products Tab */}
-                              <TabsContent value="products">
-                                {loading ? (
-                                  <p>Loading products...</p>
-                                ) : products.length === 0 ? (
-                                  <p>No products found.</p>
-                                ) : (
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[500px] overflow-hidden">
-                                    {/* Search + Product List */}
-                                    <div className="col-span-1 border-r pr-2 overflow-y-auto">
-                                      <input
-                                        type="text"
-                                        placeholder="Search products..."
-                                        className="w-full mb-2 px-3 py-2 border rounded"
-                                        onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-                                      />
-                                      <ul className="space-y-2">
-                                        {products
-                                          .filter((p) => p.name.toLowerCase().includes(searchTerm || ""))
-                                          .map((product) => (
-                                            <li
-                                              key={product.docId}
-                                              className={`p-2 rounded cursor-pointer hover:bg-orange-100 transition ${
-                                                selectedProduct?.docId === product.docId ? "bg-orange-200" : ""
-                                              }`}
-                                              onClick={() => setSelectedProduct(product)}
-                                            >
-                                              <div className="flex items-center space-x-2">
-                                                <img
-                                                  src={product.productImage}
-                                                  alt={product.name}
-                                                  className="w-10 h-10 object-cover rounded"
-                                                />
-                                                <span className="text-sm">{product.name}</span>
-                                              </div>
-                                            </li>
-                                          ))}
-                                      </ul>
-                                    </div>
+                    <TabsContent value="products">
+  {loading ? (
+    <p>Loading products...</p>
+  ) : products.length === 0 ? (
+    <p>No products found.</p>
+  ) : (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[500px] overflow-hidden">
+      {/* Search + Product List */}
+      <div className="col-span-1 border-r pr-2 overflow-y-auto">
+        <input
+          type="text"
+          placeholder="Search products..."
+          className="w-full mb-2 px-3 py-2 border rounded"
+          onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+        />
+        <ul className="space-y-2">
+          {products
+            .filter((p) => p.name.toLowerCase().includes(searchTerm || ""))
+            .map((product) => (
+              <li
+                key={product.docId}
+                className={`p-2 rounded cursor-pointer transition ${
+                  selectedProduct?.docId === product.docId ? "bg-orange-200" : "hover:bg-orange-100"
+                }`}
+                onClick={() => setSelectedProduct(product)}
+              >
+                <span className="text-sm font-medium">{product.name}</span>
+              </li>
+            ))}
+        </ul>
+      </div>
 
-                                    {/* Variant View */}
-                                    <div className="col-span-2 overflow-y-auto px-2">
-                                      {selectedProduct ? (
-                                        <>
-                                          <h3 className="text-lg font-semibold mb-2">{selectedProduct.name}</h3>
-                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {selectedProduct.variants.map((variant, index) => {
-                                              const isOutOfStock = variant.stockQuantity === 0;
-                                              return (
-                                                <div
-                                                  key={`${selectedProduct.docId}-${index}`}
-                                                  className={`p-4 border rounded-lg bg-white shadow-sm transition ${
-                                                    isOutOfStock ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"
-                                                  }`}
-                                                  onClick={() =>
-                                                    !isOutOfStock && addProductToOrder(selectedProduct, index)
-                                                  }
-                                                >
-                                                  <div className="flex items-center space-x-4">
-                                                    <img
-                                                      src={variant.images[0] || selectedProduct.productImage}
-                                                      alt={variant.type}
-                                                      className="w-16 h-16 object-cover rounded"
-                                                    />
-                                                    <div className="flex flex-col">
-                                                      <p className="font-medium text-sm">{variant.type}</p>
-                                                      <p className="text-xs text-gray-500">
-                                                        Color: {variant.color} | Size: {variant.size}
-                                                      </p>
-                                                      <p className="font-bold text-orange-600 text-md">
-                                                        R{variant.sellingPrice.toFixed(2)}
-                                                      </p>
-                                                      <Badge
-                                                        variant={isOutOfStock ? "destructive" : "default"}
-                                                        className="w-max text-xs mt-1"
-                                                      >
-                                                        {isOutOfStock ? "Out of Stock" : `${variant.stockQuantity} in stock`}
-                                                      </Badge>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              );
-                                            })}
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <p className="text-gray-500">Select a product to view variants.</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </TabsContent>
-
+      {/* Variant View */}
+      <div className="col-span-2 overflow-y-auto px-2">
+        {selectedProduct ? (
+          <>
+            <h3 className="text-lg font-semibold mb-2">{selectedProduct.name}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {selectedProduct.variants.map((variant, index) => {
+                const isOutOfStock = variant.stockQuantity === 0;
+                return (
+                  <div
+                    key={`${selectedProduct.docId}-${index}`}
+                    className={`p-4 border rounded-lg bg-white shadow-sm transition ${
+                      isOutOfStock ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"
+                    }`}
+                    onClick={() => !isOutOfStock && addProductToOrder(selectedProduct, index)}
+                  >
+                    <p className="font-medium text-sm">{variant.type}</p>
+                    <p className="text-xs text-gray-500 mb-1">
+                      Color: {variant.color} | Size: {variant.size}
+                    </p>
+                    <p className="font-bold text-orange-600 text-md mb-1">
+                      R{variant.sellingPrice.toFixed(2)}
+                    </p>
+                    <Badge
+                      variant={isOutOfStock ? "destructive" : "default"}
+                      className="w-max text-xs mt-1"
+                    >
+                      {isOutOfStock ? "Out of Stock" : `${variant.stockQuantity} in stock`}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <p className="text-gray-500">Select a product to view variants.</p>
+        )}
+      </div>
+    </div>
+  )}
+</TabsContent>
                   {/* 🧰 Services Tab */}
                   {/* 🧰 Services Tab */}
                   <TabsContent value="services">
@@ -777,57 +760,57 @@ const removeService = (index: number) => {
                 ) : (
                   <>
                     {orderItems.map((item, index) => (
-  <div
-    key={index}
-    className="border rounded p-3 bg-gray-50 flex justify-between items-center"
-  >
-    <div>
-      {/* Render productName or serviceName based on type */}
-      <div className="font-semibold">
-        {item.type === "product" ? item.productName : item.serviceName}
-      </div>
-
-      {/* Render variant info only if product */}
-      {item.type === "product" && item.variant && (
+                      <div
+                        key={index}
+                        className="border rounded p-3 bg-gray-50 flex justify-between items-center"
+                      >
+                        <div>
+                        <div>
+  {item.type === "product" ? (
+    <>
+      <div className="font-semibold">{item.productName}</div>
+      {item.variant && (
         <div className="text-xs text-muted-foreground">
           Type: {item.variant.type}, Color: {item.variant.color}, Size: {item.variant.size}
         </div>
       )}
+    </>
+  ) : (
+    <div className="font-semibold">{item.serviceName}</div>
+  )}
+</div>
 
-      {/* Price and Quantity (both types have these) */}
-      <div className="text-xs text-muted-foreground">
-        Price: R{item.price.toFixed(2)} x Quantity: {item.quantity}
-      </div>
-    </div>
-
-    <div className="flex items-center space-x-2">
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => updateQuantity(index, item.quantity - 1)}
-      >
-        <Minus className="h-3 w-3" />
-      </Button>
-      <span>{item.quantity}</span>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => updateQuantity(index, item.quantity + 1)}
-      >
-        <Plus className="h-3 w-3" />
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        className="text-red-500"
-        onClick={() => removeItem(index)}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
-    </div>
-  </div>
-))}
-
+                          <div className="text-xs text-muted-foreground">
+                            Price: R{item.price.toFixed(2)} x Quantity: {item.quantity}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(index, item.quantity - 1)}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span>{item.quantity}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(index, item.quantity + 1)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-500"
+                            onClick={() => removeItem(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
 
                     <div className="border-t pt-4 space-y-2 text-right">
                       <div>
