@@ -57,6 +57,7 @@ interface ServiceOrderItem {
   price: number;
   quantity: number;
   total: number;
+  description: string;
 
 }
 
@@ -65,6 +66,8 @@ type Service = {
   name: string;
   price: number;
   duration?: string;
+  description: string;
+
 };
 
 type OrderItem =
@@ -86,6 +89,8 @@ type OrderItem =
       quantity: number;
       total: number;
       duration?: string;
+      description: string;
+
     };
 
     function processItem(item: OrderItem) {
@@ -294,6 +299,8 @@ useEffect(() => {
       quantity: 1,
       total: service.price * 1,
       duration: service.duration, // optional
+      description: service.description,
+
     };
   
     setOrderItems(prevItems => [...prevItems, newServiceItem]);

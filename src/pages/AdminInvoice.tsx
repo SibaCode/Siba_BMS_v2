@@ -27,6 +27,8 @@ interface InvoiceItem {
   price: number;
   total: number;
   productName: string;
+  serviceName: string;
+  description: string;
   productId?: string;
   variantIndex?: number;
   variant?: Variant; // ✅ Add this to match actual data
@@ -248,10 +250,10 @@ console.log(businessInfo)
                   {invoice.items?.map((item, index) => (
                   <tr key={index} className="border-t">
                     <td className="p-2 border">
-                      <div className="font-medium">{item.productName}</div>
+                      <div className="font-medium">{item.productName || item.serviceName}</div>
                       <div className="text-sm text-muted-foreground">
                      <p>  {item.variant?.type} -  {item.variant?.color}</p>
-                     <p> {item.variant?.size}</p>
+                     <p> {item.variant?.size || item.description}</p>
                       </div>
                     </td>
                     <td className="text-center p-2 border">{item.quantity}</td>
