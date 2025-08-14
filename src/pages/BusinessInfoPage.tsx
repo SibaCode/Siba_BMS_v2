@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { collection, getDoc, doc, updateDoc } from "firebase/firestore";
+import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "@/firebase";
 import {
@@ -21,24 +21,20 @@ import {
   Calendar,
   Globe,
   Hash,
+  CreditCard,
 } from "lucide-react";
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.1 },
   },
 };
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-  },
+  visible: { opacity: 1, y: 0 },
 };
 
 const BusinessInfoPage = () => {
@@ -47,18 +43,15 @@ const BusinessInfoPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [businessInfo, setBusinessInfo] = useState<any>({});
   const [userId, setUserId] = useState<string | null>(null);
-console.log(businessInfo)
+
   useEffect(() => {
     const auth = getAuth();
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserId(user.uid);
-
         try {
           const docRef = doc(db, "businessInfo", user.uid);
           const docSnap = await getDoc(docRef);
-
           if (docSnap.exists()) {
             setBusinessInfo({
               id: docSnap.id,
@@ -80,7 +73,6 @@ console.log(businessInfo)
         setBusinessInfo({});
       }
     });
-
     return () => unsubscribe();
   }, [toast]);
 
@@ -93,19 +85,15 @@ console.log(businessInfo)
 
   const handleSave = async () => {
     if (!userId) return;
-
     setIsSaving(true);
-
     try {
       const businessDocRef = doc(db, "businessInfo", userId);
       const { id, ...dataToUpdate } = businessInfo;
       await updateDoc(businessDocRef, dataToUpdate);
-
       toast({
         title: "Business information updated!",
         description: "Your changes have been saved successfully.",
       });
-
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating business info:", error);
@@ -145,12 +133,12 @@ console.log(businessInfo)
           onChange={(e) => handleInputChange(field, e.target.value)}
           placeholder={placeholder}
           disabled={!isEditing}
+          rows={4}
           className={`transition-all duration-300 ${
             isEditing
               ? "border-primary/50 focus:border-primary shadow-sm"
               : "border-muted bg-muted/50"
           }`}
-          rows={4}
         />
       ) : (
         <Input
@@ -168,10 +156,11 @@ console.log(businessInfo)
       )}
     </div>
   );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <motion.div
-        className="max-w-4xl mx-auto p-6 space-y-8"
+        className="max-w-5xl mx-auto p-6 space-y-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -234,9 +223,23 @@ console.log(businessInfo)
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Logo */}
+        {businessInfo.logo && (
+          <motion.div
+            className="flex justify-center"
+            variants={cardVariants}
+          >
+            <img
+              src={businessInfo.logo}
+              alt="Business Logo"
+              className="w-32 h-32 rounded-full object-cover border shadow"
+            />
+          </motion.div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Business Details */}
-          <motion.div variants={cardVariants}>
+          <motion.div variants={cardVariants} className="lg:col-span-1">
             <Card className="card-hover shadow-elegant">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -248,45 +251,68 @@ console.log(businessInfo)
                 <InputField
                   icon={Building2}
                   label="Business Name"
-                  field="name"
+                  field="businessName"
                   placeholder="Enter business name"
                 />
                 <InputField
                   icon={FileText}
-                  label="Industry Type"
-                  field="industryType"
-                  placeholder="Enter industry type"
+                  label="Business Description"
+                  field="description"
+                  textarea
+                  placeholder="Describe your business"
                 />
-                <InputField
-                  icon={Hash}
-                  label="Registration Number"
-                  field="registrationNumber"
-                  placeholder="Enter registration number"
-                />
-                <InputField
-                  icon={Hash}
-                  label="VAT Number"
-                  field="vatNumber"
-                  placeholder="Enter VAT number"
-                />
-                <InputField
-                  icon={Calendar}
-                  label="Founded Year"
-                  field="foundedYear"
-                  placeholder="Enter founding year"
-                />
+                {businessInfo.createdAt && (
+                  <p className="text-sm text-muted-foreground">
+                    Created At:{" "}
+                    {businessInfo.createdAt?.toDate
+                      ? businessInfo.createdAt.toDate().toLocaleString()
+                      : ""}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Bank Details */}
+          <motion.div variants={cardVariants} className="lg:col-span-1">
+            <Card className="card-hover shadow-elegant">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-6 w-6 text-primary" />
+                  Bank Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <InputField
                   icon={User}
-                  label="Employee Count"
-                  field="employeeCount"
-                  placeholder="e.g., 15-25"
+                  label="Account Holder"
+                  field="accountHolder"
+                  placeholder="Enter account holder name"
+                />
+                <InputField
+                  icon={Hash}
+                  label="Account Number"
+                  field="accountNumber"
+                  placeholder="Enter account number"
+                />
+                <InputField
+                  icon={Building2}
+                  label="Bank Name"
+                  field="bankName"
+                  placeholder="Enter bank name"
+                />
+                <InputField
+                  icon={Hash}
+                  label="Branch Code"
+                  field="branchCode"
+                  placeholder="Enter branch code"
                 />
               </CardContent>
             </Card>
           </motion.div>
 
           {/* Contact Information */}
-          <motion.div variants={cardVariants}>
+          <motion.div variants={cardVariants} className="lg:col-span-1">
             <Card className="card-hover shadow-elegant">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -320,13 +346,6 @@ console.log(businessInfo)
                   label="Business Address"
                   field="address"
                   placeholder="Enter address"
-                />
-                <InputField
-                  icon={FileText}
-                  label="Business Description"
-                  field="description"
-                  textarea
-                  placeholder="Describe your business"
                 />
               </CardContent>
             </Card>
