@@ -58,18 +58,25 @@ interface InvoiceData {
   createdAt: string;
   deliveryStatus: string;
 }
+
 interface BusinessInfo {
   name: string;
-  createdAt: { seconds: number; nanoseconds: number }; // Firestore timestamp
+  logo?: string;
+  createdAt: { seconds: number; nanoseconds: number };
   email: string;
+  accountHolder:string;
+  accountNumber:string;
+  address:string;
+  bankName:string;
+  branchCode:string;
+  description:string;
+  phone:string;
 }
 const AdminInvoice = () => {
   const { id } = useParams();
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [loading, setLoading] = useState(true);
 console.log(invoice)
-// const [businessInfo, setBusinessInfo] = useState(null);
-//   const [loadingBusinessInfo, setLoadingBusinessInfo] = useState(true);
 
 const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null);
 const [loadingBusinessInfo, setLoadingBusinessInfo] = useState(true);
@@ -153,7 +160,14 @@ console.log(businessInfo)
   }, []);
   if (loading) return <div className="text-center mt-20">Loading invoice...</div>;
   if (!invoice) return <div className="text-center mt-20 text-red-500">Invoice not found.</div>;
-
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return "N/A";
+    if (timestamp.seconds) {
+      return new Date(timestamp.seconds * 1000).toLocaleDateString();
+    }
+    return new Date(timestamp).toLocaleDateString();
+  };
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Top Bar */}
@@ -186,12 +200,14 @@ console.log(businessInfo)
         className="max-w-4xl mx-auto px-4 py-8 bg-white"
         style={{ color: "#000" }} >
           <div className="flex justify-center mb-6">
-        {businessInfo?.[0]?.logo ? (
+            
+        {businessInfo?.logo ? (
+         
           <img
-            src={businessInfo?.[0]?.logo}
-            alt={`${businessInfo?.[0]?.name} Logo`}
-            className="h-20 object-contain"
-          />
+              src={businessInfo.logo}
+              alt={`${businessInfo.name} Logo`}
+              className="h-20 object-contain"
+            />
         ) : (
           <div className="h-20 w-40 flex items-center justify-center bg-gray-200 text-gray-500 uppercase tracking-widest font-bold">
             LOGO
@@ -213,7 +229,8 @@ console.log(businessInfo)
               </div>
               <div className="text-right text-sm">
                 <p><strong>Invoice #:</strong> {invoice.orderId}</p>
-                <p><strong>Order Date:</strong> {invoice.createdAt || "N/A"}</p>
+                <p><strong>Order Date:</strong> {formatDate(invoice.createdAt)}</p>
+
                 {/* <p><strong>Due Date:</strong> {invoice.createdAt || "N/A"}</p> */}
               </div>
             </div>
@@ -289,10 +306,10 @@ console.log(businessInfo)
             <div className="mb-6">
             <h3 className="font-semibold mb-2">Bank Account Details</h3>
             <div className="bg-muted p-4 rounded text-sm space-y-1">
-              <p><strong>Account Holder:</strong> {businessInfo?.[0]?.accountHolder || "N/A"}</p>
-              <p><strong>Bank:</strong> {businessInfo?.[0]?.bankName || "N/A"}</p>
-              <p><strong>Account Number:</strong> {businessInfo?.[0]?.accountNumber || "N/A"}</p>
-              <p><strong>Branch Code:</strong> {businessInfo?.[0]?.branchCode || "N/A"}</p>
+              <p><strong>Account Holder:</strong> {businessInfo?.accountHolder || "N/A"}</p>
+              <p><strong>Bank:</strong> {businessInfo?.bankName || "N/A"}</p>
+              <p><strong>Account Number:</strong> {businessInfo?.accountNumber || "N/A"}</p>
+              <p><strong>Branch Code:</strong> {businessInfo?.branchCode || "N/A"}</p>
             </div>
           </div>
 

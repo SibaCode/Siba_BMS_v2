@@ -116,7 +116,7 @@ function AppSidebar() {
         <strong>{bizName}</strong>
            {user && (
     <Button size="sm" variant="ghost" onClick={logout} className="self-start">
-      Logout
+     {user.uid}
     </Button>
   )}
         </div>
