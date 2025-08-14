@@ -158,62 +158,65 @@ const AdminCreateOrder = () => {
 // fetchServicePackages();
 //   }, []);
 
-  const fetchServicePackages = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, "servicePackages"));
-      const packages: ServicePackage[] = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as ServicePackage[];
-      setServicePackages(packages);
-    } catch (error) {
-      console.error("Error fetching service packages:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const fetchProducts = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, "products"));
-      const productsData = querySnapshot.docs.map((doc) => ({
-        docId: doc.id,
-        ...(doc.data() as Omit<Product, "docId">),
-      }));
-      setProducts(productsData);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load products",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  const fetchCustomers = async () => {
-    if (!currentUserUid) return;  // Wait until you have the user
-  
-    try {
-      const customersRef = collection(db, "customers");
-      const q = query(customersRef, where("uid", "==", currentUserUid));
-      const querySnapshot = await getDocs(q);
-  
-      const customersData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as CustomerInfo),
-      }));
-      setAllCustomers(customersData);
-    } catch (error) {
-      console.error("Error fetching customers:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load customers",
-        variant: "destructive",
-      });
-    }
-  };
+const fetchServicePackages = async () => {
+  if (!currentUserUid) return;
+
+  try {
+    const serviceRef = collection(db, "servicePackages");
+    const q = query(serviceRef, where("uid", "==", currentUserUid));
+    const querySnapshot = await getDocs(q);
+    const packages: ServicePackage[] = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as ServicePackage[];
+    setServicePackages(packages);
+  } catch (error) {
+    console.error("Error fetching service packages:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const fetchProducts = async () => {
+  if (!currentUserUid) return;
+
+  try {
+    const productsRef = collection(db, "products");
+    const q = query(productsRef, where("uid", "==", currentUserUid));
+    const querySnapshot = await getDocs(q);
+    const productsData = querySnapshot.docs.map((doc) => ({
+      docId: doc.id,
+      ...(doc.data() as Omit<Product, "docId">),
+    }));
+    setProducts(productsData);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    toast({
+      title: "Error",
+      description: "Failed to load products",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+const fetchCustomers = async () => {
+  if (!currentUserUid) return;
+
+  try {
+    const customersRef = collection(db, "customers");
+    const q = query(customersRef, where("uid", "==", currentUserUid));
+    const querySnapshot = await getDocs(q);
+
+    const customersData = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as CustomerInfo),
+    }));
+    setAllCustomers(customersData);
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+  }
+}
   const removeItemFromOrder = (index: number) => {
     setOrderItems((prev) => prev.filter((_, i) => i !== index));
   };
@@ -248,10 +251,9 @@ const AdminCreateOrder = () => {
 }, []);
 
 useEffect(() => {
-  fetchProducts();
-  fetchServicePackages();
-
   if (currentUserUid) {
+    fetchProducts();
+    fetchServicePackages();
     fetchCustomers();
   }
 }, [currentUserUid]);
@@ -282,14 +284,7 @@ useEffect(() => {
       setOrderItems([...orderItems, newItem]);
     }
   };
-  useEffect(() => {
-    fetchProducts();
-    fetchServicePackages();
-  
-    if (currentUserUid) {
-      fetchCustomers();
-    }
-  }, [currentUserUid]);
+ 
   function addServiceToOrder(service: Service) {
     const newServiceItem: OrderItem = {
       type: "service",
