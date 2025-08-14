@@ -61,31 +61,53 @@ const AdminCategoryManager = () => {
 
   // Fetch categories for the current user only
   const fetchCategories = async () => {
-    if (!currentUser) return;
-    setLoading(true);
+    if (!currentUser) {
+      console.warn("No current user found. Cannot fetch categories.");
+      setCategories([]);
+      return;
+    }
+  
     try {
+      console.log("Fetching categories for user:", currentUser.uid);
+  
       const q = query(
         collection(db, "categories"),
-        where("uid", "==", currentUser.uid),
-        orderBy("name")
+        where("uid", "==", currentUser.uid)
+        // removed orderBy to avoid Firestore index error
       );
+  
       const querySnapshot = await getDocs(q);
-      const categoriesData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as CategoryFormData & { uid: string }),
-      })) as Category[];
+      const categoriesData: Category[] = [];
+  
+      querySnapshot.forEach((doc) => {
+        categoriesData.push({ id: doc.id, ...doc.data() } as Category);
+      });
+  
+      // Sort locally by name
+      categoriesData.sort((a, b) => a.name.localeCompare(b.name));
+  
+      console.log("Fetched categories:", categoriesData);
       setCategories(categoriesData);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
+  
+      if (categoriesData.length === 0) {
+        console.warn("No categories found for this user.");
+      }
+  
+    } catch (error: any) {
+      console.error(
+        "Failed to fetch categories!",
+        "Error code:", error.code,
+        "Message:", error.message
+      );
+  
       toast({
         title: "Error",
-        description: "Failed to load categories.",
+        description: `Failed to load categories: ${error.message}`,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     if (currentUser) {
@@ -248,31 +270,14 @@ const AdminCategoryManager = () => {
           <thead>
             <tr className="bg-gray-200">
               <th className="border border-gray-300 p-2 text-left">Name</th>
-              <th className="border border-gray-300 p-2 text-left">
-                Description
-              </th>
-              <th className="border border-gray-300 p-2 text-center">Status</th>
-              <th className="border border-gray-300 p-2 text-center">Actions</th>
+                          <th className="border border-gray-300 p-2 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {categories.map((category) => (
               <tr key={category.id} className="hover:bg-gray-100">
                 <td className="border border-gray-300 p-2">{category.name}</td>
-                <td className="border border-gray-300 p-2">
-                  {category.description}
-                </td>
-                <td className="border border-gray-300 p-2 text-center">
-                  <button
-                    onClick={() => toggleCategoryStatus(category)}
-                    className={`px-2 py-1 rounded text-white ${
-                      category.status ? "bg-green-600" : "bg-red-600"
-                    }`}
-                    aria-label="Toggle status"
-                  >
-                    {category.status ? "Active" : "Inactive"}
-                  </button>
-                </td>
+               
                 <td className="border border-gray-300 p-2 text-center space-x-2">
                   <Button
                     variant="outline"
