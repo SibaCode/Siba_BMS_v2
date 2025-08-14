@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, DollarSign, Plus, Edit, Trash2, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { getAuth } from "firebase/auth";
 
 const expenseSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -59,7 +60,8 @@ const AdminExpenseManager = () => {
   const { toast } = useToast();
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  
+  const auth = getAuth();
+
   const form = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -77,24 +79,30 @@ const AdminExpenseManager = () => {
 
   const fetchExpenses = async () => {
     try {
-      const q = query(collection(db, "expenses"), orderBy("date", "desc"));
+      const userId = auth.currentUser?.uid;
+      if (!userId) return;
+  
+      const q = query(
+        collection(db, "expenses"),
+        orderBy("date", "desc")
+      );
+  
       const querySnapshot = await getDocs(q);
-      const expensesData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          date: data.date.toDate() // Convert Firestore timestamp to Date
-        };
-      }) as Expense[];
-      setExpenses(expensesData);
+      const expensesData = querySnapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            date: data.date.toDate()
+          };
+        })
+        .filter(exp => exp.userId === userId); // <-- filter by current user
+  
+      setExpenses(expensesData as Expense[]);
     } catch (error) {
       console.error("Error fetching expenses:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load expenses",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to load expenses", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -118,36 +126,29 @@ const AdminExpenseManager = () => {
     setIsModalOpen(true);
   };
 
+ 
   const onSubmit = async (data: ExpenseFormData) => {
     try {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return toast({ title: "Error", description: "User not logged in", variant: "destructive" });
+  
       if (editingExpense) {
-        // Update existing expense
         const docRef = doc(db, "expenses", editingExpense.id);
-        await updateDoc(docRef, data);
-        toast({
-          title: "Success",
-          description: "Expense updated successfully"
-        });
+        await updateDoc(docRef, { ...data, userId });
+        toast({ title: "Success", description: "Expense updated successfully" });
       } else {
-        // Add new expense
-        await addDoc(collection(db, "expenses"), data);
-        toast({
-          title: "Success",
-          description: "Expense created successfully"
-        });
+        await addDoc(collection(db, "expenses"), { ...data, userId });
+        toast({ title: "Success", description: "Expense created successfully" });
       }
-      
+  
       await fetchExpenses();
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error saving expense:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save expense",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to save expense", variant: "destructive" });
     }
   };
+  
 
   const deleteExpense = async (expenseId: string) => {
     if (!window.confirm("Are you sure you want to delete this expense?")) return;

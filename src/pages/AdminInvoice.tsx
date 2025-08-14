@@ -269,7 +269,7 @@ console.log(businessInfo)
                     <td className="p-2 border">
                       <div className="font-medium">{item.productName || item.serviceName}</div>
                       <div className="text-sm text-muted-foreground">
-                     <p>  {item.variant?.type} -  {item.variant?.color}</p>
+                     <p>  {item.variant?.type } - {item.variant?.color}</p>
                      <p> {item.variant?.size || item.description}</p>
                       </div>
                     </td>

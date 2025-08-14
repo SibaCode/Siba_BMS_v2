@@ -644,78 +644,78 @@ const removeService = (index: number) => {
 
                     {/* 🔶 Products Tab */}
                     <TabsContent value="products">
-  {loading ? (
-    <p>Loading products...</p>
-  ) : products.length === 0 ? (
-    <p>No products found.</p>
-  ) : (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[500px] overflow-hidden">
-      {/* Search + Product List */}
-      <div className="col-span-1 border-r pr-2 overflow-y-auto">
-        <input
-          type="text"
-          placeholder="Search products..."
-          className="w-full mb-2 px-3 py-2 border rounded"
-          onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-        />
-        <ul className="space-y-2">
-          {products
-            .filter((p) => p.name.toLowerCase().includes(searchTerm || ""))
-            .map((product) => (
-              <li
-                key={product.docId}
-                className={`p-2 rounded cursor-pointer transition ${
-                  selectedProduct?.docId === product.docId ? "bg-orange-200" : "hover:bg-orange-100"
-                }`}
-                onClick={() => setSelectedProduct(product)}
-              >
-                <span className="text-sm font-medium">{product.name}</span>
-              </li>
-            ))}
-        </ul>
-      </div>
-
-      {/* Variant View */}
-      <div className="col-span-2 overflow-y-auto px-2">
-        {selectedProduct ? (
-          <>
-            <h3 className="text-lg font-semibold mb-2">{selectedProduct.name}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {selectedProduct.variants.map((variant, index) => {
-                const isOutOfStock = variant.stockQuantity === 0;
-                return (
-                  <div
-                    key={`${selectedProduct.docId}-${index}`}
-                    className={`p-4 border rounded-lg bg-white shadow-sm transition ${
-                      isOutOfStock ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"
-                    }`}
-                    onClick={() => !isOutOfStock && addProductToOrder(selectedProduct, index)}
-                  >
-                    <p className="font-medium text-sm">{variant.type}</p>
-                    <p className="text-xs text-gray-500 mb-1">
-                      Color: {variant.color} | Size: {variant.size}
-                    </p>
-                    <p className="font-bold text-orange-600 text-md mb-1">
-                      R{variant.sellingPrice.toFixed(2)}
-                    </p>
-                    <Badge
-                      variant={isOutOfStock ? "destructive" : "default"}
-                      className="w-max text-xs mt-1"
-                    >
-                      {isOutOfStock ? "Out of Stock" : `${variant.stockQuantity} in stock`}
-                    </Badge>
+              {loading ? (
+                <p>Loading products...</p>
+              ) : products.length === 0 ? (
+                <p>No products found.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[500px] overflow-hidden">
+                  {/* Search + Product List */}
+                  <div className="col-span-1 border-r pr-2 overflow-y-auto">
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      className="w-full mb-2 px-3 py-2 border rounded"
+                      onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+                    />
+                    <ul className="space-y-2">
+                      {products
+                        .filter((p) => p.name.toLowerCase().includes(searchTerm || ""))
+                        .map((product) => (
+                          <li
+                            key={product.docId}
+                            className={`p-2 rounded cursor-pointer transition ${
+                              selectedProduct?.docId === product.docId ? "bg-orange-200" : "hover:bg-orange-100"
+                            }`}
+                            onClick={() => setSelectedProduct(product)}
+                          >
+                            <span className="text-sm font-medium">{product.name}</span>
+                          </li>
+                        ))}
+                    </ul>
                   </div>
-                );
-              })}
-            </div>
-          </>
-        ) : (
-          <p className="text-gray-500">Select a product to view variants.</p>
-        )}
-      </div>
-    </div>
-  )}
-</TabsContent>
+
+                  {/* Variant View */}
+                  <div className="col-span-2 overflow-y-auto px-2">
+                    {selectedProduct ? (
+                      <>
+                        <h3 className="text-lg font-semibold mb-2">{selectedProduct.name}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {selectedProduct.variants.map((variant, index) => {
+                            const isOutOfStock = variant.stockQuantity === 0;
+                            return (
+                              <div
+                                key={`${selectedProduct.docId}-${index}`}
+                                className={`p-4 border rounded-lg bg-white shadow-sm transition ${
+                                  isOutOfStock ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"
+                                }`}
+                                onClick={() => !isOutOfStock && addProductToOrder(selectedProduct, index)}
+                              >
+                                <p className="font-medium text-sm">{variant.type}</p>
+                                <p className="text-xs text-gray-500 mb-1">
+                                  Color: {variant.color} | Size: {variant.size}
+                                </p>
+                                <p className="font-bold text-orange-600 text-md mb-1">
+                                  R{variant.sellingPrice.toFixed(2)}
+                                </p>
+                                <Badge
+                                  variant={isOutOfStock ? "destructive" : "default"}
+                                  className="w-max text-xs mt-1"
+                                >
+                                  {isOutOfStock ? "Out of Stock" : `${variant.stockQuantity} in stock`}
+                                </Badge>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-gray-500">Select a product to view variants.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              </TabsContent>
                   {/* 🧰 Services Tab */}
                   {/* 🧰 Services Tab */}
                   <TabsContent value="services">
@@ -738,7 +738,7 @@ const removeService = (index: number) => {
       ))}
     </div>
   )}
-</TabsContent>
+                </TabsContent>
 
 
       </Tabs>

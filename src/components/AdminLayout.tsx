@@ -74,7 +74,7 @@ const menuItems = [
     icon: DollarSign,
     items: [
       { title: "Expenses", url: "/admin/finance/expenses" },
-      { title: "Bookings", url: "/admin/bookings" },
+      // { title: "Bookings", url: "/admin/bookings" },
     ],
   },
   {
@@ -116,7 +116,7 @@ function AppSidebar() {
         <strong>{bizName}</strong>
            {user && (
     <Button size="sm" variant="ghost" onClick={logout} className="self-start">
-     {user.uid}
+     Logout
     </Button>
   )}
         </div>
