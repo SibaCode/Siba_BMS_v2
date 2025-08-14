@@ -45,7 +45,7 @@ const BusinessInfoPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [businessInfo, setBusinessInfo] = useState<any>({});
   const [userId, setUserId] = useState<string | null>(null);
-
+console.log(businessInfo)
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -224,31 +224,29 @@ const BusinessInfoPage = () => {
             )}
           </div>
         </motion.div>
-{/* Logo */}
-<motion.div className="flex justify-center" variants={cardVariants}>
-  {isEditing ? (
-    <ImageUpload
-      imageUrl={businessInfo.logo || ""}
-      onImageChange={(url) =>
-        setBusinessInfo((prev) => ({ ...prev, logo: url }))
-      }
-      isEditing={isEditing} // pass the editing state
-    />
-  ) : businessInfo.logo ? (
-    <img
-      src={businessInfo.logo}
-      alt="Business Logo"
-      className="w-32 h-32 rounded-full object-cover border shadow"
-    />
-  ) : (
-    <div className="w-32 h-32 rounded-full border shadow flex items-center justify-center text-muted-foreground">
-      No Logo
-    </div>
-  )}
-</motion.div>
 
         {/* Logo */}
-    
+        <motion.div className="flex justify-center" variants={cardVariants}>
+          {isEditing ? (
+            <ImageUpload
+              imageUrl={businessInfo.logo || ""}
+              onImageChange={(url) =>
+                setBusinessInfo((prev) => ({ ...prev, logo: url }))
+              }
+              isEditing={isEditing}
+            />
+          ) : businessInfo.logo ? (
+            <img
+              src={businessInfo.logo}
+              alt="Business Logo"
+              className="w-32 h-32 rounded-full object-cover border shadow"
+            />
+          ) : (
+            <div className="w-32 h-32 rounded-full border shadow flex items-center justify-center text-muted-foreground">
+              No Logo
+            </div>
+          )}
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Business Details */}
@@ -261,12 +259,11 @@ const BusinessInfoPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <InputField
-                  icon={Building2}
-                  label="Business Name"
-                  field="businessName"
-                  placeholder="Enter business name"
-                />
+              <div className="flex flex-col mb-4">
+  <label className="text-sm font-medium text-gray-700">Business Name</label>
+  <span className="mt-1 text-gray-900">{businessInfo.name}</span>
+</div>
+
                 <InputField
                   icon={FileText}
                   label="Business Description"
@@ -298,9 +295,9 @@ const BusinessInfoPage = () => {
               <CardContent className="space-y-6">
                 <InputField
                   icon={User}
-                  label="Account Holder"
-                  field="accountHolder"
-                  placeholder="Enter account holder name"
+                  label="Account Name"
+                  field="accountName"
+                  placeholder="Enter account name"
                 />
                 <InputField
                   icon={Hash}
@@ -309,54 +306,40 @@ const BusinessInfoPage = () => {
                   placeholder="Enter account number"
                 />
                 <InputField
-                  icon={Building2}
+                  icon={Globe}
                   label="Bank Name"
                   field="bankName"
                   placeholder="Enter bank name"
-                />
-                <InputField
-                  icon={Hash}
-                  label="Branch Code"
-                  field="branchCode"
-                  placeholder="Enter branch code"
                 />
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Contact Information */}
+          {/* Contact Details */}
           <motion.div variants={cardVariants} className="lg:col-span-1">
             <Card className="card-hover shadow-elegant">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-6 w-6 text-primary" />
-                  Contact Information
+                  <MapPin className="h-6 w-6 text-primary" />
+                  Contact Details
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <InputField
-                  icon={Mail}
-                  label="Email Address"
-                  field="email"
-                  type="email"
-                  placeholder="Enter email"
-                />
+              <div className="flex flex-col mb-4">
+  <label className="text-sm font-medium text-gray-700">Business Email</label>
+  <span className="mt-1 text-gray-900">{businessInfo.email}</span>
+</div>
+
                 <InputField
                   icon={Phone}
-                  label="Phone Number"
+                  label="Phone"
                   field="phone"
-                  type="tel"
-                  placeholder="Enter phone"
+                  placeholder="Enter phone number"
                 />
-                <InputField
-                  icon={Globe}
-                  label="Website"
-                  field="website"
-                  placeholder="Enter website URL"
-                />
+                
                 <InputField
                   icon={MapPin}
-                  label="Business Address"
+                  label="Address"
                   field="address"
                   placeholder="Enter address"
                 />
