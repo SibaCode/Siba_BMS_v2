@@ -36,7 +36,7 @@ const AdminOrders = () => {
     setSelectedOrder(order);
     setModalOpen(true);
   };
-
+console.log(orders)
   const closeModal = () => {
     setSelectedOrder(null);
     setModalOpen(false);
@@ -324,11 +324,17 @@ const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {(order.items || []).map((item, index) => (
+                        {/* {(order.items || []).map((item, index) => (
                           <div key={index}>
-                            {item.name || item.productName || 'Product'} x{item.quantity || 1}
+                            {item.name || item.serviceName || 'Product'} x{item.quantity || 1}
                           </div>
-                        ))}
+                        ))} */}
+                        {(order.items || []).map((item, index) => (
+                        <div key={index}>
+                          {item.name || item.serviceName || item.productName || 'Product'} x{item.quantity || 1}
+                        </div>
+                      ))}
+
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">R{(order.total || 0).toFixed(2)}</TableCell>
