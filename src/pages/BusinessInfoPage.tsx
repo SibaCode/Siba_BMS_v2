@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "@/firebase";
+import ImageUpload from "@/pages/components/ImageUpload";
+
 import {
   Building2,
   User,
@@ -222,20 +224,31 @@ const BusinessInfoPage = () => {
             )}
           </div>
         </motion.div>
+{/* Logo */}
+<motion.div className="flex justify-center" variants={cardVariants}>
+  {isEditing ? (
+    <ImageUpload
+      imageUrl={businessInfo.logo || ""}
+      onImageChange={(url) =>
+        setBusinessInfo((prev) => ({ ...prev, logo: url }))
+      }
+      isEditing={isEditing} // pass the editing state
+    />
+  ) : businessInfo.logo ? (
+    <img
+      src={businessInfo.logo}
+      alt="Business Logo"
+      className="w-32 h-32 rounded-full object-cover border shadow"
+    />
+  ) : (
+    <div className="w-32 h-32 rounded-full border shadow flex items-center justify-center text-muted-foreground">
+      No Logo
+    </div>
+  )}
+</motion.div>
 
         {/* Logo */}
-        {businessInfo.logo && (
-          <motion.div
-            className="flex justify-center"
-            variants={cardVariants}
-          >
-            <img
-              src={businessInfo.logo}
-              alt="Business Logo"
-              className="w-32 h-32 rounded-full object-cover border shadow"
-            />
-          </motion.div>
-        )}
+    
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Business Details */}
