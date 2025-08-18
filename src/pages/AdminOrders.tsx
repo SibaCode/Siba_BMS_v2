@@ -82,16 +82,18 @@ console.log(orders)
 
     fetchOrders();
   }, [currentUid]);
-  
   const filteredOrders = orders.filter(order => {
     const customerName = String(order.customerInfo?.name || order.customer || '');
-    const orderId = String(order.id || '');
+    const orderId = String(order.orderId || ''); // <- use order.orderId here
     const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          orderId.toLowerCase().includes(searchTerm.toLowerCase());
+  
     const paymentStatus = String(order.paymentStatus || '');
     const matchesStatus = statusFilter === "all" || paymentStatus.toLowerCase() === statusFilter;
+  
     return matchesSearch && matchesStatus;
   });
+  
 
 
   const getPaymentMethodBadgeClassName = (status: string) => {
@@ -247,7 +249,28 @@ const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
           </CardContent>
         </Card>
       </div>
-  
+       {/* Filters */}
+       <div className="flex flex-col sm:flex-row items-center justify-between mt-6 mb-4 space-y-2 sm:space-y-0 sm:space-x-4">
+        <div className="flex items-center space-x-2">
+          <Input
+            placeholder="Customer or order ID"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="sm:w-64"
+          />
+          <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val)}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="processing">Processing</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       {/* Orders Grid */}
       <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {filteredOrders.length > 0 ? (
