@@ -152,30 +152,8 @@ const AdminCreateOrder = () => {
   const [serviceItems, setServiceItems] = useState<ServiceOrderItem[]>([]);
   const [currentUserUid, setCurrentUserUid] = useState<string | null>(null);
 
-//   useEffect(() => {
-//     fetchProducts();
-//     fetchCustomers();
-// fetchServicePackages();
-//   }, []);
+console.log(servicePackages)
 
-const fetchServicePackages = async () => {
-  if (!currentUserUid) return;
-
-  try {
-    const serviceRef = collection(db, "servicePackages");
-    const q = query(serviceRef, where("uid", "==", currentUserUid));
-    const querySnapshot = await getDocs(q);
-    const packages: ServicePackage[] = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as ServicePackage[];
-    setServicePackages(packages);
-  } catch (error) {
-    console.error("Error fetching service packages:", error);
-  } finally {
-    setLoading(false);
-  }
-};
 
 const fetchProducts = async () => {
   if (!currentUserUid) return;
@@ -217,6 +195,26 @@ const fetchCustomers = async () => {
     console.error("Error fetching customers:", error);
   }
 }
+const fetchServicePackages = async () => {
+  if (!currentUserUid) return; // optional if packages are user-specific
+
+  try {
+    const packagesRef = collection(db, "servicePackages"); // your collection name
+    const q = query(packagesRef); // add where() if needed
+    const querySnapshot = await getDocs(q);
+
+    const packagesData = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as ServicePackage),
+    }));
+
+    setServicePackages(packagesData);
+    console.log("Fetched service packages:", packagesData);
+  } catch (error) {
+    console.error("Error fetching service packages:", error);
+  }
+};
+
   const removeItemFromOrder = (index: number) => {
     setOrderItems((prev) => prev.filter((_, i) => i !== index));
   };
