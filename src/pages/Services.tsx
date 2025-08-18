@@ -155,7 +155,7 @@ const Services: React.FC = () => {
                   rows={3}
                 />
               </div>
-              <div>
+              {/* <div>
                 <Label htmlFor="duration">Duration (minutes)</Label>
                 <Input
                   id="duration"
@@ -164,7 +164,7 @@ const Services: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
                   placeholder="Duration in minutes"
                 />
-              </div>
+              </div> */}
               <div>
                 <Label htmlFor="price">Price </Label>
                 <Input
@@ -236,10 +236,10 @@ const Services: React.FC = () => {
             <CardContent>
               <p className="text-gray-600 mb-4">{pkg.description}</p>
               <div className="flex justify-between items-center">
-                <div className="flex items-center text-sm text-gray-500">
+                {/* <div className="flex items-center text-sm text-gray-500">
                   <Clock className="mr-1 h-4 w-4" />
                   {formatDuration(pkg.duration)}
-                </div>
+                </div> */}
                 <div className="flex items-center text-lg font-semibold text-green-600">
                   {/* < className="mr-1 h-4 w-4" /> */}
                   R{pkg.price.toFixed(2)}
@@ -256,7 +256,7 @@ const Services: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Edit Service Package</DialogTitle>
             <DialogDescription>
-              Update the details of this service package including name, description, duration, and pricing.
+              Update the details of this service package including name, description, and pricing.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -279,7 +279,7 @@ const Services: React.FC = () => {
                 rows={3}
               />
             </div>
-            <div>
+            {/* <div>
               <Label htmlFor="edit-duration">Duration (minutes)</Label>
               <Input
                 id="edit-duration"
@@ -288,7 +288,7 @@ const Services: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
                 placeholder="Duration in minutes"
               />
-            </div>
+            </div> */}
             <div>
               <Label htmlFor="edit-price">Price</Label>
               <Input

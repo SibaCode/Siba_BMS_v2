@@ -48,7 +48,7 @@ interface ServicePackage {
   name: string;
   description: string;
   price: number;
-  duration: string; // optional
+  duration?: string; // optional
 }
 
 interface ServiceOrderItem {
