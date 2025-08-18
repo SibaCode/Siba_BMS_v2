@@ -152,7 +152,7 @@ const AdminDashboard = () => {
           ...doc.data(),
         }));
         setBusinessInfo(businessInfoList);
-        console.log(businessInfoList)
+        // console.log(businessInfoList)
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -167,14 +167,14 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   
-console.log(products)
+// console.log(products)
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const productsSnapshot = await getDocs(collection(db, "products"));
         const ordersSnapshot = await getDocs(collection(db, "orders"));
         const customersSnapshot = await getDocs(collection(db, "customers"));
-        console.log(productsSnapshot)
+        // console.log(productsSnapshot)
 
         setTotalProducts(productsSnapshot.size);
         setTotalCustomers(customersSnapshot.size);
@@ -197,7 +197,7 @@ console.log(products)
       docId: doc.id, 
       ...doc.data()
     }));
-      console.log(items)
+      // console.log(items)
       setProducts(items);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -213,7 +213,7 @@ console.log(products)
         docId: doc.id,
         ...doc.data(),
       }));
-      console.log("Orders:", items);
+      // console.log("Orders:", items);
       setOrders(items);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -229,7 +229,7 @@ console.log(products)
         docId: doc.id,
         ...doc.data(),
       }));
-      console.log("Customers:", items);
+      // console.log("Customers:", items);
       setCustomers(items);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -290,13 +290,13 @@ const totalStock = categoryStockSummary.reduce(
   0
 );
 const lowStockCount = categoryStockSummary.filter(c => c.isLow).length;
-const totalOrders = orders.length;
-
+// const totalOrders = orders.length;
+console.log(orders)
 const paidOrders = orders.filter(o => o.paymentStatus?.toLowerCase() === "paid");
 const pendingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "pending");
 const failedPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "failed");
 const processingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "processing");
-console.log(paidOrders)
+// console.log(paidOrders)
 const deliveredOrders = orders.filter(
   o =>
     o.deliveryStatus?.toLowerCase() === "delivered" ||
@@ -355,6 +355,7 @@ const newCustomers = customers.length
       ).length,
     [orders]
   );
+  const totalOrders = useMemo(() => orders.length, [orders]);
 
   const newCustomersCount = customers.length;
 
@@ -403,7 +404,7 @@ const newCustomers = customers.length
     },
     {
       title: "Total Orders",
-      value: `${orders.length} orders`,
+      value: `${totalOrders} orders`,
       description: "received",
       icon: CheckCircle,
       color: "from-green-500 to-emerald-600",
