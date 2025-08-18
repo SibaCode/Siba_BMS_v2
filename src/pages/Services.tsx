@@ -157,45 +157,125 @@ const Services: React.FC = () => {
       ) : (
         filteredPackages.map(pkg => (
           <Card key={pkg.id} className="relative">
-            <CardHeader>
-              <CardTitle className="flex justify-between items-start">
-                <span>{pkg.name}</span>
-                <div className="flex gap-1">
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(pkg)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      {/* Delete Confirmation */}
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-4">{pkg.description}</p>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center text-lg font-semibold text-green-600">
-                  R{pkg.price.toFixed(2)}
-                </div>
+          <CardHeader>
+            <CardTitle className="flex justify-between items-start">
+              <span>{pkg.name}</span>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(pkg)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Service Package</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{pkg.name}"? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(pkg.id)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
-            </CardContent>
-          </Card>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">{pkg.description}</p>
+            <div className="flex justify-between items-center">
+              {/* <div className="flex items-center text-sm text-gray-500">
+                <Clock className="mr-1 h-4 w-4" />
+                {formatDuration(pkg.duration)}
+              </div> */}
+              <div className="flex items-center text-lg font-semibold text-green-600">
+                {/* < className="mr-1 h-4 w-4" /> */}
+                R{pkg.price.toFixed(2)}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         ))
       )}
     </div>
 
-    {/* Edit Package Modal */}
-    <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-      <DialogContent>
-        {/* Edit Modal Content */}
-      </DialogContent>
-    </Dialog>
+       {/* Edit Package Modal */}
+       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Service Package</DialogTitle>
+            <DialogDescription>
+              Update the details of this service package including name, description, and pricing.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-name">Package Name</Label>
+              <Input
+                id="edit-name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter package name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe the service package"
+                rows={3}
+              />
+            </div>
+            {/* <div>
+              <Label htmlFor="edit-duration">Duration (minutes)</Label>
+              <Input
+                id="edit-duration"
+                type="number"
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
+                placeholder="Duration in minutes"
+              />
+            </div> */}
+            <div>
+              <Label htmlFor="edit-price">Price</Label>
+              <Input
+                id="edit-price"
+                type="number"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                placeholder="Price in dollars"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdate}>Update Package</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
   </div>
 );
 
