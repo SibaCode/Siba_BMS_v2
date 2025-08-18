@@ -1,20 +1,11 @@
 import { useEffect, useState } from "react";
 import { db } from "@/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { UserPlus, Users } from "lucide-react";
+import { UserPlus, Users, Package, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-import {
-  Package,
-  AlertTriangle,
-  Truck,
-  ShoppingCart,
-  Clock,
-  CheckCircle,
-  CreditCard
-} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import OrderPaymentSummaryCard from "./OrderPaymentSummaryCard";
@@ -37,18 +28,16 @@ export const InventoryOverview = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const lowStockThreshold = 8;
 
-  // Replace this with actual current user from Firebase Auth
-  const currentUser = { uid: "USER_UID_HERE" };
-
-  const fetchProducts = async () => {
+  const fetchProducts = async (uid: string) => {
     setLoading(true);
     try {
       const q = query(
         collection(db, "products"),
-        where("uid", "==", currentUser.uid) // filter by user
+        where("uid", "==", uid)
       );
 
       const querySnapshot = await getDocs(q);
@@ -64,12 +53,12 @@ export const InventoryOverview = () => {
     }
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (uid: string) => {
     setLoading(true);
     try {
       const q = query(
         collection(db, "orders"),
-        where("uid", "==", currentUser.uid) // filter by user
+        where("uid", "==", uid)
       );
 
       const querySnapshot = await getDocs(q);
@@ -86,8 +75,20 @@ export const InventoryOverview = () => {
   };
 
   useEffect(() => {
-    fetchProducts();
-    fetchOrders();
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
+        fetchProducts(user.uid);
+        fetchOrders(user.uid);
+      } else {
+        setCurrentUser(null);
+        setProducts([]);
+        setOrders([]);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Count categories that are low in stock
@@ -180,7 +181,7 @@ export const InventoryOverview = () => {
           </Button>
         </CardContent>
       </Card>
-      
+
       {/* Order & Payment Summary */}
       <OrderPaymentSummaryCard />
     </div>

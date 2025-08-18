@@ -461,11 +461,9 @@ const newCustomers = customers.length
         className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         variants={containerVariants}
       >
-       
+       <RecentOrders />
        <CustomerOverview  />
-
-
-        <RecentOrders />
+       
       </motion.div> 
       
       {/* Complete Inventory Overview */}

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { getDocs, collection , query, where } from "firebase/firestore";
-import { db ,  auth,} from "@/firebase"; // adjust your path
+import { getDocs, collection, query, where } from "firebase/firestore";
+import { db } from "@/firebase";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { motion } from "framer-motion";
-import { Card, CardHeader, CardTitle, CardContent} from "@/components/ui/card"; // your UI components
-import { TrendingUp , CheckCircle , Clock,ShoppingCart } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { TrendingUp, CheckCircle, Clock, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.1 } },
@@ -15,19 +17,44 @@ const cardVariants = {
 const RecentOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-console.log(orders)
+
+  const auth = getAuth();
+// const fetchOrders = async () => {
+//   if (!auth.currentUser) return;
+
+//   setLoading(true);
+//   try {
+//     const q = query(
+//       collection(db, "orders"),
+//       where("createdBy", "==", auth.currentUser.uid)
+//     );
+
+//     const querySnapshot = await getDocs(q);
+//     const items = querySnapshot.docs.map(doc => ({
+//       docId: doc.id,
+//       ...doc.data(),
+//     }));
+
+//     setOrders(items);
+//   } catch (error) {
+//     console.error("Error fetching orders:", error);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
 const fetchOrders = async () => {
-  if (!auth.currentUser) return; // make sure the user is logged in
+  if (!auth.currentUser) return; // Ensure user is logged in
 
   setLoading(true);
   try {
     const q = query(
       collection(db, "orders"),
-      where("uid", "==", auth.currentUser.uid) // filter by current user
+      where("createdBy", "==", auth.currentUser.uid)
     );
 
     const querySnapshot = await getDocs(q);
-    const items = querySnapshot.docs.map(doc => ({
+    const items = querySnapshot.docs.map((doc) => ({
       docId: doc.id,
       ...doc.data(),
     }));
@@ -40,9 +67,9 @@ const fetchOrders = async () => {
   }
 };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+useEffect(() => {
+  fetchOrders();
+}, []);
 
   const formatTimeAgo = (dateStr) => {
     if (!dateStr) return "Unknown";
@@ -76,51 +103,54 @@ const fetchOrders = async () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-              <div className="space-y-4">
-              {loading && <div>Loading orders...</div>}
-
+          <div className="space-y-4">
+            {loading && <div>Loading orders...</div>}
             {!loading && orders.length === 0 && <div>No orders found.</div>}
 
             {!loading &&
               orders.slice(0, 4).map((order, index) => (
-                  <motion.div 
-                    key={order.docId}
-                    className="flex justify-between items-center p-4 rounded-lg bg-gradient-to-r from-card to-secondary/20 border transition-smooth hover:shadow-md"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                        {order.deliveryStatus === 'delivered' ? 
-                          <CheckCircle className="h-5 w-5 text-green-600" /> :
-                          <Clock className="h-5 w-5 text-amber-600" />
-                        }
-                      </div>
-                      <div>
-                        <div className="font-medium">{order.orderId}</div>  <Badge 
-                          variant={order.deliveryStatus === 'Delivered' ? 'default' : 'secondary'}
-                          className="text-xs w-fit"
-                        >
-                          {order.deliveryStatus}
-                        </Badge>
-                        <div className="text-sm text-muted-foreground">{order.customerInfo?.name}</div>
+                <motion.div
+                  key={order.docId}
+                  className="flex justify-between items-center p-4 rounded-lg bg-gradient-to-r from-card to-secondary/20 border transition-smooth hover:shadow-md"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                      {order.deliveryStatus === "delivered" ? (
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <Clock className="h-5 w-5 text-amber-600" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium">{order.orderId}</div>
+                      <Badge
+                        variant={order.deliveryStatus === "Delivered" ? "default" : "secondary"}
+                        className="text-xs w-fit"
+                      >
+                        {order.deliveryStatus}
+                      </Badge>
+                      <div className="text-sm text-muted-foreground">
+                        {order.customerInfo?.name}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-semibold">R{order.total}</div>
-                      <div className="text-xs text-muted-foreground">{order.customerInfo.totalOrders} items</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">R{order.total}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {/* {order.customerInfo?.totalOrders} items */}
                     </div>
-                  </motion.div>
-                  
-                ))}
-                <Button asChild variant="outline" size="sm" className="w-full mt-3 card-hover">
-                  <Link to="/admin/orders">
-                    View All Orders
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
+                  </div>
+                </motion.div>
+              ))}
+
+            <Button asChild variant="outline" size="sm" className="w-full mt-3 card-hover">
+              <Link to="/admin/orders">View All Orders</Link>
+            </Button>
+          </div>
+        </CardContent>
       </Card>
     </motion.div>
   );

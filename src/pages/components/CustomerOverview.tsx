@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db, auth } from "@/firebase";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { UserPlus, Users } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext"; // adjust path
-import { query, where } from "firebase/firestore";
-import { auth } from "@/firebase";
 
 interface Customer {
   docId: string;
@@ -16,6 +13,7 @@ interface Customer {
   email: string;
   orders: number;
   joinDate: string;
+  totalSpent?: number;
 }
 
 const cardVariants = {
@@ -26,15 +24,15 @@ const cardVariants = {
 const CustomerOverview = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
-  const currentUser = auth.currentUser; // get logged-in user directly
+  const currentUser = auth.currentUser;
 
   const fetchCustomers = async () => {
-    if (!currentUser) return; // wait until user is loaded
+    if (!currentUser) return;
     setLoading(true);
     try {
       const q = query(
         collection(db, "customers"),
-        where("userId", "==", currentUser.uid) // filter by current user
+        where("uid", "==", currentUser.uid) // filter by logged-in user
       );
       const querySnapshot = await getDocs(q);
       const items = querySnapshot.docs.map((doc) => {
@@ -45,6 +43,7 @@ const CustomerOverview = () => {
           email: data.email || "-",
           orders: data.totalOrders || 0,
           joinDate: data.joinDate || "N/A",
+          totalSpent: data.totalSpent || 0,
         };
       });
       setCustomers(items);
@@ -59,7 +58,7 @@ const CustomerOverview = () => {
     fetchCustomers();
   }, [currentUser]);
 
-  const recentCustomers = customers.slice(0, 5); // Show only recent 5
+  const recentCustomers = customers.slice(0, 5);
 
   return (
     <motion.div
@@ -98,8 +97,15 @@ const CustomerOverview = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    {/* <div className="text-sm font-medium">{customer.orders} orders</div> */}
-                    {/* <div className="text-xs text-muted-foreground">{customer.joinDate}</div> */}
+                    {/* <div className="text-sm font-medium">
+                      {customer.orders} order{customer.orders !== 1 ? "s" : ""}
+                    </div> */}
+                    {/* <div className="text-xs text-muted-foreground">
+                      Joined: {customer.joinDate}
+                    </div> */}
+                    {/* <div className="text-xs text-muted-foreground">
+                      Spent: R{customer.totalSpent}
+                    </div> */}
                   </div>
                 </motion.div>
               ))}
