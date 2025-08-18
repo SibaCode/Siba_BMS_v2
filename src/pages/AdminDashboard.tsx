@@ -34,6 +34,7 @@ import { InventoryOverview } from "@/pages/components/InventoryOverview";
 import RecentOrders from "@/pages/components/RecentOrders";
 import CustomerOverview from "@/pages/components/CustomerOverview";
 
+
 // Mock data for enhanced dashboard
 const stockOverviewData = [
   { category: 'Aprons', units: 5, isLowStock: true },
@@ -109,7 +110,6 @@ const AdminDashboard = () => {
 
 
   const [totalProducts, setTotalProducts] = useState(0);
-  // const [totalOrders, setTotalOrders] = useState(0);
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -121,10 +121,15 @@ const AdminDashboard = () => {
   // const notDeliveredOrders = orderStatusData.find(item => item.status === 'Not Delivered')?.count || 0;
   const paidAmount = paymentStatusData.find(item => item.status === 'paid')?.count || 0;
   const [businessInfo, setBusinessInfo] = useState<any[]>([]);
+  const [paidOrdersCount, setPaidOrdersCount] = useState<number>(0);
 
 
   const auth = getAuth();
   const currentUser = auth.currentUser;
+  const currentUid = "S0FB6CiEVHdx8xkytSpsIUhyv992"; // replace with auth.currentUser.uid in real code
+
+const ordersRef = collection(db, "orders");
+
   const fetchCollection = async (colName: string, setter: Function) => {
     if (!currentUser) return;
     try {
@@ -166,28 +171,48 @@ const AdminDashboard = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
-  
+  const [totalOrders, setTotalOrders] = useState<number>(0);
+
 // console.log(products)
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const productsSnapshot = await getDocs(collection(db, "products"));
-        const ordersSnapshot = await getDocs(collection(db, "orders"));
-        const customersSnapshot = await getDocs(collection(db, "customers"));
-        // console.log(productsSnapshot)
 
-        setTotalProducts(productsSnapshot.size);
-        setTotalCustomers(customersSnapshot.size);
-      } catch (err) {
-        console.error("Error fetching stats", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+// const [totalOrders, setTotalOrders] = useState<number>(0);
+// const [paidOrdersCount, setPaidOrdersCount] = useState<number>(0);
 
-    fetchStats();
-  }, []);
- ;
+useEffect(() => {
+  const fetchStats = async () => {
+    try {
+      const productsSnapshot = await getDocs(collection(db, "products"));
+
+      const ordersQuery = query(
+        collection(db, "orders"),
+        where("createdBy", "==", currentUid)
+      );
+      const ordersSnapshot = await getDocs(ordersQuery);
+      
+      // Total orders
+      setTotalOrders(ordersSnapshot.size);
+
+      // Paid orders
+      const paidCount = ordersSnapshot.docs.filter(
+        doc => doc.data().paymentStatus === "paid"
+      ).length;
+      setPaidOrdersCount(paidCount);
+
+      const customersSnapshot = await getDocs(collection(db, "customers"));
+
+      setTotalProducts(productsSnapshot.size);
+      setTotalCustomers(customersSnapshot.size);
+    } catch (err) {
+      console.error("Error fetching stats", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchStats();
+}, []);
+
+
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -296,7 +321,6 @@ const paidOrders = orders.filter(o => o.paymentStatus?.toLowerCase() === "paid")
 const pendingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "pending");
 const failedPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "failed");
 const processingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "processing");
-// console.log(paidOrders)
 const deliveredOrders = orders.filter(
   o =>
     o.deliveryStatus?.toLowerCase() === "delivered" ||
@@ -348,14 +372,13 @@ const newCustomers = customers.length
   //     product.variants.reduce((sum, variant) => sum + (variant.stockQuantity || 0), 0),
   //   0
   // );
-  const paidOrdersCount = useMemo(
-    () =>
-      orders.filter(
-        (order) => order.paymentStatus?.toLowerCase() === "paid"
-      ).length,
-    [orders]
-  );
-  const totalOrders = useMemo(() => orders.length, [orders]);
+  // const paidOrdersCount = useMemo(
+  //   () =>
+  //     orders.filter(
+  //       (order) => order.paymentStatus?.toLowerCase() === "paid"
+  //     ).length,
+  //   [orders]
+  // );
 
   const newCustomersCount = customers.length;
 
@@ -388,9 +411,6 @@ const newCustomers = customers.length
   //     hasLowStock,
   //   };
   // });
-  // const paidOrdersCount = React.useMemo(() => {
-  //   return orders.filter(order => order.paymentStatus?.toLowerCase() === "paid").length;
-  // }, [orders]);
 
 
   const statsCards = [
