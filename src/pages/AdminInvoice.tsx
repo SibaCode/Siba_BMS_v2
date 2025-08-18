@@ -88,22 +88,68 @@ console.log(businessInfo)
   const invoiceRef = document.getElementById("invoice-content");
 
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const input = document.getElementById("invoice-content");
     if (!input) return;
-
+  
+    const originalWidth = input.style.width;
+    input.style.width = "800px"; // match desktop layout
+  
+    const getBase64 = (url: string) =>
+      new Promise<string>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = url;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.onerror = reject;
+      });
+  
+    const logoBase64 = businessInfo?.logo ? await getBase64(businessInfo.logo) : null;
+  
     html2canvas(input, { scale: 2 }).then((canvas) => {
       const imgData = canvas.toDataURL("image/png");
+  
       const pdf = new jsPDF("p", "mm", "a4");
-
-      // A4 size in mm: 210 x 297
-      const pdfWidth = 210;
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Invoice-${invoice?.orderId || "unknown"}.pdf`);
+      const pdfWidth = 210; // A4 width in mm
+      let yOffset = 10;
+  
+      // Add logo if available
+      if (logoBase64) {
+        const logoWidth = 40; // smaller width in mm
+        const img = new Image();
+        img.src = logoBase64;
+        img.onload = () => {
+          const logoHeight = (img.height * logoWidth) / img.width;
+          pdf.addImage(logoBase64, "PNG", 10, yOffset, logoWidth, logoHeight);
+          yOffset += logoHeight + 5; // space between logo and invoice
+  
+          // Scale invoice to fit remaining page height
+          const remainingHeight = 297 - yOffset - 10; // A4 height in mm minus offsets
+          const invoiceHeight = (canvas.height * pdfWidth) / canvas.width;
+          const scale = remainingHeight / invoiceHeight;
+          pdf.addImage(imgData, "PNG", 0, yOffset, pdfWidth, invoiceHeight * scale);
+  
+          pdf.save(`Invoice-${invoice?.orderId || "unknown"}.pdf`);
+          input.style.width = originalWidth;
+        };
+      } else {
+        // No logo, add invoice full page
+        pdf.addImage(imgData, "PNG", 0, yOffset, pdfWidth, (canvas.height * pdfWidth) / canvas.width);
+        pdf.save(`Invoice-${invoice?.orderId || "unknown"}.pdf`);
+        input.style.width = originalWidth;
+      }
     });
   };
+  
+
+  
 
   useEffect(() => {
     const fetchInvoice = async () => {
@@ -198,6 +244,8 @@ console.log(businessInfo)
       <div
         id="invoice-content"
         className="max-w-4xl mx-auto px-4 py-8 bg-white"
+        // className="w-full max-w-none px-4 py-8 bg-white"
+        // style={{ color: "#000" }}
         style={{ color: "#000" }} >
           <div className="flex justify-center mb-6">
             
@@ -326,3 +374,4 @@ console.log(businessInfo)
 };
 
 export default AdminInvoice;
+
