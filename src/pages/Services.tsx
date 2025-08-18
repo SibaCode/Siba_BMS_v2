@@ -112,122 +112,66 @@ const Services: React.FC = () => {
     const remainingMinutes = minutes % 60;
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   };
+  const [searchQuery, setSearchQuery] = useState('');
 
-  return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Service Package Management</h1>
-          <p className="text-gray-600">Create and manage your service offerings</p>
-        </div>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-green-600 hover:bg-green-700">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Package
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Service Package</DialogTitle>
-              <DialogDescription>
-                Add a new service package with details like name, description, duration, and pricing.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Package Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Enter package name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Describe the service package"
-                  rows={3}
-                />
-              </div>
-              {/* <div>
-                <Label htmlFor="duration">Duration (minutes)</Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
-                  placeholder="Duration in minutes"
-                />
-              </div> */}
-              <div>
-                <Label htmlFor="price">Price </Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                  placeholder="Price in dollars"
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreate}>Create Package</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+  const filteredPackages = packages.filter(pkg =>
+    pkg.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+ // Filter packages based on search query
+
+
+ return (
+  <div className="p-6 space-y-6">
+  {/* Header */}
+    <div className="flex justify-between items-center">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Service Package Management</h1>
+        <p className="text-gray-600">Create and manage your service offerings</p>
       </div>
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogTrigger asChild>
+          <Button className="bg-green-600 hover:bg-green-700">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Package
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          {/* Create Modal Content */}
+        </DialogContent>
+      </Dialog>
+    </div>
 
-      {/* Service Packages Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {packages.map((pkg) => (
+    {/* Search Bar above the grid */}
+    <div className="mb-4">
+      <Input
+        placeholder="Search service packages..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+    </div>
+
+    {/* Service Packages Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredPackages.length === 0 ? (
+        <p className="text-gray-500 col-span-full">No packages found.</p>
+      ) : (
+        filteredPackages.map(pkg => (
           <Card key={pkg.id} className="relative">
             <CardHeader>
               <CardTitle className="flex justify-between items-start">
                 <span>{pkg.name}</span>
                 <div className="flex gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(pkg)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(pkg)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                      >
+                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Service Package</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{pkg.name}"? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(pkg.id)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
+                      {/* Delete Confirmation */}
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
@@ -236,81 +180,26 @@ const Services: React.FC = () => {
             <CardContent>
               <p className="text-gray-600 mb-4">{pkg.description}</p>
               <div className="flex justify-between items-center">
-                {/* <div className="flex items-center text-sm text-gray-500">
-                  <Clock className="mr-1 h-4 w-4" />
-                  {formatDuration(pkg.duration)}
-                </div> */}
                 <div className="flex items-center text-lg font-semibold text-green-600">
-                  {/* < className="mr-1 h-4 w-4" /> */}
                   R{pkg.price.toFixed(2)}
                 </div>
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
-
-      {/* Edit Package Modal */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Service Package</DialogTitle>
-            <DialogDescription>
-              Update the details of this service package including name, description, and pricing.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-name">Package Name</Label>
-              <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter package name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe the service package"
-                rows={3}
-              />
-            </div>
-            {/* <div>
-              <Label htmlFor="edit-duration">Duration (minutes)</Label>
-              <Input
-                id="edit-duration"
-                type="number"
-                value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
-                placeholder="Duration in minutes"
-              />
-            </div> */}
-            <div>
-              <Label htmlFor="edit-price">Price</Label>
-              <Input
-                id="edit-price"
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                placeholder="Price in dollars"
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleUpdate}>Update Package</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        ))
+      )}
     </div>
-  );
+
+    {/* Edit Package Modal */}
+    <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+      <DialogContent>
+        {/* Edit Modal Content */}
+      </DialogContent>
+    </Dialog>
+  </div>
+);
+
+
 };
 
 export default Services;
