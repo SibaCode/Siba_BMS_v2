@@ -14,13 +14,11 @@ import ImageUpload from "@/pages/components/ImageUpload";
 import {
   Building2,
   User,
-  Mail,
   Phone,
   MapPin,
   FileText,
   Save,
   Edit3,
-  Calendar,
   Globe,
   Hash,
   CreditCard,
@@ -28,10 +26,7 @@ import {
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
 const cardVariants = {
@@ -45,7 +40,7 @@ const BusinessInfoPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [businessInfo, setBusinessInfo] = useState<any>({});
   const [userId, setUserId] = useState<string | null>(null);
-console.log(businessInfo)
+
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -55,15 +50,12 @@ console.log(businessInfo)
           const docRef = doc(db, "businessInfo", user.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
-            setBusinessInfo({
-              id: docSnap.id,
-              ...docSnap.data(),
-            });
+            setBusinessInfo({ id: docSnap.id, ...docSnap.data() });
           } else {
             setBusinessInfo({});
           }
         } catch (error) {
-          console.error("Error fetching user business info:", error);
+          console.error("Error fetching business info:", error);
           toast({
             title: "Fetch error",
             description: "Could not load your business info.",
@@ -79,14 +71,34 @@ console.log(businessInfo)
   }, [toast]);
 
   const handleInputChange = (field: string, value: string) => {
-    setBusinessInfo((prev: any) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setBusinessInfo((prev: any) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
     if (!userId) return;
+
+    // Validation: all fields are required
+    const requiredFields = [
+      "name",
+      "description",
+      "accountName",
+      "accountNumber",
+      "bankName",
+      "phone",
+      "address",
+      "logo",
+    ];
+    for (let field of requiredFields) {
+      if (!businessInfo[field] || businessInfo[field].toString().trim() === "") {
+        toast({
+          title: "Missing information",
+          description: `Please fill out the ${field} field.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setIsSaving(true);
     try {
       const businessDocRef = doc(db, "businessInfo", userId);
@@ -127,7 +139,7 @@ console.log(businessInfo)
     <div className="space-y-2">
       <Label className="flex items-center gap-2 font-medium">
         <Icon className="h-4 w-4 text-primary" />
-        {label}
+        {label} <span className="text-red-500">*</span>
       </Label>
       {textarea ? (
         <Textarea
@@ -160,110 +172,80 @@ console.log(businessInfo)
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4 sm:p-6">
       <motion.div
-        className="max-w-5xl mx-auto p-6 space-y-8"
+        className="max-w-5xl mx-auto space-y-6 sm:space-y-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
+        {/* Info Banner */}
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+          <p className="text-sm text-yellow-800">
+            Please complete all your business information including logo, contact, and bank
+            details. This ensures your business is fully set up and visible to clients. Missing
+            information may prevent access to certain admin features.
+          </p>
+        </div>
+
         {/* Header */}
         <motion.div
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           variants={cardVariants}
         >
           <div>
-            <h1 className="text-3xl font-bold text-gradient">
-              Business Information
-            </h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gradient">Business Information</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Manage your business details and contact information
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             {!isEditing ? (
-              <Button
-                onClick={() => setIsEditing(true)}
-                className="gradient-primary shadow-elegant"
-              >
-                <Edit3 className="h-4 w-4 mr-2" />
-                Edit Info
+              <Button onClick={() => setIsEditing(true)} className="gradient-primary shadow-elegant w-full sm:w-auto">
+                <Edit3 className="h-4 w-4 mr-2" /> Edit Info
               </Button>
             ) : (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditing(false)}
-                  className="card-hover"
-                >
+              <>
+                <Button variant="outline" onClick={() => setIsEditing(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="gradient-primary shadow-elegant"
-                >
-                  {isSaving ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                      className="h-4 w-4 mr-2"
-                    >
-                      <Save className="h-4 w-4" />
-                    </motion.div>
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  {isSaving ? "Saving..." : "Save Changes"}
+                <Button onClick={handleSave} disabled={isSaving} className="gradient-primary shadow-elegant w-full sm:w-auto">
+                  <Save className="h-4 w-4 mr-2" /> {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
-              </div>
+              </>
             )}
           </div>
         </motion.div>
 
         {/* Logo */}
         <motion.div className="flex justify-center" variants={cardVariants}>
-          {isEditing ? (
-            <ImageUpload
-              imageUrl={businessInfo.logo || ""}
-              onImageChange={(url) =>
-                setBusinessInfo((prev) => ({ ...prev, logo: url }))
-              }
-              isEditing={isEditing}
-            />
-          ) : businessInfo.logo ? (
-            <img
-              src={businessInfo.logo}
-              alt="Business Logo"
-              className="w-32 h-32 rounded-full object-cover border shadow"
-            />
-          ) : (
-            <div className="w-32 h-32 rounded-full border shadow flex items-center justify-center text-muted-foreground">
-              No Logo
-            </div>
-          )}
+          <ImageUpload
+            imageUrl={businessInfo.logo || ""}
+            onImageChange={(url) => setBusinessInfo((prev) => ({ ...prev, logo: url }))}
+            isEditing={isEditing}
+          />
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Form Sections */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Business Details */}
-          <motion.div variants={cardVariants} className="lg:col-span-1">
-            <Card className="card-hover shadow-elegant">
+          <motion.div variants={cardVariants}>
+            <Card className="card-hover shadow-elegant w-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-6 w-6 text-primary" />
-                  Business Details
+                  <Building2 className="h-6 w-6 text-primary" /> Business Details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-              <div className="flex flex-col mb-4">
-  <label className="text-sm font-medium text-gray-700">Business Name</label>
-  <span className="mt-1 text-gray-900">{businessInfo.name}</span>
-</div>
-
+              <CardContent className="space-y-4 sm:space-y-6">
+                <div className="flex flex-col">
+                  <Label className="text-sm font-medium text-gray-700">Business Name <span className="text-red-500">*</span></Label>
+                  <Input
+                    value={businessInfo.name || ""}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    disabled={!isEditing}
+                    className="transition-all duration-300 border-primary/50 focus:border-primary shadow-sm"
+                  />
+                </div>
                 <InputField
                   icon={FileText}
                   label="Business Description"
@@ -271,78 +253,38 @@ console.log(businessInfo)
                   textarea
                   placeholder="Describe your business"
                 />
-                {businessInfo.createdAt && (
-                  <p className="text-sm text-muted-foreground">
-                    Created At:{" "}
-                    {businessInfo.createdAt?.toDate
-                      ? businessInfo.createdAt.toDate().toLocaleString()
-                      : ""}
-                  </p>
-                )}
               </CardContent>
             </Card>
           </motion.div>
 
           {/* Bank Details */}
-          <motion.div variants={cardVariants} className="lg:col-span-1">
-            <Card className="card-hover shadow-elegant">
+          <motion.div variants={cardVariants}>
+            <Card className="card-hover shadow-elegant w-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-6 w-6 text-primary" />
-                  Bank Details
+                  <CreditCard className="h-6 w-6 text-primary" /> Bank Details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <InputField
-                  icon={User}
-                  label="Account Name"
-                  field="accountName"
-                  placeholder="Enter account name"
+              <CardContent className="space-y-4 sm:space-y-6">
+                <InputField icon={User} label="Account Name" field="accountName" placeholder="Enter account name"
                 />
-                <InputField
-                  icon={Hash}
-                  label="Account Number"
-                  field="accountNumber"
-                  placeholder="Enter account number"
-                />
-                <InputField
-                  icon={Globe}
-                  label="Bank Name"
-                  field="bankName"
-                  placeholder="Enter bank name"
-                />
+                <InputField icon={Hash} label="Account Number" field="accountNumber" placeholder="Enter account number" />
+                <InputField icon={Globe} label="Bank Name" field="bankName" placeholder="Enter bank name" />
               </CardContent>
             </Card>
           </motion.div>
 
           {/* Contact Details */}
-          <motion.div variants={cardVariants} className="lg:col-span-1">
-            <Card className="card-hover shadow-elegant">
+          <motion.div variants={cardVariants}>
+            <Card className="card-hover shadow-elegant w-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-6 w-6 text-primary" />
-                  Contact Details
+                  <MapPin className="h-6 w-6 text-primary" /> Contact Details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-              <div className="flex flex-col mb-4">
-  <label className="text-sm font-medium text-gray-700">Business Email</label>
-  <span className="mt-1 text-gray-900">{businessInfo.email}</span>
-</div>
-
-                <InputField
-                  icon={Phone}
-                  label="Phone"
-                  field="phone"
-                  placeholder="Enter phone number"
-                />
-                
-                <InputField
-                  icon={MapPin}
-                  label="Address"
-                  field="address"
-                  placeholder="Enter address"
-                />
+              <CardContent className="space-y-4 sm:space-y-6">
+                <InputField icon={Phone} label="Phone" field="phone" placeholder="Enter phone number" />
+                <InputField icon={MapPin} label="Address" field="address" placeholder="Enter address" />
               </CardContent>
             </Card>
           </motion.div>
