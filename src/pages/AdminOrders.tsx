@@ -9,7 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { db } from "@/firebase"; // your Firebase config
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { Pencil } from "lucide-react";
+import { Coins, Pencil } from "lucide-react";
+import { motion } from "framer-motion";
+import { DollarSign, CreditCard, Truck } from "lucide-react"
 import { 
   ArrowLeft, 
   Search, 
@@ -202,53 +204,93 @@ const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
           </div>
         </div>
       </header>
-  
-      {/* Stats Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold">{orders.length}</div>
-            <div className="text-sm text-muted-foreground">Total Orders</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm font-semibold text-muted-foreground mb-2">Payment Status</div>
-            {[
-              { label: "Paid", value: paidCount, color: "text-green-600" },
-              { label: "Failed", value: FailedCount, color: "text-red-600" },
-              { label: "Processing", value: pendingCount, color: "text-amber-500" },
-            ].map((status) => (
-              <div key={status.label} className="flex justify-between text-sm">
-                <span>{status.label}</span>
-                <span className={`font-bold ${status.color}`}>{status.value}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm font-semibold text-muted-foreground mb-2">Delivery Status</div>
-            {[
-              { label: "Pending", value: pendingDeliveryCount, color: "text-amber-600" },
-              { label: "In Transit", value: inTransitCount, color: "text-blue-500" },
-              { label: "Delivered", value: deliveredCount, color: "text-green-600" },
-              { label: "Not Delivered", value: notdeliveredCount, color: "text-red-600" },
-            ].map((status) => (
-              <div key={status.label} className="flex justify-between text-sm">
-                <span>{status.label}</span>
-                <span className={`font-bold ${status.color}`}>{status.value}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">R{totalRevenue.toFixed(2)}</div>
-            <div className="text-sm text-muted-foreground">Total Revenue</div>
-          </CardContent>
-        </Card>
-      </div>
+<motion.div
+  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+  initial={{ opacity: 0, y: 15 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.4 }}
+>
+  {/* Total Orders */}
+  <Card className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-white hover:shadow-xl transition-shadow duration-200">
+  <CardHeader className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-orange-50 to-white">
+    <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+      <ShoppingCart className="h-5 w-5 text-orange-500" /> Total Orders
+    </CardTitle>
+  </CardHeader>
+  <CardContent className="p-6 text-center">
+    <div className="text-4xl sm:text-5xl font-bold text-gray-900">
+      {orders.length}
+    </div>
+  </CardContent>
+</Card>
+
+  {/* Payment Status */}
+  <Card className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-white hover:shadow-xl transition-shadow duration-200">
+    <CardHeader className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-green-50 to-white">
+      <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+        <CreditCard className="h-5 w-5 text-green-500" /> Payment Status
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="p-4 space-y-1">
+      {[
+        { label: "Paid", value: paidCount, color: "text-green-600" },
+        { label: "Failed", value: FailedCount, color: "text-red-600" },
+        { label: "Processing", value: pendingCount, color: "text-amber-500" },
+      ].map((status) => (
+        <motion.div
+          key={status.label}
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 300 }}
+          className="flex justify-between text-sm"
+        >
+          <span>{status.label}</span>
+          <span className={`font-bold ${status.color}`}>{status.value}</span>
+        </motion.div>
+      ))}
+    </CardContent>
+  </Card>
+
+  {/* Delivery Status */}
+  <Card className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-white hover:shadow-xl transition-shadow duration-200">
+    <CardHeader className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white">
+      <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+        <Truck className="h-5 w-5 text-blue-500" /> Delivery Status
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="p-4 space-y-1">
+      {[
+        { label: "Pending", value: pendingDeliveryCount, color: "text-amber-600" },
+        { label: "In Transit", value: inTransitCount, color: "text-blue-500" },
+        { label: "Delivered", value: deliveredCount, color: "text-green-600" },
+        { label: "Not Delivered", value: notdeliveredCount, color: "text-red-600" },
+      ].map((status) => (
+        <motion.div
+          key={status.label}
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 300 }}
+          className="flex justify-between text-sm"
+        >
+          <span>{status.label}</span>
+          <span className={`font-bold ${status.color}`}>{status.value}</span>
+        </motion.div>
+      ))}
+    </CardContent>
+  </Card>
+
+  {/* Total Revenue */}
+  <Card className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-white hover:shadow-xl transition-shadow duration-200">
+    <CardHeader className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-green-50 to-white">
+      <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+        <Coins className="h-5 w-5 text-green-500" /> Total Revenue
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="p-4 text-center">
+      <div className="text-2xl font-bold text-green-600">R{totalRevenue.toFixed(2)}</div>
+    </CardContent>
+  </Card>
+</motion.div>
+
+
        {/* Filters */}
        <div className="flex flex-col sm:flex-row items-center justify-between mt-6 mb-4 space-y-2 sm:space-y-0 sm:space-x-4">
         <div className="flex items-center space-x-2">
@@ -314,7 +356,8 @@ const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
                 <Badge className={getStatusBadgeClassName(order.paymentStatus)}>
                   {order.paymentStatus}
                 </Badge>
-                <div className="truncate">{order.orderDate || order.createdAt || 'N/A'}</div>
+                <div className="text-xs text-gray-400">{new Date(order.orderDate || order.createdAt).toLocaleDateString()}</div>
+
               </div>
   
               {/* Actions */}
