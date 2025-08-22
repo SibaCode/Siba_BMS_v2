@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-  import {
-    Edit, 
-    Trash2, 
-    Plus, 
+import { Edit, Trash2, Plus, X } from "lucide-react";
 
-  } from "lucide-react";
 function VariantsSection({ formData, setFormData }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentVariant, setCurrentVariant] = useState(null);
@@ -38,205 +34,118 @@ function VariantsSection({ formData, setFormData }) {
   };
 
   const saveVariant = () => {
+    if (!currentVariant) return;
+
+    const newVariants = [...formData.variants];
     if (editingIndex !== null) {
-      // Update existing variant
-      const newVariants = [...formData.variants];
       newVariants[editingIndex] = currentVariant;
-      setFormData({ ...formData, variants: newVariants });
     } else {
-      // Add new variant
-      setFormData({ ...formData, variants: [...formData.variants, currentVariant] });
+      newVariants.push(currentVariant);
     }
+    setFormData({ ...formData, variants: newVariants });
     closeModal();
   };
 
   const removeVariant = (index) => {
-    const newVariants = formData.variants.filter((_, i) => i !== index);
-    setFormData({ ...formData, variants: newVariants });
+    setFormData({
+      ...formData,
+      variants: formData.variants.filter((_, i) => i !== index),
+    });
   };
 
   const handleModalChange = (field, value) => {
-    setCurrentVariant(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+    setCurrentVariant((prev) => ({ ...prev, [field]: value }));
   };
-  const handleAddProduct = () => {
-    // ... logic to save the current product/variant(s) if needed
-  
-    // Clear variants so the table resets
-    setFormData(prev => ({
-      ...prev,
-      variants: []
-    }));
-  
-    // Also clear currentVariant modal form if needed
-    setCurrentVariant({
-      type: '',
-      color: '',
-      size: '',
-      sellingPrice: '',
-      stockQuantity: 0,
-    });
-  };
-  
+
   return (
-    <div className="mt-6 border-t pt-4">
-      <h4 className="font-semibold text-lg mb-4">Variants</h4>
-  {/* Add Variant Button */}
-  <Button onClick={openAddModal}> <Plus className="h-4 w-4 mr-2" />Add new variant</Button>
-     
-      {/* Variants Table/List */}
-      {/* {formData.variants.length > 0 ? ( */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-  <table className="min-w-full table-auto bg-white">
-    <thead>
-      <tr className="bg-gray-100 text-gray-700 text-sm">
-        <th className="px-4 py-3 text-left">Variant</th>
-        <th className="px-4 py-3 text-left">Details</th>
-        <th className="px-4 py-3 text-left">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {formData.variants.map((variant, index) => (
-        <tr key={index} className="border-t hover:bg-gray-50">
-          <td className="px-4 py-2 text-sm text-gray-800">
-            {variant.type} - {variant.color} - {variant.size}
-          </td>
-          <td className="px-4 py-2 text-sm text-gray-800">
-            R{variant.sellingPrice} - {variant.stockQuantity} in stock
-          </td>
-          <td className="px-4 py-2 flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => openEditModal(variant, index)}
-              className="flex items-center gap-1"
-            >
-              <Edit className="h-4 w-4" />
-              Edit
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => removeVariant(index)}
-              className="flex items-center gap-1"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+    <div className="mt-6">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="text-lg font-semibold">Variants</h4>
+        <Button variant="outline" size="sm" onClick={openAddModal} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" /> Add Variant
+        </Button>
+      </div>
 
+      {formData.variants.length > 0 ? (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+          <table className="min-w-full table-auto bg-white">
+            <thead className="bg-gray-50">
+              <tr className="text-left text-gray-700 text-sm">
+                <th className="px-4 py-2">Variant</th>
+                <th className="px-4 py-2">Details</th>
+                <th className="px-4 py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {formData.variants.map((variant, index) => (
+                <tr key={index} className="border-t hover:bg-gray-50">
+                  <td className="px-4 py-2 text-sm text-gray-800">
+                    {variant.type} - {variant.color} - {variant.size}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-800">
+                    R{variant.sellingPrice} - {variant.stockQuantity} in stock
+                  </td>
+                  <td className="px-4 py-2 flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => openEditModal(variant, index)} className="flex items-center gap-1">
+                      <Edit className="h-4 w-4" /> 
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => removeVariant(index)} className="flex items-center gap-1">
+                      <Trash2 className="h-4 w-4" /> 
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 italic">No variants added yet.</p>
+      )}
 
-{/* ) : (
-    <p className="text-sm text-gray-500 italic mb-4">No variants added yet.</p>
-  )} */}
-     
-    
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded max-w-md w-full">
-            <h5 className="text-lg font-semibold mb-4">
-              {editingIndex !== null ? "Edit product ariant" : "Add new product variant"}
-            </h5>
-
-            <div className="space-y-3">
-              <div>
-                <label htmlFor="modal-type" className="block font-medium">Type</label>
-                <input
-                  id="modal-type"
-                  type="text"
-                   placeholder="e.g. Basic, Deluxe"
-                  value={currentVariant.type}
-                  onChange={(e) => handleModalChange("type", e.target.value)}
-                  className="w-full border rounded p-1"
-                />
-              </div>
-              <div>
-                <label htmlFor="modal-color" className="block font-medium">Color</label>
-                <input
-                  id="modal-color"
-                  type="text"
-                  placeholder="Color"
-                  value={currentVariant.color}
-                  onChange={(e) => handleModalChange("color", e.target.value)}
-                  className="w-full border rounded p-1"
-                />
-              </div>
-              <div>
-                <label htmlFor="modal-size" className="block font-medium">Size</label>
-                <input
-                  id="modal-size"
-                  type="text"
-                   placeholder="Size"
-                  value={currentVariant.size}
-                  onChange={(e) => handleModalChange("size", e.target.value)}
-                  className="w-full border rounded p-1"
-                />
-              </div>
-              <div>
-                <label htmlFor="modal-sellingPrice" className="block font-medium">Selling Price (R)</label>
-                <input
-                  id="modal-sellingPrice"
-                  type="number"
-                  placeholder="0.00"
-                  step="0.01"
-                  value={currentVariant.sellingPrice}
-                  onChange={(e) => handleModalChange("sellingPrice", e.target.value)}
-                  className="w-full border rounded p-1"
-                />
-              </div>
-              <div>
-                <label htmlFor="modal-stockPrice" className="block font-medium">Stock Price (R)</label>
-                <input
-                  id="modal-stockPrice"
-                  type="number"
-                  placeholder="0.00"
-                  step="0.01"
-                  value={currentVariant.stockPrice}
-                  onChange={(e) => handleModalChange("stockPrice", e.target.value)}
-                  className="w-full border rounded p-1"
-                />
-              </div>
-              <div>
-                <label htmlFor="modal-stockQuantity" className="block font-medium">Stock Quantity</label>
-                <input
-                  id="modal-stockQuantity"
-                  type="number"
-                   placeholder="0"
-                  value={currentVariant.stockQuantity}
-                  onChange={(e) => handleModalChange("stockQuantity", e.target.value)}
-                  className="w-full border rounded p-1"
-                />
-              </div>
-              <div>
-                <label htmlFor="modal-description" className="block font-medium">Description</label>
-                <textarea
-                  id="modal-description"
-                  rows={3}
-                  placeholder="Description"
-                  value={currentVariant.description}
-                  onChange={(e) => handleModalChange("description", e.target.value)}
-                  className="w-full border rounded p-1"
-                />
-              </div>
-
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h5 className="text-lg font-semibold">{editingIndex !== null ? "Edit Variant" : "Add Variant"}</h5>
+              <Button variant="ghost" size="sm" onClick={closeModal}>
+                <X className="h-5 w-5" />
+              </Button>
             </div>
 
-            <div className="mt-4 flex justify-end space-x-2">
-           
-              <Button variant="outline" size="sm"   onClick={closeModal} className="flex-1">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Cancel
-                  </Button>
-                  <Button onClick={saveVariant} size="sm">
-                   Save new variant
-                  </Button>
+            <div className="space-y-3">
+              {["type", "color", "size", "sellingPrice", "stockPrice", "stockQuantity", "description"].map((field) => (
+                <div key={field}>
+                  <label className="block font-medium capitalize">{field.replace(/([A-Z])/g, " $1")}</label>
+                  {field === "description" ? (
+                    <textarea
+                      rows={3}
+                      className="w-full border rounded p-2"
+                      value={currentVariant[field] || ""}
+                      onChange={(e) => handleModalChange(field, e.target.value)}
+                      placeholder="Description"
+                    />
+                  ) : (
+                    <input
+                      type={["sellingPrice", "stockPrice"].includes(field) ? "number" : "text"}
+                      step={["sellingPrice", "stockPrice"].includes(field) ? "0.01" : undefined}
+                      className="w-full border rounded p-2"
+                      value={currentVariant[field] || ""}
+                      onChange={(e) => handleModalChange(field, e.target.value)}
+                      placeholder={field}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" size="sm" onClick={closeModal} className="flex-1">
+                Cancel
+              </Button>
+              <Button size="sm" onClick={saveVariant}>
+                Save Variant
+              </Button>
             </div>
           </div>
         </div>
@@ -244,4 +153,5 @@ function VariantsSection({ formData, setFormData }) {
     </div>
   );
 }
+
 export default VariantsSection;

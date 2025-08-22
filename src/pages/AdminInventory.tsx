@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { collection, getDocs, where } from "firebase/firestore";
+import { collection, getDocs, where,getDoc } from "firebase/firestore";
 import { db } from "@/firebase"; // Adjust path based on your structure
 import { Checkbox } from "@/components/ui/checkbox";
 import VariantsSection from "@/pages/components/VariantsSection"
@@ -33,7 +33,7 @@ import {
   Edit, 
   Trash2, 
   AlertTriangle,
-  Package,Boxes,DollarSign,Layers,AlertCircle
+  Package,Boxes,Coins,Layers,AlertCircle
 } from "lucide-react";
 
 type OrderItem = {
@@ -69,6 +69,7 @@ const AdminInventory = () => {
     supplier: "",        // string
     productImage:"",
     batchNumber: "",     // string
+    createdBy: "",
     status: "",          // string, e.g. "inStock" or "outOfStock"
     lastRestocked: "",   // string or Date (preferably Date)
     variants: [          // array of variant objects
@@ -85,10 +86,41 @@ const AdminInventory = () => {
     ],
   });
   
-
+  const [businessInfo, setBusinessInfo] = useState<any>({});
   const auth = getAuth();
   const currentUser = auth.currentUser;
-  const loggedInUserId = currentUser?.uid;
+  const currentUid = currentUser?.uid;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!currentUser) return;
+      setLoading(true);
+  
+      try {
+     
+  
+        // 3️⃣ Fetch businessInfo document
+        const businessDocRef = doc(db, "businessInfo", currentUid);
+        const businessDocSnap = await getDoc(businessDocRef);
+  
+        if (businessDocSnap.exists()) {
+          const info = { id: businessDocSnap.id, ...businessDocSnap.data() };
+          setBusinessInfo(info);
+          console.log("Business Info:", info);
+        } else {
+          setBusinessInfo({});
+        }
+
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchData();
+  }, [currentUser, currentUid]);
+  
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -135,6 +167,7 @@ const AdminInventory = () => {
       batchNumber: "",
       status: "",
       lastRestocked: "",
+      createdBy: currentUser ? currentUser.uid : "admin",
       variants: [],
     });
     setEditingProduct(null);
@@ -162,6 +195,7 @@ const AdminInventory = () => {
       supplier: product.supplier || "",
       productImage: product.productImage || "",
       batchNumber: product.batchNumber || "",
+      createdBy: product.createdBy || "",
       status: product.status || "",
       lastRestocked: product.lastRestocked || "",
       variants: product.variants?.length > 0
@@ -201,6 +235,7 @@ const AdminInventory = () => {
       !formData.batchNumber ||
       !formData.status ||
       !formData.lastRestocked ||
+      !formData.createdBy ||
       formData.variants.length === 0
     ) {
       alert("Please fill in all required main fields and add at least one variant.");
@@ -229,12 +264,14 @@ const AdminInventory = () => {
         supplier: formData.supplier,
         productImage: formData.productImage,
         batchNumber: formData.batchNumber,
+        createdBy:currentUid,
         status: formData.status,
         lastRestocked: formData.lastRestocked,
         variants: formData.variants.map((v) => ({
           type: v.type,
           color: v.color,
           size: v.size,
+          createdBy: currentUid,
           sellingPrice: parseFloat(v.sellingPrice),
           stockPrice: parseFloat(v.stockPrice),
           stockQuantity: parseInt(v.stockQuantity, 10),
@@ -262,6 +299,7 @@ const AdminInventory = () => {
       !formData.supplier ||
       !formData.productImage ||
       !formData.batchNumber ||
+      !formData.createdBy ||
       !formData.status ||
       !formData.lastRestocked ||
       formData.variants.length === 0
@@ -293,6 +331,7 @@ const AdminInventory = () => {
         supplier: formData.supplier,
         productImage: formData.productImage,
         batchNumber: formData.batchNumber,
+        createdBy: editingProduct.createdBy || currentUid, // keep original creator if editing
         status: formData.status,
         lastRestocked: formData.lastRestocked,
         variants: formData.variants.map((v) => ({
@@ -334,7 +373,7 @@ const AdminInventory = () => {
     const matchesCategory =
       categoryFilter === "all" || product.category?.toLowerCase() === categoryFilter.toLowerCase();
   
-    const matchesUser = product.uid === loggedInUserId;  // use uid here
+    const matchesUser = product.uid === currentUid;  // use uid here
   
     return matchesSearch && matchesCategory && matchesUser;
   });
@@ -424,301 +463,303 @@ const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/admin">
-                  <ArrowLeft className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-
-            <div className="flex items-center space-x-4">
+    {/* Header */}
+    <div className="border-b bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/admin">
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+          <div className="flex items-center space-x-4">
             <Button onClick={() => navigate("/admin/inventory/add")}>
-      <Plus className="h-4 w-4 mr-2" />
-      Add Product
-    </Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Product
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Stats Bar */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/** Total Units */}
+        <Card className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-white">
+          <CardHeader className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-purple-50 to-white">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+              <Boxes className="h-5 w-5 text-purple-500" />
+              Total Units
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-1 text-sm max-h-[180px] overflow-y-auto">
+            <div className="flex justify-between font-bold text-purple-600">
+              <span>Total Units</span>
+              <span>
+                {products.reduce(
+                  (total, product) =>
+                    total +
+                    (product.variants?.reduce(
+                      (sum: number, v: any) => sum + (v.stockQuantity || 0),
+                      0
+                    ) || 0),
+                  0
+                )}
+              </span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Bar */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <Card>
-  <CardContent className="p-4 flex flex-col gap-2">
-    <div className="flex items-center gap-3 mb-2">
-      <Boxes className="text-purple-600 w-6 h-6" />
-      <div className="text-sm font-semibold text-muted-foreground">Total Units Available</div>
-    </div>
-    <div className="space-y-1 text-sm">
-      <div className="flex justify-between font-bold text-purple-600">
-        <span>Total Units</span>
-        <span>
-          {products.reduce((total, product) =>
-            total + (product.variants?.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0) || 0), 0)}
-        </span>
-      </div>
-
-      {products.map((product: any, idx: number) => {
-        const totalUnits = product.variants?.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0) || 0;
-        return (
-          <div
-            key={idx}
-            className="flex justify-between text-xs text-muted-foreground ml-8"
-          >
-            <span>{product.name}</span>
-            <span className="text-purple-600 font-semibold">{totalUnits}</span>
-          </div>
-        );
-      })}
-    </div>
-  </CardContent>
-</Card>
-
-<Card>
-  <CardContent className="p-4 flex flex-col gap-2">
-    <div className="flex items-center gap-3 mb-2">
-      <AlertTriangle className="text-red-600 w-6 h-6" />
-      <div className="text-sm font-semibold text-muted-foreground">Low Stock Products</div>
-    </div>
-    <div className="space-y-1 text-sm">
-      <div className="flex justify-between font-bold text-red-600">
-        <span>Low Stock</span>
-        <span>
-          {
-            products.filter(product =>
-              product.variants?.some((v: any) => (v.stockQuantity || 0) < 5)
-            ).length
-          }
-        </span>
-      </div>
-
-      {products.filter(product =>
-        product.variants?.some((v: any) => (v.stockQuantity || 0) < 5)
-      ).map((product: any, idx: number) => {
-        const lowVariantsCount = product.variants?.reduce((count: number, v: any) =>
-          count + ((v.stockQuantity || 0) < 5 ? 1 : 0), 0) || 0;
-        return (
-          <div
-            key={idx}
-            className="flex justify-between text-xs text-muted-foreground ml-8"
-          >
-            <span>{product.name}</span>
-            <span className="text-red-600 font-semibold">{lowVariantsCount} variant{lowVariantsCount > 1 ? "s" : ""}</span>
-          </div>
-        );
-      })}
-    </div>
-  </CardContent>
-</Card>
-<Card>
-      <CardContent className="p-4 flex flex-col gap-2">
-        <div className="flex items-center gap-3 mb-2">
-          <AlertCircle className="text-red-700 w-6 h-6" />
-          <div className="text-sm font-semibold text-muted-foreground">Out of Stock Products</div>
-        </div>
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between font-bold text-red-700">
-            <span>Out of Stock</span>
-            <span>{outOfStockProducts.length}</span>
-          </div>
-
-          {outOfStockProducts.map((product: any, idx: number) => {
-            const outOfStockVariantsCount = product.variants?.reduce((count: number, v: any) =>
-              count + ((v.stockQuantity || 0) === 0 ? 1 : 0), 0) || 0;
-            return (
-              <div
-                key={idx}
-                className="flex justify-between text-xs text-muted-foreground ml-8"
-              >
-                <span>{product.name}</span>
-                <span className="text-red-700 font-semibold">
-                  {outOfStockVariantsCount} variant{outOfStockVariantsCount > 1 ? "s" : ""}
+            {products.map((product: any, idx: number) => {
+              const totalUnits =
+                product.variants?.reduce(
+                  (sum: number, v: any) => sum + (v.stockQuantity || 0),
+                  0
+                ) || 0;
+              return (
+                <div key={idx} className="flex justify-between text-xs text-muted-foreground ml-6">
+                  <span>{product.name}</span>
+                  <span className="text-purple-600 font-semibold">{totalUnits}</span>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+  
+        {/** Low Stock */}
+                  <Card className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-white">
+            <CardHeader className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-red-50 to-white">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                Low Stock Products
+              </CardTitle>
+            </CardHeader>
+            
+            <CardContent className="p-4 space-y-1 text-sm max-h-[180px] overflow-y-auto">
+              <div className="flex justify-between font-bold text-red-600">
+                <span>Low Stock</span>
+                <span>
+                  {products.filter(product =>
+                    product.variants?.some((v: any) => (v.stockQuantity || 0) < 5)
+                  ).length}
                 </span>
               </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
-    
-<Card>
-<Card className="max-w-md mx-auto bg-white shadow-md rounded-lg border border-gray-200">
-  <CardContent className="p-5 flex flex-col gap-3">
-    <div className="flex items-center gap-3 mb-3">
-      <DollarSign className="text-green-600 w-7 h-7" />
-      <h2 className="text-lg font-semibold text-gray-800">Total Stock Value</h2>
-    </div>
-    <div className="text-xl font-bold text-green-700 border-b border-green-200 pb-2">
-      R{totalStockValue.toFixed(2)}
-    </div>
-    <p className="text-sm text-gray-600 mt-1">Value of all units in stock</p>
-  </CardContent>
-</Card>
-</Card>
-        </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Filter by category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="Aprons">Aprons</SelectItem>
-              <SelectItem value="Mugs">Mugs</SelectItem>
-              <SelectItem value="Umbrellas">Umbrellas</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+              {products
+                .filter(product =>
+                  product.variants?.some((v: any) => (v.stockQuantity || 0) < 5)
+                )
+                .map((product: any, idx: number) => {
+                  const lowVariantsCount =
+                    product.variants?.reduce(
+                      (count: number, v: any) =>
+                        count + ((v.stockQuantity || 0) < 5 ? 1 : 0),
+                      0
+                    ) || 0;
+                  return (
+                    <div
+                      key={idx}
+                      className="flex justify-between text-xs text-muted-foreground ml-6"
+                    >
+                      <span>{product.name}</span>
+                      <span className="text-red-600 font-semibold">
+                        {lowVariantsCount} variant{lowVariantsCount > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  );
+                })}
+            </CardContent>
+          </Card>
 
-        {/* Products Grid */}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => {
-            const totalUnits = product.variants?.reduce(
-              (sum: number, variant: any) => sum + (variant.stockQuantity || 0),
-              0
-            ) || 0;
-            
-            const lowStockVariants = product.variants?.filter(
-              (variant: any) => (variant.stockQuantity || 0) < 5
-            ) || [];
-            
-            const lowStockCount = lowStockVariants.length;
-            
-            const totalStock = product.variants?.reduce((sum: number, variant: any) => sum + (variant.stockQuantity || 0), 0) || 0;
-            const isLowStock = totalStock < 5;
-            const priceRange = product.variants?.length > 1 
-              ? `R${Math.min(...product.variants.map((v: any) => v.sellingPrice || 0))} - R${Math.max(...product.variants.map((v: any) => v.sellingPrice || 0))}`
-              : `R${product.variants?.[0]?.sellingPrice || 0}`;
 
-            return (
-              <Card key={product.docId} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-                    {product.productImage ? (
-                      <img
-                        src={product.productImage}
-                        alt={product.name}
-                        className="object-cover w-full h-full rounded-lg"
-                      />
-                    ) : (
-                      <Package className="h-12 w-12 text-muted-foreground" />
-                    )}
+  
+        {/** Out of Stock */}
+        <Card className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-white">
+            <CardHeader className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-red-50 to-white">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                Out of Stock Products
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="p-4 space-y-1 text-sm max-h-[180px] overflow-y-auto">
+              <div className="flex justify-between font-bold text-red-700">
+                <span>Out of Stock</span>
+                <span>{outOfStockProducts.length}</span>
+              </div>
+
+              {outOfStockProducts.map((product: any, idx: number) => {
+                const outOfStockVariantsCount =
+                  product.variants?.reduce(
+                    (count: number, v: any) => count + ((v.stockQuantity || 0) === 0 ? 1 : 0),
+                    0
+                  ) || 0;
+                return (
+                  <div
+                    key={idx}
+                    className="flex justify-between text-xs text-muted-foreground ml-6"
+                  >
+                    <span>{product.name}</span>
+                    <span className="text-red-700 font-semibold">
+                      {outOfStockVariantsCount} variant{outOfStockVariantsCount > 1 ? "s" : ""}
+                    </span>
                   </div>
+                );
+              })}
+            </CardContent>
+          </Card>
 
-                  <CardTitle className="text-lg">{product.name}</CardTitle>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="secondary">{product.category}</Badge>
-                    <Badge variant={isLowStock ? "destructive" : "default"}>
-                      {isLowStock && <AlertTriangle className="h-3 w-3 mr-1" />}
-                      {totalStock} total stock
-                    </Badge>
-                  </div>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="space-y-3 mb-4">
-                  
-
-                    {/* Variants Preview */}
-                    {product.variants && product.variants.length > 0 && (
-                      <div className="mt-3 pt-3 border-t">
-                        <div className="text-xs font-medium text-muted-foreground mb-2">Variant Details:</div>
-                        <div className="space-y-2 max-h-32 overflow-y-auto">
-                              {product.variants.slice(0, 3).map((variant: any) => (
-
-                              <div
-                                key={variant.id || `${variant.color}-${variant.size}-${variant.type}`}
-                                className="bg-muted/50 p-2 rounded text-xs"
-                                >
-                              <div className="flex justify-between items-center">
-                                <span className="font-medium">
-                                  {variant.color} {variant.size} {variant.type}
-                                </span>
-                                <Badge variant={variant.stockQuantity < 5 ? "destructive" : "outline"} className="text-xs">
-                                  {variant.stockQuantity}
-                                </Badge>
-                              </div>
-                              <div className="flex justify-between mt-1">
-                                <span>R{variant.sellingPrice}</span>
-                                <span className="text-muted-foreground">Cost: R{variant.stockPrice}</span>
-                              </div>
-                            </div>
-                          ))}
-                          {product.variants.length > 3 && (
-                            <div className="text-center text-xs text-muted-foreground py-1">
-                              +{product.variants.length - 3} more variants
-                            </div>
-                          )}
+  
+        {/** Total Stock Value */}
+        <Card className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-white">
+          <CardHeader className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-green-50 to-white">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+              <Coins className="h-5 w-5 text-green-600" />
+              Stock Value
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="text-xl font-bold text-green-700 border-b border-green-200 pb-2">
+              R{totalStockValue.toFixed(2)}
+            </div>
+            <p className="text-sm text-gray-600 mt-1">Value of all units in stock</p>
+          </CardContent>
+        </Card>
+      </div>
+  
+      {/* Filters */}
+      {/* <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <Filter className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="Aprons">Aprons</SelectItem>
+            <SelectItem value="Mugs">Mugs</SelectItem>
+            <SelectItem value="Umbrellas">Umbrellas</SelectItem>
+          </SelectContent>
+        </Select>
+      </div> */}
+  
+      {/* Products Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProducts.map((product) => {
+          const totalUnits =
+            product.variants?.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0) || 0;
+          const isLowStock = totalUnits < 5;
+  
+          return (
+            <Card
+              key={product.docId}
+              className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow"
+            >
+              <CardHeader className="pb-3">
+                <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                  {product.productImage ? (
+                    <img
+                      src={product.productImage}
+                      alt={product.name}
+                      className="object-cover w-full h-full rounded-lg"
+                    />
+                  ) : (
+                    <Package className="h-12 w-12 text-muted-foreground" />
+                  )}
+                </div>
+                <CardTitle className="text-lg">{product.name}</CardTitle>
+                <div className="flex items-center justify-between">
+                  <Badge variant="secondary">{product.category}</Badge>
+                  <Badge variant={isLowStock ? "destructive" : "default"}>
+                    {isLowStock && <AlertTriangle className="h-3 w-3 mr-1" />}
+                    {totalUnits} total stock
+                  </Badge>
+                </div>
+              </CardHeader>
+  
+              <CardContent>
+                {product.variants && product.variants.length > 0 && (
+                  <div className="mt-3 pt-3 border-t max-h-32 overflow-y-auto space-y-2">
+                    {product.variants.slice(0, 3).map((variant: any) => (
+                      <div
+                        key={variant.id || `${variant.color}-${variant.size}-${variant.type}`}
+                        className="bg-muted/50 p-2 rounded text-xs"
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">
+                            {variant.color} {variant.size} {variant.type}
+                          </span>
+                          <Badge
+                            variant={variant.stockQuantity < 5 ? "destructive" : "outline"}
+                            className="text-xs"
+                          >
+                            {variant.stockQuantity}
+                          </Badge>
                         </div>
+                        <div className="flex justify-between mt-1">
+                          <span>R{variant.sellingPrice}</span>
+                          <span className="text-muted-foreground">
+                            Cost: R{variant.stockPrice}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {product.variants.length > 3 && (
+                      <div className="text-center text-xs text-muted-foreground py-1">
+                        +{product.variants.length - 3} more variants
                       </div>
                     )}
                   </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button
-  variant="outline"
-  size="sm"
-  onClick={() => navigate(`/admin/inventory/edit/${product.docId}`)}
-  className="flex items-center justify-center gap-2 flex-1
-             border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white
-             font-poppins font-medium transition-colors duration-200"
->
-  <Edit className="h-4 w-4" />
-  Edit
-</Button>
-                    <Button 
-                      variant="destructive" 
-                      
-                      onClick={() => deleteProduct(product)} 
-                      size="sm"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {filteredProducts.length === 0 && (
-          <Card className="py-12">
-            <CardContent className="text-center">
-              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No products found</h3>
-              <p className="text-muted-foreground">
-                {searchTerm || categoryFilter !== "all" 
-                  ? "Try adjusting your search or filter criteria"
-                  : "Add your first product to get started"
-                }
-              </p>
-            </CardContent>
-          </Card>
-        )}
+                )}
+  
+                <div className="flex space-x-2 mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/admin/inventory/edit/${product.docId}`)}
+                    className="flex-1 flex items-center justify-center gap-2 border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white font-poppins font-medium transition-colors duration-200"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => deleteProduct(product)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
-
+  
+      {/* Empty State */}
+      {filteredProducts.length === 0 && (
+        <Card className="py-12 rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-white">
+          <CardContent className="text-center">
+            <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No products found</h3>
+            <p className="text-muted-foreground">
+              {searchTerm || categoryFilter !== "all"
+                ? "Try adjusting your search or filter criteria"
+                : "Add your first product to get started"}
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
-  );
+  </div>
+  
+);
+
 };
 
 export default AdminInventory;

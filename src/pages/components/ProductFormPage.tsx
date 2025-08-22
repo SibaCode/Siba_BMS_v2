@@ -4,6 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ArrowLeft } from "lucide-react";
 import { db, auth } from "@/firebase";
 import { doc, getDoc, addDoc, updateDoc, collection } from "firebase/firestore";
 import CategorySelector from "@/pages/components/CategorySelector";
@@ -72,7 +74,6 @@ export default function ProductFormPage() {
 
       const data = productDoc.data();
 
-      // Ownership check
       if (data.uid !== auth.currentUser?.uid) {
         alert("You do not have permission to edit this product.");
         navigate("/admin/inventory");
@@ -113,19 +114,19 @@ export default function ProductFormPage() {
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
   const uploadImageFile = async (file: File) => {
     const form = new FormData();
     form.append("image", file);
     const apiKey = "102c039448f4f14be52fc5c055364fa5";
-  
+
     try {
       const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
         method: "POST",
         body: form,
       });
-  
       const data = await res.json();
-  
+
       if (data?.data?.url) {
         handleInputChange("productImage", data.data.url);
       } else {
@@ -136,26 +137,19 @@ export default function ProductFormPage() {
       alert("Failed to upload image.");
     }
   };
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      uploadImageFile(file);
-    }
+    if (file) uploadImageFile(file);
   };
-  
 
   const handleImageDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
-    if (file) {
-      uploadImageFile(file);
-    }
+    if (file) uploadImageFile(file);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
+  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
 
   const validateForm = () => {
     const requiredFields: (keyof FormData)[] = [
@@ -167,33 +161,11 @@ export default function ProductFormPage() {
       "status",
       "lastRestocked",
     ];
-
-    for (const field of requiredFields) {
-      if (!formData[field]) {
-        alert("Please fill in all required main fields.");
-        return false;
-      }
-    }
-
-    if (formData.variants.length === 0) {
-      alert("Please add at least one variant.");
-      return false;
-    }
-
-    for (const v of formData.variants) {
-      if (
-        !v.type ||
-        !v.color ||
-        !v.size ||
-        v.sellingPrice === "" ||
-        v.stockPrice === "" ||
-        v.stockQuantity === ""
-      ) {
-        alert("All variant fields must be filled.");
-        return false;
-      }
-    }
-
+    for (const field of requiredFields) if (!formData[field]) return alert("Fill all required fields.");
+    if (formData.variants.length === 0) return alert("Add at least one variant.");
+    for (const v of formData.variants)
+      if (!v.type || !v.color || !v.size || v.sellingPrice === "" || v.stockPrice === "" || v.stockQuantity === "")
+        return alert("All variant fields must be filled.");
     return true;
   };
 
@@ -207,6 +179,8 @@ export default function ProductFormPage() {
         sellingPrice: parseFloat(v.sellingPrice as string),
         stockPrice: parseFloat(v.stockPrice as string),
         stockQuantity: parseInt(v.stockQuantity as string, 10),
+        createdBy: auth.currentUser?.uid,
+
       })),
     };
 
@@ -215,24 +189,12 @@ export default function ProductFormPage() {
         const productRef = doc(db, "products", id);
         const productDoc = await getDoc(productRef);
 
-        if (!productDoc.exists()) {
-          alert("Product not found.");
-          return;
-        }
-
-        const data = productDoc.data();
-
-        if (data.uid !== auth.currentUser?.uid) {
-          alert("You do not have permission to update this product.");
-          return;
-        }
+        if (!productDoc.exists()) return alert("Product not found.");
+        if (productDoc.data().uid !== auth.currentUser?.uid) return alert("No permission to update.");
 
         await updateDoc(productRef, payload);
       } else {
-        await addDoc(collection(db, "products"), {
-          ...payload,
-          uid: auth.currentUser?.uid,
-        });
+        await addDoc(collection(db, "products"), { ...payload, uid: auth.currentUser?.uid ,createdBy: auth.currentUser?.uid, });
       }
 
       navigate("/admin/inventory");
@@ -242,111 +204,73 @@ export default function ProductFormPage() {
     }
   };
 
-  if (loading) {
-    return <p>Loading product...</p>;
-  }
+  if (loading) return <p>Loading product...</p>;
 
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
-      <h1 className="text-xl font-bold mb-4">{isEditMode ? "Edit Product" : "Add New Product"}</h1>
-
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="name">Product Name *</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="category">Category *</Label>
-          <CategorySelector
-            value={formData.category}
-            onChange={(value) => handleInputChange("category", value)}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="supplier">Supplier *</Label>
-          <Input
-            id="supplier"
-            value={formData.supplier}
-            onChange={(e) => handleInputChange("supplier", e.target.value)}
-          />
-        </div>
-
-        <div
-          onDrop={handleImageDrop}
-          onDragOver={handleDragOver}
-          onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-gray-300 p-4 rounded-md text-center cursor-pointer hover:bg-gray-50 transition"
-        >
-          <Label htmlFor="productImage">Product Image *</Label>
-          <Input
-            id="productImage"
-            value={formData.productImage}
-            readOnly
-            className="mb-2 cursor-pointer"
-            placeholder="Drag and drop or click to upload"
-          />
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          {formData.productImage ? (
-            <img
-              src={formData.productImage}
-              alt="Preview"
-              className="mt-2 max-h-40 object-contain border rounded mx-auto"
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground mt-2">Drag and drop or click to upload</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="batchNumber">Batch Number *</Label>
-          <Input
-            id="batchNumber"
-            value={formData.batchNumber}
-            onChange={(e) => handleInputChange("batchNumber", e.target.value)}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="status">Status *</Label>
-          <Input
-            id="status"
-            placeholder="e.g. Active / Inactive"
-            value={formData.status}
-            onChange={(e) => handleInputChange("status", e.target.value)}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="lastRestocked">Last Restocked *</Label>
-          <Input
-            id="lastRestocked"
-            type="date"
-            value={formData.lastRestocked}
-            onChange={(e) => handleInputChange("lastRestocked", e.target.value)}
-          />
-        </div>
-
-        <VariantsSection formData={formData} setFormData={setFormData} />
-
-        <div className="mt-6 flex justify-end gap-2">
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            Cancel
+      <Card className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden bg-white">
+        <CardHeader className="p-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-white flex justify-between items-center">
+          <CardTitle className="text-lg font-semibold text-gray-900">
+            {isEditMode ? "Edit Product" : "Add New Product"}
+          </CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <Button onClick={handleSubmit}>{isEditMode ? "Update Product" : "Add Product"}</Button>
-        </div>
-      </div>
+        </CardHeader>
+
+        <CardContent className="p-6 space-y-4">
+          {/* Main Fields */}
+          <div>
+            <Label htmlFor="name">Product Name *</Label>
+            <Input id="name" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor="category">Category *</Label>
+            <CategorySelector value={formData.category} onChange={(value) => handleInputChange("category", value)} />
+          </div>
+          <div>
+            <Label htmlFor="supplier">Supplier *</Label>
+            <Input id="supplier" value={formData.supplier} onChange={(e) => handleInputChange("supplier", e.target.value)} className="mt-1" />
+          </div>
+
+          {/* Image Upload */}
+          <div
+            onDrop={handleImageDrop}
+            onDragOver={handleDragOver}
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center cursor-pointer hover:bg-gray-50 transition relative"
+          >
+            <Label htmlFor="productImage">Product Image *</Label>
+            <Input id="productImage" value={formData.productImage} readOnly placeholder="Drag and drop or click to upload" className="mt-2 cursor-pointer" />
+            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+            {formData.productImage && <img src={formData.productImage} alt="Preview" className="mt-2 max-h-40 object-contain border rounded mx-auto" />}
+          </div>
+
+          <div>
+            <Label htmlFor="batchNumber">Batch Number *</Label>
+            <Input id="batchNumber" value={formData.batchNumber} onChange={(e) => handleInputChange("batchNumber", e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor="status">Status *</Label>
+            <Input id="status" placeholder="e.g. Active / Inactive" value={formData.status} onChange={(e) => handleInputChange("status", e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor="lastRestocked">Last Restocked *</Label>
+            <Input id="lastRestocked" type="date" value={formData.lastRestocked} onChange={(e) => handleInputChange("lastRestocked", e.target.value)} className="mt-1" />
+          </div>
+
+          {/* Variants Section */}
+          <VariantsSection formData={formData} setFormData={setFormData} />
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => navigate(-1)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>{isEditMode ? "Update Product" : "Add Product"}</Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

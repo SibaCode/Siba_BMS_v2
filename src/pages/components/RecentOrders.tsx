@@ -120,7 +120,7 @@ const RecentOrders = () => {
                 </div>
                 <div className="text-right">
                   <div className="font-semibold text-gray-900 text-lg">R{order.total}</div>
-                  <div className="text-xs text-gray-400">{new Date(order.date).toLocaleDateString()}</div>
+                  <div className="text-xs text-gray-400">{new Date(order.orderDate).toLocaleDateString()}</div>
                 </div>
               </motion.div>
             ))}

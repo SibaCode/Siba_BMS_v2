@@ -79,7 +79,7 @@ const AdminDashboard = () => {
       try {
         // 1️⃣ Fetch products, orders, customers, expenses in parallel
         const [productsSnapshot, ordersSnapshot, customersSnapshot, expensesSnapshot] = await Promise.all([
-          getDocs(query(collection(db, "products"), where("uid", "==", currentUid))),
+          getDocs(query(collection(db, "products"), where("createdBy", "==", currentUid))),
           getDocs(query(collection(db, "orders"), where("createdBy", "==", currentUid))),
           getDocs(query(collection(db, "customers"), where("uid", "==", currentUid))),
           getDocs(query(collection(db, "expenses"), where("userId", "==", currentUid))), // added
