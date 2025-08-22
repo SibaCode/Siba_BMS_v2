@@ -126,8 +126,7 @@ const AdminDashboard = () => {
 
   const auth = getAuth();
   const currentUser = auth.currentUser;
-  const currentUid = "S0FB6CiEVHdx8xkytSpsIUhyv992"; // replace with auth.currentUser.uid in real code
-
+  const currentUid = auth.currentUser.uid;
 const ordersRef = collection(db, "orders");
 
   const fetchCollection = async (colName: string, setter: Function) => {
