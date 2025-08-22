@@ -33,6 +33,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { InventoryOverview } from "@/pages/components/InventoryOverview";
 import RecentOrders from "@/pages/components/RecentOrders";
 import CustomerOverview from "@/pages/components/CustomerOverview";
+import OrderPaymentSummaryCard from "./components/OrderPaymentSummaryCard";
+import ServicesOverview  from "@/pages/components/ServicesOverview";
 
 import {  doc, getDoc } from "firebase/firestore";
 const containerVariants = {
@@ -65,6 +67,9 @@ const AdminDashboard = () => {
   const currentUid = currentUser?.uid;
   const [expenses, setExpenses] = useState<any[]>([]);
   const paidOrdersCount = orders.filter((o) => o.paymentStatus === "paid").length;
+  const deliveredCount = orders.filter((o) => o.deliveryStatus === "delivered").length;
+
+  const [servicePackages, setServicePackages] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,6 +83,8 @@ const AdminDashboard = () => {
           getDocs(query(collection(db, "orders"), where("createdBy", "==", currentUid))),
           getDocs(query(collection(db, "customers"), where("uid", "==", currentUid))),
           getDocs(query(collection(db, "expenses"), where("userId", "==", currentUid))), // added
+          getDocs(query(collection(db, "servicePackages"), where("createdBy", "==", currentUid))), // added
+
         ]);
   
         // 2️⃣ Map to arrays
@@ -85,7 +92,8 @@ const AdminDashboard = () => {
         setOrders(ordersSnapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() })));
         setCustomers(customersSnapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() })));
         setExpenses(expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); // added
-  
+        setServicePackages(expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); // added
+
         setTotalProducts(productsSnapshot.size);
         setTotalOrders(ordersSnapshot.size);
         setTotalCustomers(customersSnapshot.size);
@@ -196,54 +204,44 @@ const AdminDashboard = () => {
     [products, lowStockThreshold]
   );
 
-
   const statsCards = [
     {
-      title: "Total Stock Items",
+      title: "Products",
       value: `${totalUnits} units`,
-      description: "of inventory",
+      description: (
+        <span className="text-sm">
+          <span className="font-bold text-red-500">Low stock: {lowStockCount}</span> |{" "}
+          <span className="font-bold text-blue-500">Delivered: {deliveredCount}</span> |{" "}
+          <span className="font-bold text-green-500">Paid: {paidOrdersCount}</span>
+        </span>
+      ),
       icon: Package,
-      color: "from-blue-500 to-blue-600",
+      color: "from-blue-500 to-indigo-600",
       details: productStockInfo,
     },
     {
-      title: "Low Stock Products",
-      value: `${lowStockCount} items`,
-      description: `below threshold (${businessInfo.lowStockThreshold ?? 5})`,
-      icon: AlertTriangle,
-      color: "from-red-500 to-rose-600",
-      details: productStockInfo.filter(p => p.hasLowStock),
-    },
-    // {
-    //   title: "Total Orders",
-    //   value: `${totalOrders} orders`,
-    //   description: "received",
-    //   icon: CheckCircle,
-    //   color: "from-green-500 to-emerald-600",
-    // },
-    {
-      title: "Paid Orders",
-      value: `${paidOrdersCount}`,
-      description: "orders paid",
-      icon: CreditCard,
-      color: "from-green-500 to-green-600",
+      title: "Services",
+      value: `${servicePackages.length}`,
+      description: (
+        <span className="font-semibold text-purple-600">Packages offered</span>
+      ),
+      icon: Users,
+      color: "from-purple-500 to-pink-500",
     },
     {
       title: "Finance Overview",
-      value: `R${totalRevenue}`,
-      description: `Profit: R${profit} | Expenses: R${totalExpenses}`,
+      value: `R${profit}`,
+      description: (
+        <span className="text-sm">
+          <span className="font-bold text-green-600">Revenue: R{totalRevenue}</span> |{" "}
+          <span className="font-bold text-red-600">Expenses: R{totalExpenses}</span>
+        </span>
+      ),
       icon: DollarSign,
       color: "from-green-500 to-teal-600",
-    }
-    
-    // {
-    //   title: "New Customers",
-    //   value: loading ? "..." : newCustomersCount,
-    //   description: "Recently joined",
-    //   icon: UserPlus,
-    //   color: "from-amber-500 to-orange-600",
-    // },
+    },
   ];
+  
   
 
   return (
@@ -277,14 +275,17 @@ const AdminDashboard = () => {
                 </motion.div>
               ))}
             </motion.div>
+
             <InventoryOverview />
 
             <motion.div 
         className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         variants={containerVariants}
       >
+                    <ServicesOverview servicePackages={servicePackages} />
+
        <RecentOrders />
-       <CustomerOverview  />
+       {/* <CustomerOverview  /> */}
        
       </motion.div> 
       
@@ -321,12 +322,12 @@ const AdminDashboard = () => {
                   <span className="text-xs sm:text-sm">View Customers</span>
                 </Button>
               </Link>
-              {/* <Link to="/admin/finance/expenses">
+              <Link to="/admin/services">
                 <Button variant="outline" className="w-full h-auto p-3 sm:p-4 flex flex-col gap-1 sm:gap-2">
                   <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-xs sm:text-sm">View Reports</span>
+                  <span className="text-xs sm:text-sm">View Services</span>
                 </Button>
-              </Link> */}
+              </Link>
             </div>
           </CardContent>
         </Card>
