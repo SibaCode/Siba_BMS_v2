@@ -34,306 +34,135 @@ import { InventoryOverview } from "@/pages/components/InventoryOverview";
 import RecentOrders from "@/pages/components/RecentOrders";
 import CustomerOverview from "@/pages/components/CustomerOverview";
 
-
-// Mock data for enhanced dashboard
-const stockOverviewData = [
-  { category: 'Aprons', units: 5, isLowStock: true },
-  { category: 'Umbrellas', units: 10, isLowStock: false },
-  { category: 'T-Shirts', units: 25, isLowStock: false },
-  { category: 'Mugs', units: 3, isLowStock: true },
-  { category: 'Bags', units: 18, isLowStock: false },
-];
-
-const orderStatusData = [
-  { status: 'Delivered', count: 1, color: '#10b981' },
-  { status: 'Not Delivered', count: 3, color: '#f59e0b' },
-];
-
-const paymentStatusData = [
-  { status: 'Paid', count: 15, color: '#10b981' },
-  { status: 'Pending', count: 8, color: '#f59e0b' },
-  { status: 'Failed', count: 2, color: '#ef4444' },
-];
-
-const recentCustomers = [
-  { id: 1, name: "John Smith", email: "john@example.com", totalSpent: 250, orderCount: 3, joinedDate: "2024-01-15" },
-  { id: 2, name: "Sarah Johnson", email: "sarah@example.com", totalSpent: 180, orderCount: 2, joinedDate: "2024-01-10" },
-  { id: 3, name: "Mike Davis", email: "mike@example.com", totalSpent: 420, orderCount: 5, joinedDate: "2024-01-05" },
-  { id: 4, name: "Emily Brown", email: "emily@example.com", totalSpent: 95, orderCount: 1, joinedDate: "2024-01-01" },
-];
-
-const recentOrders = [
-  { id: "ORD001", customer: "John Smith", items: 3, total: 125, status: "Delivered", date: "2024-01-20" },
-  { id: "ORD002", customer: "Sarah Johnson", items: 2, total: 89, status: "Processing", date: "2024-01-19" },
-  { id: "ORD003", customer: "Mike Davis", items: 4, total: 210, status: "Shipped", date: "2024-01-18" },
-  { id: "ORD004", customer: "Emily Brown", items: 1, total: 45, status: "Pending", date: "2024-01-17" },
-];
-
-const inventory = [
-  { id: 1, name: "Custom Aprons", category: "Aprons", stock: 5, price: 45, status: "Low Stock" },
-  { id: 2, name: "Branded Umbrellas", category: "Umbrellas", stock: 10, price: 65, status: "In Stock" },
-  { id: 3, name: "Premium T-Shirts", category: "T-Shirts", stock: 25, price: 85, status: "Active" },
-  { id: 4, name: "Coffee Mugs", category: "Mugs", stock: 3, price: 45, status: "Low Stock" },
-  { id: 5, name: "Laptop Bags", category: "Bags", stock: 18, price: 150, status: "Active" },
-];
-
+import {  doc, getDoc } from "firebase/firestore";
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
+    transition: { staggerChildren: 0.1 },
+  },
 };
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
-    y: 0
-  }
+  visible: { opacity: 1, y: 0 },
 };
 
 const AdminDashboard = () => {
-
-
-
-
-
-
-
-
-
-
-
-
-
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalCustomers, setTotalCustomers] = useState(0);
+  const [totalOrders, setTotalOrders] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // Calculate dynamic stats
-  const lowStockCategories = stockOverviewData.filter(item => item.isLowStock).length;
-  const totalStockItems = stockOverviewData.reduce((sum, item) => sum + item.units, 0);
-  // const deliveredOrders = orderStatusData.find(item => item.status === 'Delivered')?.count || 0;
-  // const notDeliveredOrders = orderStatusData.find(item => item.status === 'Not Delivered')?.count || 0;
-  const paidAmount = paymentStatusData.find(item => item.status === 'paid')?.count || 0;
-  const [businessInfo, setBusinessInfo] = useState<any[]>([]);
-  const [paidOrdersCount, setPaidOrdersCount] = useState<number>(0);
-
-
-  const auth = getAuth();
-  const currentUser = auth.currentUser;
-  const currentUid = auth.currentUser.uid;
-const ordersRef = collection(db, "orders");
-
-  const fetchCollection = async (colName: string, setter: Function) => {
-    if (!currentUser) return;
-    try {
-      const q = query(
-        collection(db, colName),
-        where("uid", "==", currentUser.uid)
-      );
-      const snapshot = await getDocs(q);
-      const items = snapshot.docs.map(doc => ({
-        docId: doc.id,
-        ...doc.data(),
-      }));
-      setter(items);
-    } catch (error) {
-      console.error(`Error fetching ${colName}:`, error);
-    }
-  };
-  useEffect(() => {
-    async function fetchBusinessInfo() {
-      try {
-        const businessInfoCol = collection(db, "businessInfo");  
-        const businessInfoSnapshot = await getDocs(businessInfoCol);
-        const businessInfoList = businessInfoSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setBusinessInfo(businessInfoList);
-        // console.log(businessInfoList)
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    }
-    fetchBusinessInfo();
-  }, []);
-
-
-  const [todaySales] = useState(850);
-  const [monthlyRevenue] = useState(12340);
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
-  const [totalOrders, setTotalOrders] = useState<number>(0);
+  const [businessInfo, setBusinessInfo] = useState<any>({});
+  console.log(orders)
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
+  const currentUid = currentUser?.uid;
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const paidOrdersCount = orders.filter((o) => o.paymentStatus === "paid").length;
 
-// console.log(products)
-
-// const [totalOrders, setTotalOrders] = useState<number>(0);
-// const [paidOrdersCount, setPaidOrdersCount] = useState<number>(0);
-
-useEffect(() => {
-  const fetchStats = async () => {
-    try {
-      const productsSnapshot = await getDocs(collection(db, "products"));
-
-      const ordersQuery = query(
-        collection(db, "orders"),
-        where("createdBy", "==", currentUid)
-      );
-      const ordersSnapshot = await getDocs(ordersQuery);
-      
-      // Total orders
-      setTotalOrders(ordersSnapshot.size);
-
-      // Paid orders
-      const paidCount = ordersSnapshot.docs.filter(
-        doc => doc.data().paymentStatus === "paid"
-      ).length;
-      setPaidOrdersCount(paidCount);
-
-      const customersSnapshot = await getDocs(collection(db, "customers"));
-
-      setTotalProducts(productsSnapshot.size);
-      setTotalCustomers(customersSnapshot.size);
-    } catch (err) {
-      console.error("Error fetching stats", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchStats();
-}, []);
-
-
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(db, "products"));
-      const items = querySnapshot.docs.map(doc => ({
-      docId: doc.id, 
-      ...doc.data()
-    }));
-      // console.log(items)
-      setProducts(items);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(db, "orders"));
-      const items = querySnapshot.docs.map(doc => ({
-        docId: doc.id,
-        ...doc.data(),
-      }));
-      // console.log("Orders:", items);
-      setOrders(items);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const fetchCustomers = async () => {
-    setLoading(true);
-    try {
-      const querySnapshot = await getDocs(collection(db, "customers"));
-      const items = querySnapshot.docs.map(doc => ({
-        docId: doc.id,
-        ...doc.data(),
-      }));
-      // console.log("Customers:", items);
-      setCustomers(items);
-    } catch (error) {
-      console.error("Error fetching customers:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
   useEffect(() => {
-    if (currentUser) {
-      Promise.all([
-        fetchCollection("products", setProducts),
-        fetchCollection("orders", setOrders),
-        fetchCollection("customers", setCustomers),
-        fetchCollection("businessInfo", setBusinessInfo),
-      ]).finally(() => setLoading(false));
-    }
-  }, [currentUser]);
-
+    const fetchData = async () => {
+      if (!currentUser) return;
+      setLoading(true);
+  
+      try {
+        // 1️⃣ Fetch products, orders, customers, expenses in parallel
+        const [productsSnapshot, ordersSnapshot, customersSnapshot, expensesSnapshot] = await Promise.all([
+          getDocs(query(collection(db, "products"), where("uid", "==", currentUid))),
+          getDocs(query(collection(db, "orders"), where("createdBy", "==", currentUid))),
+          getDocs(query(collection(db, "customers"), where("uid", "==", currentUid))),
+          getDocs(query(collection(db, "expenses"), where("uid", "==", currentUid))), // added
+        ]);
+  
+        // 2️⃣ Map to arrays
+        setProducts(productsSnapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() })));
+        setOrders(ordersSnapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() })));
+        setCustomers(customersSnapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() })));
+        setExpenses(expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); // added
+  
+        setTotalProducts(productsSnapshot.size);
+        setTotalOrders(ordersSnapshot.size);
+        setTotalCustomers(customersSnapshot.size);
+  
+        // 3️⃣ Fetch businessInfo document
+        const businessDocRef = doc(db, "businessInfo", currentUid);
+        const businessDocSnap = await getDoc(businessDocRef);
+  
+        if (businessDocSnap.exists()) {
+          const info = { id: businessDocSnap.id, ...businessDocSnap.data() };
+          setBusinessInfo(info);
+          console.log("Business Info:", info);
+        } else {
+          setBusinessInfo({});
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchData();
+  }, [currentUser, currentUid]);
+  
   // ====== Calculations ======
+  const lowStockThreshold = businessInfo.lowStockThreshold ?? 5;
+
   const totalUnits = useMemo(
     () =>
       products.reduce(
-        (total, product) =>
+        (total: number, product: any) =>
           total +
           product.variants.reduce(
-            (sum: number, v: any) => sum + (v.stockQuantity || 0),
+            (sum: number, v: any) => sum + Number(v.stockQuantity || 0),
             0
           ),
         0
-      ),
+      )
+      ,
     [products]
   );
-const lowStockThreshold = 10;
 
-const categoryStock = products.reduce((acc, product) => {
-  const totalStockForProduct = product.variants.reduce(
-    (sum, variant) => sum + (variant.stockQuantity || 0),
-    0
+  const categoryStockSummary = useMemo(() => {
+    const categoryStock = products.reduce((acc, product) => {
+      const totalStockForProduct = product.variants.reduce(
+        (sum, variant) => sum + (variant.stockQuantity || 0),
+        0
+      );
+      acc[product.category] = (acc[product.category] || 0) + totalStockForProduct;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(categoryStock).map(([category, totalStock]) => ({
+      category,
+      totalStock,
+      isLow: totalStock < lowStockThreshold,
+    }));
+  }, [products, lowStockThreshold]);
+
+  const totalStock = categoryStockSummary.reduce((sum, c) => sum + c.totalStock, 0);
+  const lowStockCount = categoryStockSummary.filter(c => c.isLow).length;
+
+  const paidOrders = orders.filter(o => o.paymentStatus?.toLowerCase() === "paid");
+  const pendingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "pending");
+  const failedPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "failed");
+  const deliveredOrders = orders.filter(
+    o => o.deliveryStatus?.toLowerCase() === "delivered" || o.status?.toLowerCase() === "delivered"
   );
-  if (acc[product.category]) {
-    acc[product.category] += totalStockForProduct;
-  } else {
-    acc[product.category] = totalStockForProduct;
-  }
-  return acc;
-}, {} as Record<string, number>);
+  const notDeliveredOrders = orders.length - deliveredOrders.length;
 
-// Convert to array and add isLow flag
-const categoryStockSummary = Object.entries(categoryStock).map(
-  ([category, totalStock]: [string, number]) => ({
-    category,
-    totalStock,
-    isLow: totalStock < lowStockThreshold,
-  })
-);
-const totalStock = categoryStockSummary.reduce(
-  (sum, { totalStock }) => sum + totalStock,
-  0
-);
-const lowStockCount = categoryStockSummary.filter(c => c.isLow).length;
-// const totalOrders = orders.length;
-console.log(orders)
-const paidOrders = orders.filter(o => o.paymentStatus?.toLowerCase() === "paid");
-const pendingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "pending");
-const failedPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "failed");
-const processingPayments = orders.filter(o => o.paymentStatus?.toLowerCase() === "processing");
-const deliveredOrders = orders.filter(
-  o =>
-    o.deliveryStatus?.toLowerCase() === "delivered" ||
-    o.status?.toLowerCase() === "delivered"
-);
-const notDeliveredOrders = orders.length - deliveredOrders.length;
-
-const totalRevenue = paidOrders.reduce((sum, order) => sum + (order.total || 0), 0);
-
-
-const newCustomers = customers.length
-  // Flatten variants for the table
-  const flattenedVariants = products.flatMap((product) =>
-    product.variants.map((variant) => ({
+  const totalRevenue = paidOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+  const profit = totalRevenue - totalExpenses;
+  
+  const flattenedVariants = products.flatMap(product =>
+    product.variants.map(variant => ({
       docId: product.docId,
       name: product.name,
       category: product.category,
@@ -343,44 +172,17 @@ const newCustomers = customers.length
       stockQuantity: variant.stockQuantity,
       sellingPrice: variant.sellingPrice,
       productImage: product.productImage,
-      status: variant.stockQuantity <= 5 ? "Low Stock" : product.status,
+      status: variant.stockQuantity <= lowStockThreshold ? "Low Stock" : product.status,
     }))
   );
 
-  // Filter based on search input (checks name, category, variantType, color, size)
-  const filteredVariants = flattenedVariants.filter((item) =>
-    [
-      item.name,
-      item.category,
-      item.variantType,
-      item.color,
-      item.size,
-    ]
+  const filteredVariants = flattenedVariants.filter(item =>
+    [item.name, item.category, item.variantType, item.color, item.size]
       .join(" ")
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
-
-
-  const LOW_STOCK_THRESHOLD = 5; // define what "low stock" means
-
-  // Calculate total units across all products
-  // const totalUnits = products.reduce(
-  //   (total, product) =>
-  //     total +
-  //     product.variants.reduce((sum, variant) => sum + (variant.stockQuantity || 0), 0),
-  //   0
-  // );
-  // const paidOrdersCount = useMemo(
-  //   () =>
-  //     orders.filter(
-  //       (order) => order.paymentStatus?.toLowerCase() === "paid"
-  //     ).length,
-  //   [orders]
-  // );
-
   const newCustomersCount = customers.length;
-
   const productStockInfo = useMemo(
     () =>
       products.map(product => {
@@ -388,28 +190,11 @@ const newCustomers = customers.length
           (sum: number, v: any) => sum + (v.stockQuantity || 0),
           0
         );
-        const hasLowStock = product.variants.some(
-          v => (v.stockQuantity || 0) < LOW_STOCK_THRESHOLD
-        );
-        return {
-          name: product.name,
-          units,
-          hasLowStock,
-        };
+        const hasLowStock = product.variants.some(v => (v.stockQuantity || 0) < lowStockThreshold);
+        return { name: product.name, units, hasLowStock };
       }),
-    [products]
+    [products, lowStockThreshold]
   );
-
-  // For each product, get units and low stock status
-  // const productStockInfo = products.map(product => {
-  //   const units = product.variants.reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
-  //   const hasLowStock = product.variants.some(v => (v.stockQuantity || 0) < LOW_STOCK_THRESHOLD);
-  //   return {
-  //     name: product.name,
-  //     units,
-  //     hasLowStock,
-  //   };
-  // });
 
 
   const statsCards = [
@@ -422,12 +207,20 @@ const newCustomers = customers.length
       details: productStockInfo,
     },
     {
-      title: "Total Orders",
-      value: `${totalOrders} orders`,
-      description: "received",
-      icon: CheckCircle,
-      color: "from-green-500 to-emerald-600",
+      title: "Low Stock Products",
+      value: `${lowStockCount} items`,
+      description: `below threshold (${businessInfo.lowStockThreshold ?? 5})`,
+      icon: AlertTriangle,
+      color: "from-red-500 to-rose-600",
+      details: productStockInfo.filter(p => p.hasLowStock),
     },
+    // {
+    //   title: "Total Orders",
+    //   value: `${totalOrders} orders`,
+    //   description: "received",
+    //   icon: CheckCircle,
+    //   color: "from-green-500 to-emerald-600",
+    // },
     {
       title: "Paid Orders",
       value: `${paidOrdersCount}`,
@@ -436,13 +229,22 @@ const newCustomers = customers.length
       color: "from-green-500 to-green-600",
     },
     {
-      title: "New Customers",
-      value: loading ? "..." : newCustomersCount,
-      description: "Recently joined",
-      icon: UserPlus,
-      color: "from-amber-500 to-orange-600",
+      title: "Finance Overview",
+      value: `R${totalRevenue}`,
+      description: `Profit: R${profit} | Expenses: R${totalExpenses}`,
+      icon: DollarSign,
+      color: "from-green-500 to-teal-600",
     }
+    
+    // {
+    //   title: "New Customers",
+    //   value: loading ? "..." : newCustomersCount,
+    //   description: "Recently joined",
+    //   icon: UserPlus,
+    //   color: "from-amber-500 to-orange-600",
+    // },
   ];
+  
 
   return (
     <motion.div 
