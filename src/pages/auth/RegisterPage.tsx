@@ -7,6 +7,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import logo from "@/lib/logo.png"; // replace with your logo path
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -23,21 +24,18 @@ export default function RegisterPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-  
-      // Save basic user info in "users"
+
       await setDoc(doc(db, "users", user.uid), {
         email,
         bizName,
       });
-  
-      // Save business info separately in "businessInfo"
+
       await setDoc(doc(db, "businessInfo", user.uid), {
         name: bizName,
-        email: email,
+        email,
         createdAt: new Date(),
-        // Add any other business-specific fields here
       });
-  
+
       navigate("/login");
     } catch (err: any) {
       setError(err.message || "Registration failed.");
@@ -45,15 +43,23 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
-  
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white shadow-md rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center">Register</h1>
-        <form onSubmit={handleRegister} className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1800ad]/10 to-[#1800ad]/20 px-4">
+      <div className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <img src={logo} alt="Logo" className="h-[10rem] w-[10rem] object-contain" />
+        </div>
+
+        {/* Header */}
+        <h1 className="text-3xl font-bold mb-2 text-center text-[#1800ad]">Create Account</h1>
+        <p className="text-center text-gray-600 mb-6">Register your business to get started</p>
+
+        {/* Registration Form */}
+        <form onSubmit={handleRegister} className="space-y-5">
           <div>
-            <Label htmlFor="bizName">Business Name</Label>
+            <Label htmlFor="bizName" className="text-gray-700">Business Name</Label>
             <Input
               id="bizName"
               type="text"
@@ -65,7 +71,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-gray-700">Email</Label>
             <Input
               id="email"
               type="email"
@@ -77,7 +83,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-gray-700">Password</Label>
             <Input
               id="password"
               type="password"
@@ -88,16 +94,23 @@ export default function RegisterPage() {
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 p-2 rounded-md">{error}</p>
+          )}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full text-white font-semibold bg-[#1800ad] hover:bg-[#14008a] transition-all duration-200 shadow-lg hover:shadow-xl"
+            disabled={loading}
+          >
             {loading ? "Registering..." : "Register"}
           </Button>
         </form>
 
-        <div className="text-center mt-4 text-sm">
+        {/* Footer Links */}
+        <div className="text-center mt-6 text-sm text-gray-600">
           Already have an account?{" "}
-          <Link to="/login" className="text-blue-600 hover:underline">
+          <Link to="/login" className="text-[#1800ad] hover:underline font-medium">
             Login
           </Link>
         </div>

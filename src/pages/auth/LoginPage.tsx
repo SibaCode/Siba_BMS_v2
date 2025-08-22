@@ -8,6 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Mail, Lock } from "lucide-react";
+import logo from "@/lib/logo.png"; // replace with your logo path
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -47,49 +49,73 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white shadow-md rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
-        <form onSubmit={handleLogin} className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1800ad]/10 to-[#1800ad]/20 px-4">
+      <div className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-10">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+        <img src={logo} alt="Logo" className="h-[10rem] w-[10rem] object-contain " />
+        </div>
+
+        {/* Header */}
+        {/* <h1 className="text-3xl font-bold mb-1 text-center text-[#1800ad]">Welcome Back</h1> */}
+        <p className="text-center text-gray-600 mb-6">Login to access your dashboard</p>
+
+        {/* Login Form */}
+        <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <Label htmlFor="email" className="text-gray-700">Email</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                className="pl-10"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
           <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="********"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <Label htmlFor="password" className="text-gray-700">Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Input
+                id="password"
+                type="password"
+                placeholder="********"
+                className="pl-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 p-2 rounded-md">{error}</p>
+          )}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full text-white font-semibold bg-[#1800ad] hover:bg-[#14008a] transition-all duration-200 shadow-lg hover:shadow-xl"
+            disabled={loading}
+          >
             {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
 
-        <div className="text-center mt-4 text-sm">
-          <Link to="/forgot-password" className="text-blue-600 hover:underline">
+        {/* Footer Links */}
+        <div className="text-center mt-6 text-sm text-gray-600">
+          <Link to="/forgot-password" className="text-[#1800ad] hover:underline">
             Forgot password?
           </Link>
         </div>
-        <div className="text-center mt-2 text-sm">
+        <div className="text-center mt-2 text-sm text-gray-600">
           Don’t have an account?{" "}
-          <Link to="/register" className="text-blue-600 hover:underline">
+          <Link to="/register" className="text-[#1800ad] hover:underline font-medium">
             Register
           </Link>
         </div>

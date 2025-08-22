@@ -26,14 +26,14 @@ import AdminEditOrder from "./pages/AdminEditOrder";
 import Booking from "./pages/Booking";
 import Services from "./pages/Services";
 import ProductFormPage from "./pages/components/ProductFormPage";
-import LandingPage from "./pages/LandingPage";
+import LandingPage from "./pages/SuperAdminDashboard";
 import ContactPage from "./pages/ContactPage";
 import LoginPage from "./pages/auth/LoginPage"; // import your login page here
 
 import { useAuth } from "./contexts/AuthContext"; // assuming you have this
 import RegisterPage from "./pages/auth/RegisterPage"; // adjust path if needed
 import ProtectedRoute from "./pages/components/ProtectedRoute";
-
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -193,7 +193,16 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/super"
+            element={
+              <ProtectedRoute>
+                <AdminLayout title="Super Admin">
+                  <SuperAdminDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
           {/* Public store routes */}
           <Route path="/storefront" element={<StorefrontPage />} />
           <Route path="/store" element={<PublicStore />} />
@@ -202,7 +211,7 @@ const App = () => (
           <Route path="/store/checkout" element={<Checkout />} />
           <Route path="/store/success" element={<OrderSuccess />} />
           <Route path="/contact" element={<ContactPage />} />
-
+          {/* <Route path="/super"element={<SuperAdminDashboard />} /> */}
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
