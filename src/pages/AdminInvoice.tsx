@@ -71,6 +71,7 @@ interface BusinessInfo {
   branchCode:string;
   description:string;
   phone:string;
+  lowStockThreshold:string;
 }
 const AdminInvoice = () => {
   const { id } = useParams();

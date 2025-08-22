@@ -10,6 +10,7 @@ import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "@/firebase";
 import ImageUpload from "@/pages/components/ImageUpload";
+                 import { Package } from "lucide-react"; // add this at the top with other icons
 
 import {
   Building2,
@@ -87,6 +88,7 @@ const BusinessInfoPage = () => {
       "phone",
       "address",
       "logo",
+      "lowStockThreshold",
     ];
     for (let field of requiredFields) {
       if (!businessInfo[field] || businessInfo[field].toString().trim() === "") {
@@ -253,6 +255,19 @@ const BusinessInfoPage = () => {
                   textarea
                   placeholder="Describe your business"
                 />
+
+                  <InputField
+                    icon={Package} // relevant icon for inventory/stock
+                    label="Low Stock Threshold"
+                    field="lowStockThreshold"
+                    placeholder="Enter the minimum stock quantity before alert"
+                    textarea={false}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    The minimum number of items before you receive a low stock alert. Example: 5
+                  </p>
+
+
               </CardContent>
             </Card>
           </motion.div>

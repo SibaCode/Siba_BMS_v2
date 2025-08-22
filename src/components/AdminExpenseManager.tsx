@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy ,where} from "firebase/firestore";
 import { db } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -79,27 +79,23 @@ const AdminExpenseManager = () => {
 
   const fetchExpenses = async () => {
     try {
-      const userId = auth.currentUser?.uid;
-      if (!userId) return;
+      const currentUid = auth.currentUser?.uid;
+      if (!currentUid) return;
   
       const q = query(
         collection(db, "expenses"),
+        where("createdBy", "==", currentUid),
         orderBy("date", "desc")
       );
   
-      const querySnapshot = await getDocs(q);
-      const expensesData = querySnapshot.docs
-        .map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            date: data.date.toDate()
-          };
-        })
-        .filter(exp => exp.userId === userId); // <-- filter by current user
+      const snapshot = await getDocs(q);
+      const expensesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        date: doc.data().date.toDate(),
+      }));
   
-      setExpenses(expensesData as Expense[]);
+      setExpenses(expensesData);
     } catch (error) {
       console.error("Error fetching expenses:", error);
       toast({ title: "Error", description: "Failed to load expenses", variant: "destructive" });
@@ -107,6 +103,7 @@ const AdminExpenseManager = () => {
       setLoading(false);
     }
   };
+  
 
   const openAddModal = () => {
     form.reset({

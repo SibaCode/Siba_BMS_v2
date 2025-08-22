@@ -58,7 +58,7 @@ export const InventoryOverview = () => {
     try {
       const q = query(
         collection(db, "orders"),
-        where("uid", "==", uid)
+        where("createdBy", "==", uid)
       );
 
       const querySnapshot = await getDocs(q);

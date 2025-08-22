@@ -77,7 +77,7 @@ const AdminDashboard = () => {
           getDocs(query(collection(db, "products"), where("uid", "==", currentUid))),
           getDocs(query(collection(db, "orders"), where("createdBy", "==", currentUid))),
           getDocs(query(collection(db, "customers"), where("uid", "==", currentUid))),
-          getDocs(query(collection(db, "expenses"), where("uid", "==", currentUid))), // added
+          getDocs(query(collection(db, "expenses"), where("userId", "==", currentUid))), // added
         ]);
   
         // 2️⃣ Map to arrays
