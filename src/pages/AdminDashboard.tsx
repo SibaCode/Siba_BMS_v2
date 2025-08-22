@@ -30,7 +30,7 @@ import {
   Truck
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { InventoryOverview } from "@/pages/components/InventoryOverview";
+import InventoryOverview from "@/pages/components/InventoryOverview";
 import RecentOrders from "@/pages/components/RecentOrders";
 import CustomerOverview from "@/pages/components/CustomerOverview";
 import OrderPaymentSummaryCard from "./components/OrderPaymentSummaryCard";
@@ -154,7 +154,11 @@ const AdminDashboard = () => {
     }));
   }, [products, lowStockThreshold]);
 
-  const totalStock = categoryStockSummary.reduce((sum, c) => sum + c.totalStock, 0);
+  const totalStock = categoryStockSummary.reduce(
+    (sum, c) => sum + (c.totalStock as number),
+    0
+  );
+  
   const lowStockCount = categoryStockSummary.filter(c => c.isLow).length;
 
   const paidOrders = orders.filter(o => o.paymentStatus?.toLowerCase() === "paid");
@@ -282,10 +286,10 @@ const AdminDashboard = () => {
         className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         variants={containerVariants}
       >
-                    <ServicesOverview servicePackages={servicePackages} />
+                    {/* <ServicesOverview servicePackages={servicePackages} /> */}
 
        <RecentOrders />
-       {/* <CustomerOverview  /> */}
+       <CustomerOverview  />
        
       </motion.div> 
       
@@ -293,45 +297,53 @@ const AdminDashboard = () => {
  
 
       {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.5 }}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm sm:text-base">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              <Link to="/admin/orders/create">
-                <Button className="w-full h-auto p-3 sm:p-4 flex flex-col gap-1 sm:gap-2">
-                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-xs sm:text-sm">Create Order</span>
-                </Button>
-              </Link>
-              <Link to="/admin/inventory">
-                <Button variant="outline" className="w-full h-auto p-3 sm:p-4 flex flex-col gap-1 sm:gap-2">
-                  <Package className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-xs sm:text-sm">Manage Inventory</span>
-                </Button>
-              </Link>
-              <Link to="/admin/customers">
-                <Button variant="outline" className="w-full h-auto p-3 sm:p-4 flex flex-col gap-1 sm:gap-2">
-                  <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-xs sm:text-sm">View Customers</span>
-                </Button>
-              </Link>
-              <Link to="/admin/services">
-                <Button variant="outline" className="w-full h-auto p-3 sm:p-4 flex flex-col gap-1 sm:gap-2">
-                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-xs sm:text-sm">View Services</span>
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+              <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5 }}
+        >
+          <Card className="card-hover shadow-elegant rounded-2xl border border-gray-200 overflow-hidden">
+            <CardHeader className="p-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-white">
+              <CardTitle className="text-sm sm:text-base font-semibold text-gray-900">
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="p-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <Link to="/admin/orders/create">
+                  <Button className="w-full h-auto p-3 sm:p-4 flex flex-col gap-1 sm:gap-2 hover:shadow-lg transition">
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-900">Create Order</span>
+                  </Button>
+                </Link>
+
+                <Link to="/admin/inventory">
+                  <Button variant="outline" className="w-full h-auto p-3 sm:p-4 flex flex-col gap-1 sm:gap-2 hover:shadow-lg transition border-gray-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700">
+                    <Package className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-xs sm:text-sm font-medium">Manage Inventory</span>
+                  </Button>
+                </Link>
+
+                <Link to="/admin/customers">
+                  <Button variant="outline" className="w-full h-auto p-3 sm:p-4 flex flex-col gap-1 sm:gap-2 hover:shadow-lg transition border-gray-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-xs sm:text-sm font-medium">View Customers</span>
+                  </Button>
+                </Link>
+
+                <Link to="/admin/services">
+                  <Button variant="outline" className="w-full h-auto p-3 sm:p-4 flex flex-col gap-1 sm:gap-2 hover:shadow-lg transition border-gray-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700">
+                    <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-xs sm:text-sm font-medium">View Services</span>
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+
     </motion.div>
   );
 };

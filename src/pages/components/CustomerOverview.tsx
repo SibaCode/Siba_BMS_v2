@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import { getDocs, collection, query, where } from "firebase/firestore";
 import { db, auth } from "@/firebase";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -17,25 +17,25 @@ interface Customer {
 }
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.1 } },
 };
 
 const CustomerOverview = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
-  const currentUser = auth.currentUser;
 
   const fetchCustomers = async () => {
+    const currentUser = auth.currentUser;
     if (!currentUser) return;
     setLoading(true);
     try {
       const q = query(
         collection(db, "customers"),
-        where("uid", "==", currentUser.uid) // filter by logged-in user
+        where("uid", "==", currentUser.uid)
       );
-      const querySnapshot = await getDocs(q);
-      const items = querySnapshot.docs.map((doc) => {
+      const snapshot = await getDocs(q);
+      const items = snapshot.docs.map(doc => {
         const data = doc.data();
         return {
           docId: doc.id,
@@ -56,60 +56,69 @@ const CustomerOverview = () => {
 
   useEffect(() => {
     fetchCustomers();
-  }, [currentUser]);
+  }, []);
 
   const recentCustomers = customers.slice(0, 5);
+
+  // Skeleton loader
+  const SkeletonCard = () => (
+    <div className="flex justify-between items-center p-4 rounded-lg border bg-gray-100 animate-pulse h-16" />
+  );
 
   return (
     <motion.div
       variants={cardVariants}
       initial="hidden"
       animate="visible"
-      transition={{ duration: 0.5 }}
+      className="w-full"
     >
-      <Card className="card-hover shadow-elegant">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+      <Card className="card-hover shadow-elegant rounded-2xl border border-gray-200 overflow-hidden bg-white">
+        <CardHeader className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
             <UserPlus className="h-5 w-5 text-blue-500" />
-            <span>Recent Customers</span>
+            Recent Customers
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 space-y-3">
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading customers...</p>
+            Array(5)
+              .fill(0)
+              .map((_, i) => <SkeletonCard key={i} />)
+          ) : recentCustomers.length === 0 ? (
+            <div className="text-gray-400 text-center py-8">No customers found.</div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {recentCustomers.map((customer, index) => (
                 <motion.div
                   key={customer.docId}
-                  className="flex justify-between items-center p-4 rounded-lg bg-gradient-to-r from-card to-secondary/20 border transition-smooth hover:shadow-md"
+                  className="flex justify-between items-center p-4 rounded-lg border hover:shadow-lg transition-colors duration-200 bg-white"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.05 }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-primary" />
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                      <Users className="h-5 w-5 text-blue-500" />
                     </div>
                     <div>
-                      <div className="font-medium">{customer.name}</div>
-                      <div className="text-sm text-muted-foreground">{customer.email}</div>
+                      <div className="font-medium text-gray-900">{customer.name}</div>
+                      <div className="text-sm text-gray-500">{customer.email}</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    {/* <div className="text-sm font-medium">
-                      {customer.orders} order{customer.orders !== 1 ? "s" : ""}
-                    </div> */}
-                    {/* <div className="text-xs text-muted-foreground">
-                      Joined: {customer.joinDate}
-                    </div> */}
-                    {/* <div className="text-xs text-muted-foreground">
-                      Spent: R{customer.totalSpent}
-                    </div> */}
+                  {/* Placeholder for future stats */}
+                  <div className="text-right text-sm text-gray-500 space-y-1">
+                    {/* <div>{customer.orders} orders</div>
+                    <div>Joined: {customer.joinDate}</div>
+                    <div>Spent: R{customer.totalSpent}</div> */}
                   </div>
                 </motion.div>
               ))}
-              <Button asChild variant="outline" size="sm" className="w-full mt-3 card-hover">
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="w-full mt-3 rounded-lg border-gray-300 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              >
                 <Link to="/admin/customers">View All Customers</Link>
               </Button>
             </div>
